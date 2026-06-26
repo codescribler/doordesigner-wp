@@ -110,6 +110,10 @@ class HD_DD_Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<p class="description" style="margin-top:1.5em">
+				Built by <a href="https://dreamfree.co.uk" target="_blank" rel="noopener">Dreamfree</a>
+				&middot; Support: <a href="mailto:daniel@dreamfree.co.uk">daniel@dreamfree.co.uk</a>
+			</p>
 		</div>
 		<?php
 	}
