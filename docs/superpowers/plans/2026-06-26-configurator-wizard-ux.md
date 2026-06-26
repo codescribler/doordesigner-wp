@@ -175,24 +175,30 @@ function view(type) {
   return cv;
 }
 
-// Double Door hides the frame-shape (sidelights) step and the knocker step.
+// Double Door hides the frame-shape step (only "No Sidelights"); per the captured
+// data it DOES expose a knocker (31 options) and uses Master Leaf for hinge side.
 const dbl = view('Double Door');
 let steps = SC.applicableSteps(dbl, { 'Door Type': { label: 'Double Door' } }).map((s) => s.key);
-assert.ok(!steps.includes('frame'), 'Double should hide frame-shape step');
-assert.ok(!steps.includes('knocker'), 'Double should hide knocker step');
+assert.ok(!steps.includes('frame'), 'Double hides frame-shape step (single "No Sidelights")');
+assert.ok(steps.includes('knocker'), 'Double offers a knocker (data: 31 options)');
 assert.ok(steps.includes('hinge'), 'hinge step present');
 
-// Single + solid style (Mayon) hides glazing + knocker (Mayon offers none).
+// Single + solid style (Mayon) hides glazing (zero glazing) but still offers a knocker.
 const sd = view('Single Door');
 steps = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Mayon' } }).map((s) => s.key);
 assert.ok(!steps.includes('glazing'), 'Mayon (solid) hides glazing');
-assert.ok(!steps.includes('knocker'), 'Mayon hides knocker');
+assert.ok(steps.includes('knocker'), 'Mayon still offers a knocker');
+
+// Single + Ketu offers glazing but NO knocker (per-style knockerByStyle['Ketu'] is empty).
+steps = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Ketu' } }).map((s) => s.key);
+assert.ok(steps.includes('glazing'), 'Ketu shows glazing');
+assert.ok(!steps.includes('knocker'), 'Ketu hides knocker (per-style: none)');
 
 // Single + Abbott shows glazing + knocker.
 steps = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).map((s) => s.key);
 assert.ok(steps.includes('glazing') && steps.includes('knocker'), 'Abbott shows glazing + knocker');
 
-// Avantal hides internal colour + knocker.
+// Avantal hides internal colour + knocker (no such fields).
 const av = view('Avantal');
 steps = SC.applicableSteps(av, { 'Door Type': { label: 'Avantal' }, 'Door Design': { label: 'Sirius' } }).map((s) => s.key);
 assert.ok(!steps.includes('intColour') && !steps.includes('knocker'), 'Avantal hides internal colour + knocker');
@@ -402,7 +408,8 @@ Expected: FAIL — `Cannot find module '.../wizard-controller.js'`.
       if (!t) { return; }
       design = { 'Door Type': { label: label, id: typeIdOf(label) } };
       stepIndex = 0; atReview = false;
-      applyDefaults();
+      // Defaults apply lazily on select(), not on type change: a fresh type
+      // starts as a clean slate (just Door Type) — the controller test asserts this.
     }
     function typeIdOf(label) {
       var any = customerView.byType[label];
