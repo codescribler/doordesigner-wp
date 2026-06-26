@@ -69,17 +69,25 @@ function buildType(node) {
   const baselineCassetteKey = baseCassettes[0] ? (parseCassette(baseCassettes[0].url) || {}).key : null;
 
   // STYLES: mould + cassetteKey + blank/cassette geometry (delta overrides baseline).
+  // The 'Door Design' capture only records each style's SLAB; a style's own cassettes
+  // are captured only when they differ from the baseline. When none were captured we may
+  // fall back to the baseline cassettes — but ONLY for GLAZED styles, whose glass needs
+  // the aperture frames. SOLID styles have no apertures, so the baseline cassettes are
+  // spurious decorative squares that would be stamped on every plain door — draw none.
   const styles = {};
   const dd = node.fields['Door Design'];
+  const glazingByStyle = node.glazingByStyle || {};
   (dd ? dd.choices : []).forEach((c) => {
     const blank = keep(c.delta, 'DoorBlanks')[0];
     const cassettes = keep(c.delta, 'DoorCassettes');
     const pb = blank ? parseBlank(blank.url) : null;
     const pc = cassettes[0] ? parseCassette(cassettes[0].url) : null;
-    const cassetteGeom = (cassettes.length ? cassettes : baseCassettes).map(geom);
+    const styleGlazed = ((glazingByStyle[c.label]) || []).length > 1;
+    const useCassettes = cassettes.length ? cassettes : (styleGlazed ? baseCassettes : []);
+    const cassetteGeom = useCassettes.map(geom);
     styles[c.label] = {
       mould: pb ? pb.mould : baselineMould,
-      cassetteKey: pc ? pc.key : baselineCassetteKey,
+      cassetteKey: pc ? pc.key : (styleGlazed ? baselineCassetteKey : null),
       blankGeom: blank ? geom(blank) : (baseBlankLayer ? geom(baseBlankLayer) : null),
       cassetteGeom: cassetteGeom,
       glazingGeom: innerCassettes(cassetteGeom) // where the glass panels go for this style
