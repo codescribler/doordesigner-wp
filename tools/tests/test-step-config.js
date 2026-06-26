@@ -8,7 +8,11 @@ const SC = require(path.join(__dirname, '..', '..', 'assets/js/wizard/step-confi
 const full = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data/endurance-catalogue-full.json'), 'utf8'));
 function view(type) {
   const n = full[type];
-  const cv = { fields: {}, glazingByStyle: {}, knockerByStyle: {}, sidelights: null,
+  const cv = { fields: {}, glazingByStyle: {}, knockerByStyle: {},
+    sidelights: n.sidelights ? {
+      sidelightType: (n.sidelights.sidelightType.choices || []).map((c) => ({ label: c.label, id: c.id })),
+      sidelightGlass: (n.sidelights.sidelightGlass.choices || []).map((c) => ({ label: c.label, id: c.id }))
+    } : null,
     hasInternalColour: !!n.fields['Door Colour (Internal)'], hasKnocker: !!n.fields['Knocker'],
     hasFrameShape: !!(n.fields['Frame Design'] && n.fields['Frame Design'].choices.length > 1),
     hingeSideField: n.fields['Door Hinged On'] ? 'Door Hinged On' : 'Master Leaf' };
@@ -40,6 +44,13 @@ assert.ok(!steps.includes('knocker'), 'Ketu hides knocker (per-style: none)');
 // Single + Abbott shows glazing + knocker.
 steps = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).map((s) => s.key);
 assert.ok(steps.includes('glazing') && steps.includes('knocker'), 'Abbott shows glazing + knocker');
+
+// "No Sidelights" must NOT surface the sidelight-glass step (regex must not match the label).
+const noSL = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'No Sidelights' } }).map((s) => s.key);
+assert.ok(noSL.indexOf('sidelightGlass') === -1, 'No Sidelights hides the sidelight-glass step');
+// A real sidelit frame DOES surface it.
+const withSL = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'Double Sidelight' } }).map((s) => s.key);
+assert.ok(withSL.indexOf('sidelightGlass') !== -1, 'Double Sidelight shows the sidelight-glass step');
 
 // Avantal hides internal colour + knocker (no such fields).
 const av = view('Avantal');

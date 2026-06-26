@@ -85,7 +85,7 @@
 	App.prototype.buildShell = function () {
 		var self = this;
 		this.root.innerHTML = '';
-		var layout = el('div', 'hd-dd hd-dd--wizard');
+		var layout = el('div', 'hd-dd hd-dd__app');
 
 		var head = el('div', 'hd-dd__wizhead');
 		this.backBtn = el('button', 'hd-dd__back', I18N.back || 'Back');
@@ -107,7 +107,7 @@
 		this.body = el('div', 'hd-dd__body');
 		layout.appendChild(this.body);
 
-		this.continueBtn = el('button', 'hd-dd__continue', I18N.next || 'Continue');
+		this.continueBtn = el('button', 'hd-dd__cta', I18N.next || 'Continue');
 		this.continueBtn.type = 'button';
 		this.continueBtn.addEventListener('click', function () { self.advance('next'); });
 		layout.appendChild(this.continueBtn);
@@ -186,7 +186,7 @@
 		var total = (p && p.total) || 0;
 		var current = (p && p.current) || 0;
 		for (var i = 1; i <= total; i++) {
-			this.progressEl.appendChild(el('span', 'hd-dd__progress-seg' + (i <= current ? ' is-done' : '')));
+			this.progressEl.appendChild(el('span', 'hd-dd__seg' + (i <= current ? ' is-on' : '')));
 		}
 	};
 

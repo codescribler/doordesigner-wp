@@ -28,7 +28,7 @@
   function sidelit(n, d) {
     if (!n.hasFrameShape) { return false; }
     var shape = (d['Frame Design'] && d['Frame Design'].label) || '';
-    return /sidelight|half flag/i.test(shape);
+    return shape !== 'No Sidelights' && /sidelight|half flag/i.test(shape);
   }
 
   // Resolve the real heading + choice list for a step given the active type+design.
