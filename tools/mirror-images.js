@@ -4,11 +4,11 @@ const path = require('path');
 const https = require('https');
 
 // A real image URL must end in an actual filename. The capture occasionally collects
-// a bare folder reference (e.g. ".../Images/Handles/" for a "no handle" layer), which
-// would collide with the real Handles/ directory — skip anything that isn't a file.
-function isFileUrl(after) {
-  if (!after || after.charAt(after.length - 1) === '/') { return false; }
-  var last = after.split('/').pop();
+// a bare folder reference (e.g. ".../Images/Handles/" for a "no handle" layer) — skip
+// anything that isn't a file.
+function isFileUrl(p) {
+  if (!p || p.charAt(p.length - 1) === '/') { return false; }
+  var last = p.split('/').pop();
   return /\.[a-z0-9]+$/i.test(last);
 }
 
@@ -16,10 +16,13 @@ function mirrorPlan(data) {
   var base = (data._assetBase || '').replace(/\/$/, '');
   var plan = [];
   (data._imageUrls || []).forEach(function (u) {
-    var clean = u.replace(/\?.*$/, '');
-    var after = clean.replace(/^.*\/Images\//, '');
-    if (!isFileUrl(after)) { return; }
-    plan.push({ url: base + '/' + u, localPath: 'assets/img/endurance/' + after });
+    var clean = u.replace(/\?.*$/, ''); // full asset path, e.g. Assets/CompositeDoors/Images/DoorBlanks/...
+    if (!isFileUrl(clean)) { return; }
+    // Mirror the FULL asset path. The renderer builds layer URLs that include the
+    // 'Assets/CompositeDoors/Images/...' prefix and the compositor prepends the asset
+    // base (plugin_url + 'assets/img/endurance'). So the file must live at
+    // assets/img/endurance/Assets/CompositeDoors/Images/... to resolve — NOT a stripped path.
+    plan.push({ url: base + '/' + u, localPath: 'assets/img/endurance/' + clean });
   });
   return plan;
 }

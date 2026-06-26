@@ -3,7 +3,7 @@
  * Plugin Name:       Hertfordshire Doors — Door Designer
  * Plugin URI:        https://github.com/codescribler/doordesigner-wp
  * Description:       Enquiry-only composite-door configurator for Hertfordshire Doors. A customer visually designs a door; the spec is captured in Endurance's exact option vocabulary and emailed/stored as an enquiry. No pricing, no sizes, no lock selection.
- * Version:           0.2.1
+ * Version:           0.2.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Dreamfree
@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-define( 'HD_DD_VERSION', '0.2.1' );
+define( 'HD_DD_VERSION', '0.2.2' );
 define( 'HD_DD_FILE', __FILE__ );
 define( 'HD_DD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HD_DD_URL', plugin_dir_url( __FILE__ ) );

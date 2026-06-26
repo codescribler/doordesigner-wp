@@ -14,6 +14,11 @@ Thumbs.db
 # Node (if a build step is added later)
 /node_modules/
 
+# Generated image mirror (tools/mirror-images.js). NOT bundled: the captured set is
+# only a subset of all option combinations, so the preview hotlinks the Endurance host
+# by default. For full self-hosting, mirror to a CDN and set "Preview image base URL".
+/assets/img/endurance/
+
 # Keep the data folder but ignore the (potentially large, ToS-sensitive) full catalogue
 # by default — un-ignore it if you want it committed/shipped in the release.
 # /data/endurance-catalogue-full.json
