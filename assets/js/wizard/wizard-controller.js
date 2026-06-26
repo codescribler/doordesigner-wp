@@ -6,6 +6,7 @@
 
   function create(customerView, stepConfig) {
     var SC = stepConfig || (typeof HD_DD_StepConfig !== 'undefined' ? HD_DD_StepConfig : null);
+    if (!SC) { throw new Error('HD_DD_Wizard: stepConfig is required'); }
     var design = {};
     var stepIndex = 0;
     var atReview = false;
@@ -56,15 +57,15 @@
     }
 
     function indexOfKey(key) { var ss = steps(); for (var i = 0; i < ss.length; i++) { if (ss[i].key === key) { return i; } } return -1; }
-    function next() { var ss = steps(); if (stepIndex < ss.length - 1) { stepIndex++; } else { atReview = true; } }
-    function back() { if (atReview) { atReview = false; return; } if (stepIndex > 0) { stepIndex--; } }
+    function next() { if (!typeLabel()) { return; } var ss = steps(); if (stepIndex < ss.length - 1) { stepIndex++; } else { atReview = true; } }
+    function back() { if (!typeLabel()) { return; } if (atReview) { atReview = false; return; } if (stepIndex > 0) { stepIndex--; } }
     function jumpTo(key) { var i = indexOfKey(key); if (i >= 0) { stepIndex = i; atReview = false; } }
 
     function state() {
       var ss = steps();
-      if (stepIndex > ss.length - 1) { stepIndex = Math.max(0, ss.length - 1); }
-      return { design: design, steps: ss, stepIndex: stepIndex, atReview: atReview,
-        progress: { current: Math.min(stepIndex + 1, ss.length), total: ss.length } };
+      var idx = stepIndex > ss.length - 1 ? Math.max(0, ss.length - 1) : stepIndex;
+      return { design: design, steps: ss, stepIndex: idx, atReview: atReview,
+        progress: { current: Math.min(idx + 1, ss.length), total: ss.length } };
     }
 
     return { selectType: selectType, select: select, next: next, back: back, jumpTo: jumpTo, state: state };
