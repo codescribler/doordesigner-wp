@@ -91,7 +91,7 @@ class HD_DD_Assets {
 				'renderReady'    => $this->catalogue->render_model_available(),
 				// Asset base for preview images: a setting override, else the model's own
 				// captured origin (Endurance host). Empty during dev = use model._assetBase.
-				'assetBase'      => HD_DD_Plugin::settings()['asset_base'],
+				'assetBase'      => $this->get_asset_base(),
 				'i18n'           => $this->i18n_strings(),
 			)
 		);
@@ -101,6 +101,19 @@ class HD_DD_Assets {
 	private function asset_version( $relative ) {
 		$path = HD_DD_DIR . $relative;
 		return is_readable( $path ) ? (string) filemtime( $path ) : HD_DD_VERSION;
+	}
+
+	/** Get the asset base URL: setting override, else local mirror if present, else empty. */
+	private function get_asset_base() {
+		$setting = HD_DD_Plugin::settings()['asset_base'];
+		if ( $setting ) {
+			return $setting;
+		}
+		$mirror_dir = HD_DD_DIR . 'assets/img/endurance';
+		if ( is_dir( $mirror_dir ) ) {
+			return HD_DD_URL . 'assets/img/endurance';
+		}
+		return '';
 	}
 
 	/** Strings the JS app needs (kept here so they're translatable). */

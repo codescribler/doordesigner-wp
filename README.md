@@ -76,7 +76,8 @@ Endurance change options over time. To sync:
 1. Re-run the extractor and replace `data/endurance-catalogue-full.json`.
 2. Rebuild the preview layer model: `node tools/build-render-model.js` → writes
    `data/render-model.json` (run with `--test` to print a sample assembly).
-3. (Once mirroring is built) re-mirror any new image assets.
+3. Re-mirror any new image assets: `node tools/mirror-images.js` → downloads all
+   captured image URLs to `assets/img/endurance/` (requires network access to Endurance).
 
 A diff of the old vs new capture shows what changed. Logic never needs editing for
 content changes — the data is fully decoupled.
