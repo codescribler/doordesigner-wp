@@ -16,34 +16,15 @@
 -->
 <link rel="stylesheet" href="../assets/css/hd-door-designer.css">
 <style>
+  /* Harness-page chrome ONLY. The wizard itself is styled exclusively by the real
+     plugin stylesheet linked above, so this harness reflects production 1:1.
+     (Do NOT re-add .hd-dd__* rules here — overriding the plugin CSS is what once
+     masked a production-only responsive bug.) */
   body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; color: #222; background: #fafafa; }
-  h1 { font-size: 1.05rem; }
-  .harness { max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 1.05rem; text-align: center; }
+  .harness { max-width: 1180px; margin: 0 auto; }
   #mount { min-height: 60vh; }
-  #harness-status { color: #888; font-size: 0.85rem; margin-top: 0.75rem; }
-  /* Minimal fallback styling so the wizard is usable even before the plugin CSS
-     defines these classes. */
-  .hd-dd__carousel { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
-  .hd-dd__tile { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; min-width: 88px; padding: 0.5rem; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor: pointer; font: inherit; }
-  .hd-dd__tile.is-selected { border-color: #1a6; box-shadow: 0 0 0 2px #1a6 inset; }
-  .hd-dd__tile-media { width: 64px; height: 132px; object-fit: contain; }
-  .hd-dd__swatch { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #aaa; }
-  .hd-dd__steptitle { font-weight: 700; font-size: 1rem; margin: 0.5rem 0; }
-  .hd-dd__canvas { width: 100%; max-width: 280px; display: block; margin: 0 auto; background: #f4f4f2; border: 1px solid #ddd; }
-  .hd-dd__wizhead { display: flex; align-items: center; gap: 0.75rem; }
-  .hd-dd__progress { display: flex; gap: 4px; flex: 1; }
-  .hd-dd__progress-seg { flex: 1; height: 5px; border-radius: 3px; background: #ddd; }
-  .hd-dd__progress-seg.is-done { background: #1a6; }
-  .hd-dd__back, .hd-dd__continue, .hd-dd__cta, .hd-dd__edit, .hd-dd__submit { font: inherit; padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid #999; background: #fff; cursor: pointer; }
-  .hd-dd__continue, .hd-dd__cta, .hd-dd__submit { display: block; width: 100%; margin-top: 1rem; background: #1a6; color: #fff; border-color: #1a6; }
-  .hd-dd__continue[disabled] { opacity: 0.4; cursor: not-allowed; }
-  [hidden] { display: none !important; }
-  .hd-dd__back[disabled] { opacity: 0.3; }
-  .hd-dd__review dl { display: grid; grid-template-columns: auto 1fr auto; gap: 0.35rem 0.75rem; align-items: center; }
-  .hd-dd__edit { padding: 0.2rem 0.6rem; font-size: 0.8rem; }
-  .hd-dd__form-row { display: block; margin: 0.5rem 0; }
-  .hd-dd__form-input { display: block; width: 100%; padding: 0.4rem; font: inherit; }
-  .hd-dd__hp { position: absolute; left: -9999px; }
+  #harness-status { color: #888; font-size: 0.85rem; margin-top: 0.75rem; text-align: center; }
 </style>
 </head>
 <body>

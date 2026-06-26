@@ -36,7 +36,6 @@
   --brand:  #1d4f3f;   /* TODO: replace with sampled Hertfordshire Doors accent */
   --radius: 6px;
   --gap:    16px;
-  --maxw:   480px;
 
   color: var(--ink);
   background: var(--paper);
@@ -58,9 +57,10 @@
    ========================================================================== */
 
 .hd-dd__app {
-  max-width: var(--maxw);
+  width: 100%;
+  max-width: 600px;        /* mobile / narrow — full-width up to a comfortable column */
   margin: 0 auto;
-  min-height: 70vh;
+  min-height: 60vh;
   display: flex;
   flex-direction: column;
 }
@@ -140,24 +140,17 @@
    6. CAROUSEL + TILES
    ========================================================================== */
 
+/* A responsive wrapping grid — tiles fill the available width and wrap onto new
+   rows as needed, so options are NEVER clipped on any screen size. */
 .hd-dd__carousel {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
   gap: 10px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 8px 16px;
-  justify-content: flex-start;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;          /* Firefox */
+  padding: 8px 16px 4px;
 }
-
-.hd-dd__carousel::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 
 /* Choice tile */
 .hd-dd__tile {
-  flex: 0 0 auto;
-  scroll-snap-align: center;
-  width: 120px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
@@ -397,9 +390,56 @@
 
 
 /* ==========================================================================
-   13. RESPONSIVE — wider viewports
+   13. RESPONSIVE — laptop / desktop two-pane layout
+   --------------------------------------------------------------------------
+   At >=820px the configurator becomes two columns: the door preview sticks on
+   the left while the customer scrolls options on the right. Uses the available
+   width instead of pinning everything to a phone-width column.
    ========================================================================== */
 
-@media (min-width: 860px) {
-  .hd-dd__app { --maxw: 520px; }
+@media (min-width: 820px) {
+  .hd-dd__app {
+    max-width: 1120px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-areas:
+      "stage head"
+      "stage body"
+      "stage cta";
+    align-items: start;
+    column-gap: 36px;
+    padding: 12px 24px 28px;
+  }
+
+  .hd-dd__wizhead { grid-area: head; padding: 6px 0 4px; }
+  .hd-dd__body    { grid-area: body; }
+
+  /* Sticky preview panel beside the controls. */
+  .hd-dd__stage {
+    grid-area: stage;
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    border: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .hd-dd__canvas { max-width: 460px; }
+
+  /* Left-align the step title + options now they sit in their own column. */
+  .hd-dd__steptitle { text-align: left; margin: 8px 0 6px; font-size: 20px; }
+  .hd-dd__carousel  { padding-left: 0; padding-right: 0; }
+
+  /* CTA fills its column instead of the inset mobile margin. */
+  .hd-dd__cta { grid-area: cta; width: 100%; margin: 18px 0 0; }
+
+  /* Review + form align to the controls column. */
+  .hd-dd__review dl { margin-left: 0; margin-right: 0; }
+  .hd-dd__form { margin-left: 0; margin-right: 0; }
+}
+
+/* Roomier preview on very large screens. */
+@media (min-width: 1200px) {
+  .hd-dd__canvas { max-width: 520px; }
 }
