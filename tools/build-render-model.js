@@ -105,6 +105,13 @@ function buildType(node) {
   const hf = node.fields['Handle'];
   (hf ? hf.choices : []).forEach((c) => { const h = keep(c.delta, 'Handles').concat(keep(c.delta, 'HandlesRight'))[0]; if (h) handles[c.label] = { url: strip(h.url), geom: geom(h) }; });
   const baseHandle = keep(base, 'Handles').concat(keep(base, 'HandlesRight'))[0];
+  // The baseline handle never appears in a delta (it's already in the baseline composite),
+  // so the loop above gives it no thumbnail. Add it explicitly from the baseline layer so
+  // EVERY handle — including the default (e.g. Lever/Lever) — has an image.
+  const baseHandleLabel = baseSel['Handle'] && baseSel['Handle'].label;
+  if (baseHandleLabel && baseHandle && !handles[baseHandleLabel]) {
+    handles[baseHandleLabel] = { url: strip(baseHandle.url), geom: geom(baseHandle) };
+  }
 
   // HARDWARE COLOUR suffix mapping (best-effort): Hardware Type delta handle URLs.
   const hardwareSuffix = {};

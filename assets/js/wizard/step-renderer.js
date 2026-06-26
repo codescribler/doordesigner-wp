@@ -11,7 +11,15 @@
 		t.type = 'button';
 		if (ctx.design[ctx.heading] && ctx.design[ctx.heading].label === choice.label) { t.className += ' is-selected'; }
 		var media = ctx.thumbFor(step, choice); // {kind:'img',url} | {kind:'swatch',color} | null
-		if (media && media.kind === 'img') { var im = el('img', 'hd-dd__tile-media'); im.src = media.url; im.alt = choice.label; im.loading = 'lazy'; t.appendChild(im); }
+		if (media && media.kind === 'img') {
+			var im = el('img', 'hd-dd__tile-media');
+			im.alt = choice.label; im.loading = 'lazy';
+			// A few Endurance assets 404 (e.g. some pull-bar handles). Drop a broken image
+			// so the tile falls back to a clean label instead of a broken-image icon.
+			im.onerror = function () { if (im.parentNode) { im.parentNode.removeChild(im); } };
+			im.src = media.url;
+			t.appendChild(im);
+		}
 		else if (media && media.kind === 'swatch') { var sw = el('div', 'hd-dd__swatch'); sw.style.background = media.color; t.appendChild(sw); }
 		t.appendChild(el('span', 'hd-dd__tile-label', friendly(choice.label)));
 		t.addEventListener('click', function () { ctx.onSelect(ctx.heading, choice); });
