@@ -1,0 +1,915 @@
+{
+  "_meta": {
+    "name": "Endurance Retail Door Designer - full option catalogue (enquiry-only)",
+    "source": "bmapprocaldoorportalretail.azurewebsites.net/Default.aspx",
+    "captured": "2026-06-25 (live, via client-side mJobState)",
+    "BIG_FINDING": "The ENTIRE catalogue is held client-side in window.mJobState.Job.Options - an array of option fields, each with Heading, CurrentOption, and SubOptions[] where every choice has {Description (label), ID (Endurance's internal id), ImageURL, Images}. This means the configurator's data backbone (labels, IDs AND door render images) can be GENERATED PROGRAMMATICALLY rather than hand-built, and the catalogue-sync (drift detection) is trivial: re-read mJobState and diff. Field order/indices differ per door type - map by Heading, not index.",
+    "extractionRecipe": "For each door type (select it in the UI), read window.mJobState.Job.Options; for per-style glazing, select each Door Design and read the 'Door Glass' field. Each SubOption.ID + ImageURL gives you the asset + identifier per choice.",
+    "status": "Comprehensive. Lists captured directly from data. Per-style glazing captured as representative samples (full per-style mapping is one scripted pass via the recipe above).",
+    "extractorScript": "endurance-catalogue-extractor.js \u2014 paste into the designer's browser console (logged in) and run EXT.captureAllTypes() then EXT.download(). Produces the COMPLETE tree for all 4 types with option IDs, image URLs, and the per-style glazing matrix, as a downloadable JSON. Re-run any time to sync against catalogue drift.",
+    "imageData": "Each choice's render images are at SubOption.Images[n].ImageURL (and OnRightImageURL for double doors), with layout geometry (CX, CY, W, H, Rotation, FlipH). The extractor captures these. Image URLs can't be transcribed here but download with the script.",
+    "optionIDs": "Every choice has an Endurance internal numeric ID (SubOption.ID) and each field a Category number; SelectOption(category, id) sets it. The extractor captures all IDs \u2014 these are what a build would map selections to.",
+    "avantalDifferences": "Avantal (aluminium range) differs structurally: NO internal colour, NO knocker, NO spyhole / security chain / separate Lock field, and NO 'Door Hinged On' (uses Master Leaf instead). Frame Colour limited to 3. 13 style\u00d7cassette combos, 5 external colours, 4 hinges, 25 handles."
+  },
+  "customerFacingFields_12": [
+    "Door Type",
+    "Frame Shape",
+    "Frame Colour",
+    "Door Style",
+    "Door Colour",
+    "Sidelight Type",
+    "Glazing",
+    "Hinge Side",
+    "Hardware Colour",
+    "Handle",
+    "Letter Plate",
+    "Knocker"
+  ],
+  "doorTypes": [
+    "Single Door",
+    "Double Door",
+    "Stable Door",
+    "Avantal"
+  ],
+  "styles": {
+    "_note": "Type-dependent. Single and Double share the SAME 88 composite styles. Stable has 30 ('X Stable'). Avantal has 13 style x cassette combos (5 base: Antares, Celeste, Rigel, Sirius, Vega).",
+    "Single Door": {
+      "count": 88,
+      "values": [
+        "Abbott",
+        "Ainos",
+        "Algas",
+        "Alto",
+        "Aneto",
+        "Antero",
+        "Apo",
+        "Ben Nevis",
+        "Berwyn",
+        "Bleaklow",
+        "Bowmont",
+        "Brecon",
+        "Bredon",
+        "Bruce",
+        "Cader Idris",
+        "Calva",
+        "Cheviot",
+        "Cleeve",
+        "Coombe",
+        "Denali",
+        "Diran",
+        "Dowell",
+        "Eiger",
+        "Eiger Georgian",
+        "Elbrus",
+        "Eldon",
+        "Esk",
+        "Etna",
+        "Fuji",
+        "Gibson",
+        "Godwin",
+        "Grasmoor",
+        "Hallin",
+        "Holme",
+        "Hope",
+        "Jasper",
+        "Kabru",
+        "Kea",
+        "Kentmere",
+        "Ketu",
+        "Kit",
+        "Knott",
+        "Kuppe",
+        "Kyo",
+        "Kyo Georgian",
+        "Lingmell",
+        "Lingmoor",
+        "Lomond",
+        "Lyell",
+        "Malvern",
+        "Mardale",
+        "May",
+        "Mayon",
+        "McKinley",
+        "Meron",
+        "Mixen",
+        "Mont Blanc",
+        "Monte Rosa",
+        "Monte Viso",
+        "Nab",
+        "Nanda",
+        "Olympus",
+        "Pelmo",
+        "Pen",
+        "Pentland",
+        "Reynolds",
+        "Rhobell",
+        "Rushmore",
+        "Rushmore Georgian",
+        "Sanford",
+        "Sanford Georgian",
+        "Scafell",
+        "Skiddaw",
+        "Skiddaw Georgian",
+        "Snowdon",
+        "Snowdon Georgian",
+        "Stanley",
+        "Starling",
+        "Tate",
+        "Tate Georgian",
+        "Totes",
+        "Tove",
+        "Tux",
+        "Tyree",
+        "Urner",
+        "Vinson",
+        "Walton",
+        "Wentwood"
+      ]
+    },
+    "Double Door": {
+      "count": 88,
+      "note": "Identical to Single Door styles."
+    },
+    "Stable Door": {
+      "count": 30,
+      "values": [
+        "Algas Stable",
+        "Ben Nevis Stable",
+        "Brecon Stable",
+        "Eiger Stable",
+        "Elbrus Stable",
+        "Etna Stable",
+        "Grasmoor Stable",
+        "Hallin Stable",
+        "Hope Stable",
+        "Knott Stable",
+        "Lingmoor Stable",
+        "Lomond Stable",
+        "Malvern Stable",
+        "Mardale Stable",
+        "McKinley Stable",
+        "Mont Blanc Stable",
+        "Monte Rosa Stable",
+        "Olympus Stable",
+        "Pelmo Stable",
+        "Rushmore Georgian Stable",
+        "Rushmore Stable",
+        "Sanford Georgian Stable",
+        "Sanford Stable",
+        "Skiddaw Stable",
+        "Snowdon Georgian Stable",
+        "Snowdon Stable",
+        "Starling Stable",
+        "Tate Georgian Stable",
+        "Tate Stable",
+        "Tove Stable"
+      ]
+    },
+    "Avantal": {
+      "count": 13,
+      "values": [
+        "Antares (Anthracite Grey Cassette)",
+        "Antares (Signal Grey Cassette)",
+        "Antares (Ulti-Matt Black Cassette)",
+        "Celeste (Anthracite Grey Cassette)",
+        "Celeste (Signal Grey Cassette)",
+        "Celeste (Ulti-Matt Black Cassette)",
+        "Rigel (Anthracite Grey Cassette)",
+        "Rigel (Signal Grey Cassette)",
+        "Rigel (Uni-Matt Black Cassette)",
+        "Sirius",
+        "Vega (Anthracite Grey Cassette)",
+        "Vega (Signal Grey Cassette)",
+        "Vega (Uni-Matt Black Cassette)"
+      ],
+      "baseStyles": [
+        "Antares",
+        "Celeste",
+        "Rigel",
+        "Sirius",
+        "Vega"
+      ],
+      "cassettes": [
+        "Anthracite Grey",
+        "Signal Grey",
+        "Ulti-Matt/Uni-Matt Black"
+      ],
+      "note": "Sirius has no cassette variant."
+    }
+  },
+  "frameShapes": {
+    "count": 21,
+    "values": [
+      "No Sidelights",
+      "Sidelight Left",
+      "Sidelight Left with Midrail",
+      "Half Flag Sidelight Left",
+      "Sidelight Right",
+      "Sidelight Right with Midrail",
+      "Half Flag Sidelight Right",
+      "Double Sidelight",
+      "Double Sidelight with Midrails",
+      "Double Sidelight with Half Flags",
+      "Toplight",
+      "Toplight with Sidelight Left",
+      "Toplight with Sidelight Left with Midrail",
+      "Toplight with Half Flag Left",
+      "Toplight with Sidelight Right",
+      "Toplight with Sidelight Right with Midrail",
+      "Toplight with Half Flag Right",
+      "Toplight with Sidelight Both",
+      "Toplight with Sidelights Both with Midrails",
+      "Toplight with Half Flag Both",
+      "Toplight (full)"
+    ],
+    "note": "Shared across types; raw field lists 24 with 3 duplicate toplight entries.",
+    "byType": {
+      "Single Door": 21,
+      "Stable Door": 21,
+      "Avantal": 21,
+      "Double Door": {
+        "count": 1,
+        "values": [
+          "No Sidelights"
+        ],
+        "note": "Double doors support NO sidelight/toplight frames \u2014 only 'No Sidelights'."
+      }
+    }
+  },
+  "colours": {
+    "doorColourExternal": {
+      "SingleDoubleStable": {
+        "count": 21,
+        "values": [
+          "Quartz Grey",
+          "Anthracite Grey",
+          "Claystone",
+          "Chartwell Green",
+          "Cream",
+          "Duck Egg Blue",
+          "Elephant Grey",
+          "French Navy",
+          "Golden Oak",
+          "Irish Oak",
+          "Pearl Grey",
+          "Racing Green",
+          "Raven Black",
+          "Rich Red",
+          "Rosewood",
+          "Schwarz Braun Black",
+          "Slate Grey",
+          "White",
+          "White Foiled",
+          "Sage",
+          "Brilliant Blue"
+        ]
+      },
+      "Avantal": {
+        "count": 5,
+        "values": [
+          "AnTeak (with tick)",
+          "Anthracite Grey (Smooth)",
+          "BlackUlti-Matt (Smooth)",
+          "Rustic Cherry (with tick)",
+          "Signal Grey (Smooth)"
+        ],
+        "note": "Cassette-specific aluminium finishes."
+      }
+    },
+    "doorColourInternal": {
+      "count": 21,
+      "values": [
+        "Quartz Grey",
+        "Anthracite Grey",
+        "Claystone",
+        "Chartwell Green",
+        "Cream",
+        "Duck Egg Blue",
+        "Elephant Grey",
+        "French Navy",
+        "Golden Oak",
+        "Irish Oak",
+        "Pearl Grey",
+        "Racing Green",
+        "Raven Black",
+        "Rich Red",
+        "Rosewood",
+        "Schwarz Braun Black",
+        "Slate Grey",
+        "White",
+        "White Foiled",
+        "Sage",
+        "Brilliant Blue"
+      ],
+      "note": "Same palette as external. NOT present on Avantal (no internal-colour field). Entirely ABSENT on Avantal (Avantal has no internal-colour field)."
+    },
+    "frameColour": {
+      "count": 29,
+      "values": [
+        "White/White",
+        "Anthracite Grey/Anthracite Grey",
+        "Anthracite Grey/White",
+        "Brilliant Blue/White",
+        "Chartwell Green/Chartwell Green",
+        "Chartwell Green/White",
+        "Claystone/White",
+        "Cream/Cream",
+        "Cream/White",
+        "Elephant Grey/White",
+        "French Navy/White",
+        "Golden Oak/Golden Oak",
+        "Golden Oak/White",
+        "Irish Oak/Irish Oak",
+        "Irish Oak/White",
+        "Pearl Grey/Pearl Grey",
+        "Pearl Grey/White",
+        "Quartz Grey/White",
+        "Racing Green/White",
+        "Raven Black/Raven Black",
+        "Raven Black/White",
+        "Rich Red/White",
+        "Rosewood/Rosewood",
+        "Rosewood/White",
+        "Schwarz Braun Black/Schwarz Braun Black",
+        "Schwarz Braun Black/White",
+        "Slate Grey/White",
+        "Smooth Sage/White",
+        "White Foiled/White Foiled"
+      ],
+      "note": "Paired external/internal; global.",
+      "byType": {
+        "Single/Double/Stable": {
+          "count": 29
+        },
+        "Avantal": {
+          "count": 3,
+          "values": [
+            "Black Ulti-Matt/White",
+            "Signal Grey/White",
+            "Smooth Anthracite Grey/White"
+          ]
+        }
+      }
+    }
+  },
+  "glazing": {
+    "_note": "Door Glass is STYLE-DEPENDENT - each style offers a subset of a ~37-design master list, based on its glazed aperture. Examples: Abbott 37, Algas Stable 35, Ketu 8, Avantal 6.",
+    "backingGlass": {
+      "count": 9,
+      "values": [
+        "Arctic",
+        "Autumn",
+        "Charcoal Sticks",
+        "Contora",
+        "Cotswold",
+        "Everglade",
+        "Minster",
+        "Stippolyte",
+        "Clear"
+      ]
+    },
+    "masterDesigns": {
+      "count": 59,
+      "values": [
+        "Adina",
+        "Blind Clear/Clear",
+        "Blind Laminated/Clear",
+        "Bullion",
+        "Clara",
+        "Clarence",
+        "Clear",
+        "Comete",
+        "Deco",
+        "Diamonds",
+        "Diamonte",
+        "Eden",
+        "Edwardian",
+        "Edwardian Number",
+        "Elegance",
+        "Elizabeth Blue",
+        "Elizabeth Red",
+        "Ellie",
+        "Ennis",
+        "Fabian",
+        "Gavalas Blue",
+        "Gavalas Clear",
+        "Gavalas Green",
+        "Geo",
+        "Gracia Blue",
+        "Gracia Clear",
+        "Gracia Green",
+        "Graphite",
+        "Harmony",
+        "Iris",
+        "Jewel",
+        "Joy",
+        "Kerner",
+        "Linear",
+        "Murano Black",
+        "Murano Blue",
+        "Murano Green",
+        "Nova",
+        "Olympias Blue",
+        "Olympias Clear",
+        "Olympias Green",
+        "Opal",
+        "Opus",
+        "Ornate",
+        "Patterned",
+        "Prism",
+        "Reeded",
+        "Riviera",
+        "Sarah",
+        "Satin",
+        "Sceptre",
+        "Simplicity",
+        "Spring",
+        "Sunburst",
+        "Twilight",
+        "Unglazed",
+        "Vector",
+        "Vignette",
+        "Virtue"
+      ],
+      "note": "Full glazing vocabulary observed across the Single Door range (union of all per-style sets). Each style offers a SUBSET of these based on its glazed aperture."
+    },
+    "perStyleStructure": {
+      "note": "Glazing is per-style. Across 74 of the 88 Single Door styles walked, there were 31 DISTINCT glazing sets (sizes ranged 0 to 47 designs). So a configurator must store each style's own glazing list. The full per-style matrix (and the equivalent for Stable/Avantal) is produced by the extractor script in one run.",
+      "stylesWalked": 74,
+      "distinctSetsFound": 31
+    }
+  },
+  "hardware": {
+    "hardwareColour": {
+      "count": 11,
+      "values": [
+        "Chrome",
+        "Black",
+        "Gold",
+        "Stainless Steel",
+        "Antique Black",
+        "Graphite",
+        "Bronze",
+        "Forged Black",
+        "Pewter",
+        "Matt Black",
+        "Satin Brass"
+      ],
+      "note": "Global."
+    },
+    "handle": {
+      "_note": "Type-dependent.",
+      "Single/Double": {
+        "count": 26,
+        "values": [
+          "Lever/Lever",
+          "Lever/Pad",
+          "Heritage Finger Pull with 1200mm Pull Handle",
+          "Heritage Finger Pull with 400mm Pull Handle",
+          "Heritage Finger Pull with 900mm Pull Handle",
+          "1200mm Pull Handle",
+          "1200mm Stainless Flat Pull Handle",
+          "1800mm Pull Handle",
+          "400mm Pull Handle",
+          "900mm Pull Handle",
+          "900mm Stainless Flat Pull Handle",
+          "Premium Stainless Lever Handles",
+          "Stainless Lever/Lever Handles",
+          "Architectural Lever/Lever",
+          "Architectural Lever/Pad",
+          "Heritage Lever/Lever",
+          "Heritage Lever/Pad",
+          "Finger Pull",
+          "Pewter Noble Handle",
+          "Forged Black Noble Handle",
+          "Pewter Regal Handle",
+          "Forged Black Regal Handle",
+          "Pewter Monkey Tail",
+          "Forged Black Monkey Tail",
+          "No Handle",
+          "Touch Key Handle Chrome"
+        ]
+      },
+      "Stable": {
+        "count": 16,
+        "values": [
+          "Lever/Lever",
+          "Lever/Pad",
+          "Premium Stainless Lever Handles",
+          "Stainless Lever/Lever Handles",
+          "Architectural Lever/Lever",
+          "Architectural Lever/Pad",
+          "Heritage Lever/Lever",
+          "Heritage Lever/Pad",
+          "Pewter Noble Handle",
+          "Forged Black Noble Handle",
+          "Pewter Regal Handle",
+          "Forged Black Regal Handle",
+          "Pewter Monkey Tail",
+          "Forged Black Monkey Tail",
+          "No Handle",
+          "Touch Key Handle Chrome"
+        ],
+        "note": "No pull handles."
+      },
+      "Avantal": {
+        "count": 25,
+        "note": "Single's set minus Touch Key Handle."
+      }
+    },
+    "internalHandle": {
+      "count": 27,
+      "values": [
+        "1200mm Matt Black Flat Pull Handle",
+        "Forged Black Pull Knob",
+        "N/A",
+        "Pewter Pull Knob",
+        "Premium Matt Black Square Pull Knob",
+        "Satin Brass Lever Rose Handle",
+        "Satin Brass Opera Lever Rose Handle",
+        "Satin Brass Pull Knob",
+        "1200 Pull Handle",
+        "1200mm Stainless Flat Pull Bar",
+        "1800 Pull Handle",
+        "400mm Pull Handle",
+        "900mm Pull Handle",
+        "900mm Stainless Flat Pull Handle",
+        "Antique Black Pull Knob",
+        "Black Pull Knob",
+        "Bronze Pull Knob",
+        "Chrome Pull Knob",
+        "Gold Pull Knob",
+        "Graphite Pull Knob",
+        "Premium Round Pull Knob",
+        "Premium Square Pull Knob",
+        "Premium Stainless Half Lever",
+        "Stainless Steel Pull Knob",
+        "Premium Matt Black Half Lever",
+        "Premium Matt Black Round Pull Knob",
+        "Stainless Lever on Rose Handle"
+      ],
+      "note": "Single Door; pull knobs / internal handles."
+    },
+    "lock": {
+      "count": 8,
+      "values": [
+        "AV4 Lock",
+        "AV4 Heritage Lock",
+        "AV2 Heritage Lock",
+        "AV4E Lock Deadbolt",
+        "QuadHook+",
+        "Touch Key Lock",
+        "Guardian5 Lock",
+        "AV4 E Lock NO Deadbolt"
+      ],
+      "note": "Single Door. Derived from handle at quoting time - NOT a customer field."
+    },
+    "cylinder": {
+      "_note": "Not customer-facing; derived/defaulted at quoting time.",
+      "Single Door": {
+        "count": 8
+      },
+      "Stable Door": {
+        "count": 5,
+        "values": [
+          "Stable High Security Keyed Alike Brass",
+          "Stable High Security Keyed Alike Chrome",
+          "Stable Keyed Alike DDA Chrome",
+          "Stable Keyed Alike DDA Gold",
+          "No Cylinder"
+        ]
+      },
+      "Avantal": {
+        "count": 6,
+        "values": [
+          "High Security 5-key Cylinder Brass",
+          "High Security 5-Key Cylinder Chrome",
+          "High Security 5-key Thumb-turn Cylinder Chrome",
+          "High Security 5-key Thumbturn Cylinder Brass",
+          "High Sec 5-key DDA Thumbturn Chrome A",
+          "No Cylinder"
+        ]
+      }
+    },
+    "hinge": {
+      "_note": "Type-dependent. Hinge colour is NOT one of the 12 customer fields, but recorded for completeness.",
+      "Single Door": {
+        "count": 16,
+        "values": [
+          "White SFS D2DC Butt Hinges",
+          "Chrome SFS D2DC Butt Hinges",
+          "Matt Chrome SFS D2DC Butt Hinges",
+          "Rosewood SFS D2DC Butt Hinges",
+          "Black SFS D2DC Butt Hinges",
+          "Gold SFS D2DC Butt Hinges",
+          "Anthracite SFS D2DC Butt Hinges",
+          "Clay Brown SFS D2DC Butt Hinges",
+          "White Flag Hinges",
+          "Chrome Flag Hinges",
+          "Gold Flag Hinges",
+          "Dark Brown Flag Hinges",
+          "Light Brown Flag Hinges",
+          "Graphite Flag Hinges",
+          "Black Flag Hinges",
+          "Anthracite Grey Flag Hinges"
+        ],
+        "note": "8 butt + 8 flag hinges"
+      },
+      "Double Door": {
+        "count": 8,
+        "values": [
+          "White SFS D2DC Butt Hinges",
+          "Chrome SFS D2DC Butt Hinges",
+          "Matt Chrome SFS D2DC Butt Hinges",
+          "Rosewood SFS D2DC Butt Hinges",
+          "Black SFS D2DC Butt Hinges",
+          "Gold SFS D2DC Butt Hinges",
+          "Anthracite SFS D2DC Butt Hinges",
+          "Clay Brown SFS D2DC Butt Hinges"
+        ],
+        "note": "butt hinges only \u2014 no flag hinges"
+      },
+      "Stable Door": {
+        "count": 8,
+        "values": [
+          "White SFS D2DC Butt Hinges",
+          "Chrome SFS D2DC Butt Hinges",
+          "Matt Chrome SFS D2DC Butt Hinges",
+          "Rosewood SFS D2DC Butt Hinges",
+          "Black SFS D2DC Butt Hinges",
+          "Gold SFS D2DC Butt Hinges",
+          "Anthracite SFS D2DC Butt Hinges",
+          "Clay Brown SFS D2DC Butt Hinges"
+        ],
+        "note": "butt hinges only \u2014 no flag hinges"
+      },
+      "Avantal": {
+        "count": 4,
+        "values": [
+          "White SFS D2DC Butt Hinges",
+          "Chrome SFS D2DC Butt Hinges",
+          "Matt Chrome SFS D2DC Butt Hinges",
+          "Gold SFS D2DC Butt Hinges"
+        ]
+      },
+      "hingeSide": "Single/Double/Stable use 'Door Hinged On' (Hinges on Left / Hinges on Right). Avantal has no 'Door Hinged On' \u2014 it uses 'Master Leaf' (Left Leaf / Right Leaf) instead."
+    },
+    "knocker": {
+      "count": 31,
+      "values": [
+        "No Knocker",
+        "Chrome Doctors Knocker",
+        "Forged Black Bull Ring",
+        "Forged Black Spire Knocker",
+        "Pewter Bull Ring",
+        "Pewter Spire Knocker",
+        "Stainless Flat Knocker",
+        "Urn",
+        "Urn Spy",
+        "Slimline Urn",
+        "Bull Ring",
+        "Architectural",
+        "Slimline Urn Spy",
+        "Black Bee Knocker",
+        "Brass Bee Knocker",
+        "Bronze Bee Knocker",
+        "Heritage Brass Bee Knocker",
+        "Nickel Bee Knocker",
+        "Pewter Bee Knocker",
+        "Nickel Dragonfly Knocker",
+        "Brass Dragonfly Knocker",
+        "Bronze Dragonfly Knocker",
+        "Black Dragonfly Knocker",
+        "Nickel Shell Knocker",
+        "Brass Shell Knocker",
+        "Nickel Paw Knocker",
+        "Brass Paw Knocker",
+        "Heritage Paw Knocker",
+        "Brass Bee Ring Knocker",
+        "Nickel Bee Ring Knocker",
+        "Pewter Bee Ring Knocker"
+      ],
+      "note": "Conditionally available - greyed on some styles.",
+      "byType": {
+        "Single/Double/Stable": 31,
+        "Avantal": "ABSENT \u2014 Avantal has no knocker field"
+      }
+    },
+    "letterplate": {
+      "count": 6,
+      "values": [
+        "No Letterplate",
+        "Letterplate",
+        "Architectural Letterplate",
+        "Heritage Letterplate",
+        "Forged Black Architectural Letterplate",
+        "Pewter Architectural Letterplate"
+      ]
+    },
+    "spyhole": [
+      "No Spyhole",
+      "Spy Hole"
+    ],
+    "securityChain": [
+      "No Security Chain",
+      "Chrome Door Guard",
+      "Gold Door Guard",
+      "Graphite Door Guard"
+    ],
+    "numerals": [
+      "No Numerals",
+      "Gold Numerals",
+      "Graphite Numerals",
+      "Black Numerals",
+      "Bright Chrome Numerals"
+    ],
+    "splitSpindle": [
+      "No",
+      "Yes"
+    ],
+    "masterLeaf": {
+      "values": [
+        "Left Leaf",
+        "Right Leaf"
+      ],
+      "note": "Which leaf is the master/operating leaf. Present for Double Door and Avantal; for Avantal it stands in for 'Door Hinged On'."
+    }
+  },
+  "frameAndThreshold": {
+    "frame": [
+      "72mm Frame",
+      "52mm Frame",
+      "72mm EDGE Frame",
+      "52mm EDGE Frame"
+    ],
+    "cill": [
+      "No Cill",
+      "95mm Cill",
+      "150mm Cill",
+      "180mm Cill",
+      "Customers Own Cill"
+    ],
+    "threshold": {
+      "count": 11,
+      "values": [
+        "52mm PVC",
+        "72mm PVC",
+        "Gold Macclex 15FS (Part M*)",
+        "Silver Macclex 15FS (Part M*)",
+        "MDS 25 Gold onto Brick (Part M*)",
+        "MDS 25 Silver onto Brick (Part M*)",
+        "72mm Edge PVC",
+        "52mm Edge PVC",
+        "Silver MDS70 (Thermal Break)",
+        "Gold MDS70 (Thermal Break)",
+        "Black Macclex 15FS (Part M*)"
+      ],
+      "note": "Avantal offers a 9-item subset."
+    },
+    "addOns": {
+      "positions": [
+        "Top",
+        "Bottom",
+        "Left",
+        "Right"
+      ],
+      "values": [
+        "No Add-On",
+        "15mm",
+        "45mm"
+      ]
+    },
+    "finishingTrims": {
+      "slots": 5,
+      "type": [
+        "N/A",
+        "25mm D Trim",
+        "45mm Flat",
+        "65mm Flat",
+        "17.5mm Quadrant"
+      ],
+      "colourCount": 19,
+      "length": [
+        "1 x 2.25m length",
+        "2 x 2.25m lengths",
+        "3 x 2.25m lengths",
+        "4 x 2.25m lengths",
+        "5 x 2.25m lengths",
+        "6 x 2.25m lengths",
+        "7 x 2.25m lengths"
+      ]
+    },
+    "coupler": {
+      "count": 2,
+      "values": [
+        "15mm Coupler",
+        "24mm Coupler"
+      ]
+    }
+  },
+  "doorBehaviour": {
+    "opening": [
+      "Open In",
+      "Open Out"
+    ],
+    "eurosizeDoor": [
+      "No",
+      "Yes"
+    ],
+    "hingeSide": [
+      "Hinges on Left",
+      "Hinges on Right"
+    ]
+  },
+  "sidelightAndToplight": {
+    "_verified": "Captured live and confirmed identical for Single Door and Avantal (so not style-dependent).",
+    "_note": "Sidelight options appear in Job.Options as the fields 'Sidelight Glass' and 'Sidelight Type', but ONLY when a sidelit frame shape is selected (absent for 'No Sidelights'). SegmentSidelight_L/_R hold geometry only (dimensions, profiles, aperture) \u2014 NOT option lists.",
+    "sidelightType": {
+      "count": 2,
+      "values": [
+        "Unglazed",
+        "Glazed"
+      ]
+    },
+    "sidelightGlass": {
+      "count": 6,
+      "values": [
+        "Reeded",
+        "Ornate Low E",
+        "Satin (0 to 300mm wide)",
+        "Satin (300mm  to 650mm wide)",
+        "Satin (650mm + wide)",
+        "Unglazed"
+      ],
+      "note": "Pick the Satin band matching the sidelight width. Note the double space in 'Satin (300mm  to 650mm wide)' is in the source label \u2014 preserve it."
+    },
+    "toplight": {
+      "note": "Toplight frame shapes exist (see frameShapes). Toplight glazing is handled via SegmentTopBox; not separately walked. Re-run the extractor on a toplight shape if toplight glazing options are needed."
+    },
+    "sideSlabRequired": {
+      "values": [
+        "No - Use sidelight glass details",
+        "Yes - Side Slab"
+      ],
+      "note": "Whether the sidelight is a solid slab instead of glazed. Appears with sidelit frames."
+    }
+  },
+  "conditionalRules": [
+    {
+      "id": "style-by-type",
+      "rule": "Door Design list filtered by Door Type. Single=Double=88 shared composite styles; Stable=30 ('X Stable'); Avantal=13 (style x cassette)."
+    },
+    {
+      "id": "colour-model",
+      "rule": "Single/Double/Stable external+internal = same 21 palette. Avantal external = 5 cassette finishes, no internal colour."
+    },
+    {
+      "id": "glazing-by-style",
+      "rule": "Door Glass list depends on the selected style (subset of ~37 master designs)."
+    },
+    {
+      "id": "handle-by-type",
+      "rule": "Handle list depends on door type (Single/Double 26, Stable 16 no-pulls, Avantal 25)."
+    },
+    {
+      "id": "cylinder/threshold/hinge-by-type",
+      "rule": "Cylinder, threshold and hinge lists are partly type-dependent (e.g. Stable cylinders; Avantal 4 hinges / 9 thresholds)."
+    },
+    {
+      "id": "sidelight-by-shape",
+      "rule": "Sidelight Type/glazing only when frameShape includes a sidelight."
+    },
+    {
+      "id": "knocker-by-style",
+      "rule": "Knocker availability depends on style (greyed on some)."
+    },
+    {
+      "id": "lock-derived",
+      "rule": "Lock + cylinder exist in the data model with defaults but are NOT customer-facing in the retail tool; you derive lock from handle at quoting time."
+    },
+    {
+      "id": "no-customer-dimensions",
+      "rule": "Retail tool collects no sizes - configurator needs no dimension inputs (set at survey)."
+    },
+    {
+      "id": "double-no-frames",
+      "rule": "Double Door supports NO sidelight/toplight frame shapes \u2014 only 'No Sidelights'. So the configurator must hide the Frame Shape and Sidelight steps when Double Door is chosen."
+    },
+    {
+      "id": "hinge-by-type",
+      "rule": "Hinge colour count is type-dependent: Single 16 (butt+flag), Double 8 (butt only), Stable 8 (butt only), Avantal 4 (butt only)."
+    },
+    {
+      "id": "frame-colour-by-type",
+      "rule": "Frame Colour is 29 for Single/Double/Stable but only 3 for Avantal."
+    },
+    {
+      "id": "avantal-omissions",
+      "rule": "For Avantal, hide/skip: internal colour, knocker, spyhole, security chain, lock; and use 'Master Leaf' (Left/Right Leaf) for hinge side instead of 'Door Hinged On'."
+    },
+    {
+      "id": "hinge-side-field",
+      "rule": "Hinge Side is 'Door Hinged On' for Single/Double/Stable, but 'Master Leaf' for Avantal \u2014 the configurator's Hinge Side control must map to the right field per type."
+    }
+  ]
+}

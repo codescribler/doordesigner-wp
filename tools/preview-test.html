@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HD Door Designer — compositor QA harness</title>
+<!--
+  Visual QA for the door compositor WITHOUT WordPress.
+  Run a static server from the plugin root, then open this file:
+      python -m http.server 8000
+      → http://localhost:8000/tools/preview-test.html
+  Images hotlink from the captured Endurance host (model._assetBase) for QA;
+  production serves a local mirror instead.
+-->
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; color: #222; }
+  h1 { font-size: 1.1rem; }
+  .wrap { display: grid; grid-template-columns: 360px 1fr; gap: 2rem; align-items: start; }
+  .controls label { display: block; margin-bottom: 0.75rem; font-size: 0.85rem; font-weight: 600; }
+  .controls select { display: block; width: 100%; padding: 0.4rem; margin-top: 0.2rem; font: inherit; }
+  canvas { width: 100%; max-width: 460px; background: #f4f4f2; border: 1px solid #ddd; }
+  #status { color: #888; font-size: 0.85rem; margin-top: 0.5rem; }
+  pre { font-size: 11px; background: #f6f6f4; padding: 0.5rem; overflow: auto; max-height: 220px; }
+</style>
+</head>
+<body>
+<h1>Door compositor — QA harness</h1>
+<div class="wrap">
+  <div class="controls" id="controls">Loading…</div>
+  <div>
+    <canvas id="door" width="460" height="940"></canvas>
+    <div id="status"></div>
+    <pre id="layers"></pre>
+  </div>
+</div>
+
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<script>
+(function () {
+  var MODEL, CAT, COMP, DESIGN = {};
+  var controls = document.getElementById('controls');
+  var statusEl = document.getElementById('status');
+  var layersEl = document.getElementById('layers');
+
+  Promise.all([
+    fetch('../data/render-model.json').then(function (r) { return r.json(); }),
+    fetch('../data/endurance-catalogue-full.json').then(function (r) { return r.json(); })
+  ]).then(function (res) {
+    MODEL = res[0]; CAT = res[1];
+    COMP = window.HD_DD_Preview.create(document.getElementById('door'), { model: MODEL, assetBase: MODEL._assetBase });
+    buildControls(Object.keys(MODEL.types)[0]);
+  }).catch(function (e) {
+    controls.textContent = 'Failed to load data — are you serving via http (python -m http.server)? ' + e;
+  });
+
+  function opt(label) { var o = document.createElement('option'); o.value = label; o.textContent = label; return o; }
+  function select(name, values, onChange, current) {
+    var lab = document.createElement('label'); lab.textContent = name;
+    var sel = document.createElement('select');
+    values.forEach(function (v) { sel.appendChild(opt(v)); });
+    if (current) sel.value = current;
+    sel.addEventListener('change', function () { onChange(sel.value); });
+    lab.appendChild(sel); return { label: lab, select: sel };
+  }
+
+  function set(heading, label) { DESIGN[heading] = { label: label }; }
+
+  function buildControls(type) {
+    DESIGN = {};
+    set('Door Type', type);
+    controls.innerHTML = '';
+    var T = MODEL.types[type];
+    var C = CAT[type];
+    var styleList = Object.keys(T.styles);
+    var colours = (C.fields['Door Colour (External)'].choices || []).map(function (c) { return c.label; });
+    var frames = Object.keys(T.frames);
+    var handles = Object.keys(T.handles);
+    var knockers = Object.keys(T.knockers);
+
+    // type
+    controls.appendChild(select('Door Type', Object.keys(MODEL.types), function (v) { buildControls(v); }, type).label);
+    // style
+    var style0 = styleList[0]; set('Door Design', style0);
+    controls.appendChild(select('Door Design (style)', styleList, function (v) { set('Door Design', v); refreshGlass(type); render(); }, style0).label);
+    // frame shape (drives sidelights)
+    var frameShapes = ((C.fields['Frame Design'] || {}).choices || []).map(function (c) { return c.label; });
+    if (frameShapes.length > 1) {
+      set('Frame Design', frameShapes[0]);
+      controls.appendChild(select('Frame shape', frameShapes, function (v) { set('Frame Design', v); render(); }, frameShapes[0]).label);
+    }
+    // colour
+    set('Door Colour (External)', colours[0]);
+    controls.appendChild(select('Door Colour (External)', colours, function (v) { set('Door Colour (External)', v); render(); }, colours[0]).label);
+    // glass (depends on style) — placeholder, filled by refreshGlass
+    var glassWrap = document.createElement('div'); glassWrap.id = 'glassWrap'; controls.appendChild(glassWrap);
+    // frame
+    set('Frame Colour', frames[0]);
+    controls.appendChild(select('Frame Colour', frames, function (v) { set('Frame Colour', v); render(); }, frames[0]).label);
+    // handle
+    set('Handle', handles[0]);
+    controls.appendChild(select('Handle', handles, function (v) { set('Handle', v); render(); }, handles[0]).label);
+    // knocker
+    if (knockers.length) { set('Knocker', knockers[0]); controls.appendChild(select('Knocker', knockers, function (v) { set('Knocker', v); render(); }, knockers[0]).label); }
+    // hinge side ('Door Hinged On' for Single/Stable/Avantal, 'Master Leaf' for Double)
+    var hingeField = C.fields['Door Hinged On'] ? 'Door Hinged On' : (C.fields['Master Leaf'] ? 'Master Leaf' : null);
+    if (hingeField) {
+      var hingeChoices = (C.fields[hingeField].choices || []).map(function (c) { return c.label; });
+      set(hingeField, hingeChoices[0]);
+      controls.appendChild(select('Hinge side (' + hingeField + ')', hingeChoices, function (v) { set(hingeField, v); render(); }, hingeChoices[0]).label);
+    }
+
+    refreshGlass(type);
+    render();
+  }
+
+  function refreshGlass(type) {
+    var C = CAT[type];
+    var style = DESIGN['Door Design'].label;
+    var glasses = ['(none)'].concat(((C.glazingByStyle && C.glazingByStyle[style]) || []).map(function (g) { return g.label; }));
+    set('Door Glass', glasses[1] || '(none)');
+    var wrap = document.getElementById('glassWrap'); wrap.innerHTML = '';
+    wrap.appendChild(select('Door Glass', glasses, function (v) { set('Door Glass', v === '(none)' ? '' : v); render(); }, DESIGN['Door Glass'].label).label);
+  }
+
+  function render() {
+    var type = DESIGN['Door Type'].label;
+    var layers = window.HD_DD_RenderModel.assemble(MODEL, type, DESIGN);
+    layersEl.textContent = layers.map(function (l) { return '[' + l.slot + '] ' + l.url.split('/').slice(3).join('/'); }).join('\n');
+    statusEl.textContent = layers.length + ' layers';
+    COMP.render(type, DESIGN);
+  }
+})();
+</script>
+</body>
+</html>

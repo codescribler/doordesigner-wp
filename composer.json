@@ -1,0 +1,14 @@
+{
+  "name": "dreamfree/hd-door-designer",
+  "description": "Enquiry-only composite-door configurator for Hertfordshire Doors (WordPress plugin).",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=7.4",
+    "yahnis-elsts/plugin-update-checker": "^5.5"
+  },
+  "config": {
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true
+  }
+}

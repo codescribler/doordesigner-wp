@@ -1,0 +1,27 @@
+# Dependencies (vendor the update-checker into the release zip, but don't track
+# the whole composer tree in dev). Comment the next line out if you prefer to
+# commit the vendored library for releases-from-source.
+/vendor/
+
+# Composer
+composer.lock
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
+
+# Node (if a build step is added later)
+/node_modules/
+
+# Keep the data folder but ignore the (potentially large, ToS-sensitive) full catalogue
+# by default — un-ignore it if you want it committed/shipped in the release.
+# /data/endurance-catalogue-full.json
+
+# Brainstorming visual companion
+.superpowers/
+samples/
+.claude/
+data/endurance-patch.json
+
+# Client PDFs (PII) and local tool settings — never commit

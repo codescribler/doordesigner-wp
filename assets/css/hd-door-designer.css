@@ -1,0 +1,177 @@
+/*
+ * HD Door Designer — scoped front-end styles.
+ * ------------------------------------------------------------------
+ * Everything is namespaced under .hd-dd so the plugin's CSS neither leaks into
+ * nor is broken by the theme. Typography is inherited from the theme; colours
+ * come from the brand variables below.
+ *
+ * BRAND TODO: the values below are placeholders. Sample hertfordshiredoors.co.uk
+ * (primary CTA colour, body/heading fonts, button radius) and replace them so the
+ * configurator reads as part of the site, not a bolted-on widget.
+ */
+
+.hd-dd {
+	/* --- Brand tokens (replace by sampling the live site) --- */
+	--hd-brand: #1d4f3f;          /* primary CTA / accent — PLACEHOLDER */
+	--hd-brand-ink: #ffffff;      /* text on brand */
+	--hd-brand-dark: #163b2f;     /* hover state — PLACEHOLDER */
+	--hd-surface: #ffffff;
+	--hd-surface-alt: #f5f5f3;
+	--hd-border: #dcdcd6;
+	--hd-ink: #222222;
+	--hd-muted: #6b6b66;
+	--hd-radius: 6px;
+	--hd-gap: 1rem;
+
+	color: var(--hd-ink);
+	font-family: inherit;        /* inherit the theme's body font */
+	line-height: 1.5;
+	box-sizing: border-box;
+}
+.hd-dd *, .hd-dd *::before, .hd-dd *::after { box-sizing: inherit; }
+
+.hd-dd__loading,
+.hd-dd__notice {
+	padding: 2rem;
+	text-align: center;
+	color: var(--hd-muted);
+}
+
+/* --- Layout: preview + panel --- */
+.hd-dd__layout {
+	display: grid;
+	grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.1fr);
+	gap: calc(var(--hd-gap) * 2);
+	align-items: start;
+}
+@media (max-width: 860px) {
+	.hd-dd__layout { grid-template-columns: 1fr; }
+}
+
+.hd-dd__stage {
+	position: sticky;
+	top: 1rem;
+	background: var(--hd-surface-alt);
+	border: 1px solid var(--hd-border);
+	border-radius: var(--hd-radius);
+	padding: var(--hd-gap);
+	display: flex;
+	justify-content: center;
+}
+.hd-dd__canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+	max-width: 420px;
+	margin: 0 auto 1rem;
+}
+
+/* Interim preview = a live design summary (replaced by the layer compositor). */
+.hd-dd__preview { width: 100%; }
+.hd-dd__preview-note { font-weight: 700; margin-bottom: 0.6rem; }
+.hd-dd__summary {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.25rem 0.75rem;
+	margin: 0;
+	font-size: 0.9rem;
+}
+.hd-dd__summary dt { color: var(--hd-muted); }
+.hd-dd__summary dd { margin: 0; font-weight: 600; }
+
+/* --- Steps / fields --- */
+.hd-dd__field {
+	border: 0;
+	border-top: 1px solid var(--hd-border);
+	margin: 0;
+	padding: var(--hd-gap) 0;
+}
+.hd-dd__field-legend {
+	font-weight: 700;
+	padding: 0;
+	margin-bottom: 0.5rem;
+}
+.hd-dd__choices {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+	gap: 0.5rem;
+}
+.hd-dd__choice {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.4rem;
+	background: var(--hd-surface);
+	border: 1px solid var(--hd-border);
+	border-radius: var(--hd-radius);
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.78rem;
+	text-align: center;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	will-change: border-color;
+}
+.hd-dd__choice:hover { border-color: var(--hd-brand); }
+.hd-dd__choice.is-selected {
+	border-color: var(--hd-brand);
+	box-shadow: inset 0 0 0 2px var(--hd-brand);
+}
+.hd-dd__choice-img {
+	width: 100%;
+	height: 56px;
+	object-fit: contain;
+}
+.hd-dd__choice-label { color: var(--hd-muted); }
+
+/* --- CTA --- */
+.hd-dd__cta,
+.hd-dd__submit {
+	display: inline-block;
+	margin-top: var(--hd-gap);
+	padding: 0.85rem 1.5rem;
+	background: var(--hd-brand);
+	color: var(--hd-brand-ink);
+	border: 0;
+	border-radius: var(--hd-radius);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+.hd-dd__cta:hover,
+.hd-dd__submit:hover { background: var(--hd-brand-dark); }
+.hd-dd__submit:disabled { opacity: 0.6; cursor: default; }
+
+/* --- Enquiry form --- */
+.hd-dd__form {
+	margin-top: calc(var(--hd-gap) * 2);
+	padding: calc(var(--hd-gap) * 1.5);
+	background: var(--hd-surface-alt);
+	border: 1px solid var(--hd-border);
+	border-radius: var(--hd-radius);
+	max-width: 460px;
+}
+.hd-dd__form-title { margin-top: 0; }
+.hd-dd__form-row { display: block; margin-bottom: 0.85rem; }
+.hd-dd__form-label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.hd-dd__form-input {
+	width: 100%;
+	padding: 0.6rem 0.7rem;
+	border: 1px solid var(--hd-border);
+	border-radius: var(--hd-radius);
+	font: inherit;
+}
+.hd-dd__form-input:focus { outline: 2px solid var(--hd-brand); outline-offset: 1px; }
+.hd-dd__form-error { display: block; color: #b00020; font-size: 0.8rem; min-height: 1em; }
+.hd-dd__consent { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.85rem; margin: 0.5rem 0; }
+.hd-dd__form-status { margin-top: 0.5rem; min-height: 1.2em; color: var(--hd-muted); }
+.hd-dd__success { padding: 1rem; font-weight: 600; }
+
+/* Honeypot — hidden from humans, visible to bots. */
+.hd-dd__hp {
+	position: absolute !important;
+	left: -9999px !important;
+	width: 1px; height: 1px;
+	overflow: hidden;
+}
