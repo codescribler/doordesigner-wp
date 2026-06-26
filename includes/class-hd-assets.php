@@ -50,13 +50,27 @@ class HD_DD_Assets {
 
 		wp_register_style( self::HANDLE, HD_DD_URL . 'assets/css/hd-door-designer.css', array(), $ver_css );
 
-		// Shared layer assembler (UMD) → canvas compositor → app controller.
+		// Shared layer assembler (UMD) → canvas compositor.
 		wp_register_script( self::HANDLE . '-rendermodel', HD_DD_URL . 'assets/js/render-model.js', array(), $ver_js, true );
 		wp_register_script( self::HANDLE . '-preview', HD_DD_URL . 'assets/js/preview.js', array( self::HANDLE . '-rendermodel' ), $ver_js, true );
+
+		// Guided wizard modules. Only the controller has an inter-dep (it needs the
+		// step config); the renderer + review are standalone UMD modules.
+		wp_register_script( self::HANDLE . '-stepcfg', HD_DD_URL . 'assets/js/wizard/step-config.js', array(), $ver_js, true );
+		wp_register_script( self::HANDLE . '-wizard', HD_DD_URL . 'assets/js/wizard/wizard-controller.js', array( self::HANDLE . '-stepcfg' ), $ver_js, true );
+		wp_register_script( self::HANDLE . '-steprender', HD_DD_URL . 'assets/js/wizard/step-renderer.js', array(), $ver_js, true );
+		wp_register_script( self::HANDLE . '-review', HD_DD_URL . 'assets/js/wizard/review.js', array(), $ver_js, true );
+
+		// App bootstrap depends on the compositor + every wizard module.
 		wp_register_script(
 			self::HANDLE,
 			HD_DD_URL . 'assets/js/hd-door-designer.js',
-			array( self::HANDLE . '-preview' ),
+			array(
+				self::HANDLE . '-preview',
+				self::HANDLE . '-wizard',
+				self::HANDLE . '-steprender',
+				self::HANDLE . '-review',
+			),
 			$ver_js,
 			true
 		);
@@ -69,6 +83,9 @@ class HD_DD_Assets {
 			'HD_DD_CONFIG',
 			array(
 				'restUrl'        => esc_url_raw( rest_url( HD_DD_REST_NS . '/' ) ),
+				'catalogueUrl'   => esc_url_raw( rest_url( HD_DD_REST_NS . '/catalogue' ) ),
+				'renderModelUrl' => esc_url_raw( rest_url( HD_DD_REST_NS . '/render-model' ) ),
+				'categoriesUrl'  => esc_url_raw( HD_DD_URL . 'data/style-categories.json' ),
 				'nonce'          => wp_create_nonce( 'wp_rest' ),
 				'catalogueReady' => $this->catalogue->is_available(),
 				'renderReady'    => $this->catalogue->render_model_available(),
@@ -89,9 +106,11 @@ class HD_DD_Assets {
 	/** Strings the JS app needs (kept here so they're translatable). */
 	private function i18n_strings() {
 		return array(
-			'next'         => __( 'Next', 'hd-door-designer' ),
+			'next'         => __( 'Continue', 'hd-door-designer' ),
 			'back'         => __( 'Back', 'hd-door-designer' ),
+			'chooseType'   => __( 'What kind of door?', 'hd-door-designer' ),
 			'enquire'      => __( 'Enquire about this door', 'hd-door-designer' ),
+			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),
 			'genericError' => __( 'Something went wrong. Please try again.', 'hd-door-designer' ),
 			'consent'      => __( 'I agree to Hertfordshire Doors contacting me about this enquiry.', 'hd-door-designer' ),

@@ -3,133 +3,131 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HD Door Designer — compositor QA harness</title>
+<title>HD Door Designer — guided wizard QA harness</title>
 <!--
-  Visual QA for the door compositor WITHOUT WordPress.
+  Visual QA for the GUIDED WIZARD without WordPress.
   Run a static server from the plugin root, then open this file:
       python -m http.server 8000
       → http://localhost:8000/tools/preview-test.html
-  Images hotlink from the captured Endurance host (model._assetBase) for QA;
-  production serves a local mirror instead.
+  It builds the same compact "customer view" the PHP serves (class-hd-catalogue.php
+  customer_view()) from the full catalogue, sets HD_DD_CONFIG.assetBase to the model's
+  captured Endurance host, and mounts the real App. Images hotlink from that host for
+  QA (production serves a same-origin mirror); a 404 just falls back to a label tile.
 -->
+<link rel="stylesheet" href="../assets/css/hd-door-designer.css">
 <style>
-  body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; color: #222; }
-  h1 { font-size: 1.1rem; }
-  .wrap { display: grid; grid-template-columns: 360px 1fr; gap: 2rem; align-items: start; }
-  .controls label { display: block; margin-bottom: 0.75rem; font-size: 0.85rem; font-weight: 600; }
-  .controls select { display: block; width: 100%; padding: 0.4rem; margin-top: 0.2rem; font: inherit; }
-  canvas { width: 100%; max-width: 460px; background: #f4f4f2; border: 1px solid #ddd; }
-  #status { color: #888; font-size: 0.85rem; margin-top: 0.5rem; }
-  pre { font-size: 11px; background: #f6f6f4; padding: 0.5rem; overflow: auto; max-height: 220px; }
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; color: #222; background: #fafafa; }
+  h1 { font-size: 1.05rem; }
+  .harness { max-width: 480px; margin: 0 auto; }
+  #mount { min-height: 60vh; }
+  #harness-status { color: #888; font-size: 0.85rem; margin-top: 0.75rem; }
+  /* Minimal fallback styling so the wizard is usable even before the plugin CSS
+     defines these classes. */
+  .hd-dd__carousel { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
+  .hd-dd__tile { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; min-width: 88px; padding: 0.5rem; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor: pointer; font: inherit; }
+  .hd-dd__tile.is-selected { border-color: #1a6; box-shadow: 0 0 0 2px #1a6 inset; }
+  .hd-dd__tile-media { width: 64px; height: 132px; object-fit: contain; }
+  .hd-dd__swatch { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #aaa; }
+  .hd-dd__steptitle { font-weight: 700; font-size: 1rem; margin: 0.5rem 0; }
+  .hd-dd__canvas { width: 100%; max-width: 280px; display: block; margin: 0 auto; background: #f4f4f2; border: 1px solid #ddd; }
+  .hd-dd__wizhead { display: flex; align-items: center; gap: 0.75rem; }
+  .hd-dd__progress { display: flex; gap: 4px; flex: 1; }
+  .hd-dd__progress-seg { flex: 1; height: 5px; border-radius: 3px; background: #ddd; }
+  .hd-dd__progress-seg.is-done { background: #1a6; }
+  .hd-dd__back, .hd-dd__continue, .hd-dd__cta, .hd-dd__edit, .hd-dd__submit { font: inherit; padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid #999; background: #fff; cursor: pointer; }
+  .hd-dd__continue, .hd-dd__cta, .hd-dd__submit { display: block; width: 100%; margin-top: 1rem; background: #1a6; color: #fff; border-color: #1a6; }
+  .hd-dd__continue[disabled] { opacity: 0.4; cursor: not-allowed; }
+  [hidden] { display: none !important; }
+  .hd-dd__back[disabled] { opacity: 0.3; }
+  .hd-dd__review dl { display: grid; grid-template-columns: auto 1fr auto; gap: 0.35rem 0.75rem; align-items: center; }
+  .hd-dd__edit { padding: 0.2rem 0.6rem; font-size: 0.8rem; }
+  .hd-dd__form-row { display: block; margin: 0.5rem 0; }
+  .hd-dd__form-input { display: block; width: 100%; padding: 0.4rem; font: inherit; }
+  .hd-dd__hp { position: absolute; left: -9999px; }
 </style>
 </head>
 <body>
-<h1>Door compositor — QA harness</h1>
-<div class="wrap">
-  <div class="controls" id="controls">Loading…</div>
-  <div>
-    <canvas id="door" width="460" height="940"></canvas>
-    <div id="status"></div>
-    <pre id="layers"></pre>
-  </div>
+<div class="harness">
+  <h1>Guided wizard — QA harness</h1>
+  <div id="mount" data-hd-door-designer-harness>Loading…</div>
+  <div id="harness-status"></div>
 </div>
 
+<!-- render model + compositor -->
 <script src="../assets/js/render-model.js"></script>
 <script src="../assets/js/preview.js"></script>
+<!-- wizard modules -->
+<script src="../assets/js/wizard/step-config.js"></script>
+<script src="../assets/js/wizard/wizard-controller.js"></script>
+<script src="../assets/js/wizard/step-renderer.js"></script>
+<script src="../assets/js/wizard/review.js"></script>
+<!-- app bootstrap (exposes window.HD_DD_App; its DOMContentLoaded auto-start finds no
+     [data-hd-door-designer] node here, so we mount manually below) -->
+<script src="../assets/js/hd-door-designer.js"></script>
 <script>
 (function () {
-  var MODEL, CAT, COMP, DESIGN = {};
-  var controls = document.getElementById('controls');
-  var statusEl = document.getElementById('status');
-  var layersEl = document.getElementById('layers');
+  var mount = document.getElementById('mount');
+  var statusEl = document.getElementById('harness-status');
+
+  // Mirror of class-hd-catalogue.php → customer_view(): project the full catalogue
+  // down to the compact, customer-facing shape the wizard consumes.
+  var CUSTOMER_HEADINGS = [
+    'Door Type', 'Frame Design', 'Frame Colour', 'Door Design',
+    'Door Colour (External)', 'Door Colour (Internal)', 'Door Glass',
+    'Door Hinged On', 'Master Leaf', 'Hardware Type', 'Handle', 'Letterplate', 'Knocker'
+  ];
+  function slimChoices(choices) {
+    return (choices || []).map(function (c) { return { label: c.label || '', id: c.id != null ? c.id : null }; });
+  }
+  function slimGlazing(byStyle) {
+    var out = {};
+    Object.keys(byStyle || {}).forEach(function (s) { out[s] = Array.isArray(byStyle[s]) ? slimChoices(byStyle[s]) : []; });
+    return out;
+  }
+  function slimSidelights(node) {
+    if (!node || typeof node !== 'object') { return null; }
+    function pick(key) { return (node[key] && Array.isArray(node[key].choices)) ? slimChoices(node[key].choices) : []; }
+    return { sidelightType: pick('sidelightType'), sidelightGlass: pick('sidelightGlass') };
+  }
+  function buildCustomerView(full) {
+    var types = [], byType = {};
+    Object.keys(full).forEach(function (typeName) {
+      var node = full[typeName];
+      if (!node || typeof node !== 'object' || !node.fields) { return; } // skip _assetBase/_schema/etc.
+      types.push(typeName);
+      var fields = {};
+      CUSTOMER_HEADINGS.forEach(function (h) {
+        if (node.fields[h] && node.fields[h].choices) { fields[h] = slimChoices(node.fields[h].choices); }
+      });
+      byType[typeName] = {
+        hingeSideField: node.fields['Door Hinged On'] ? 'Door Hinged On' : (node.fields['Master Leaf'] ? 'Master Leaf' : ''),
+        hasInternalColour: !!node.fields['Door Colour (Internal)'],
+        hasKnocker: !!node.fields['Knocker'],
+        hasFrameShape: !!(node.fields['Frame Design'] && node.fields['Frame Design'].choices.length > 1),
+        fields: fields,
+        glazingByStyle: slimGlazing(node.glazingByStyle),
+        knockerByStyle: slimGlazing(node.knockerByStyle),
+        sidelights: slimSidelights(node.sidelights)
+      };
+    });
+    return { types: types, byType: byType };
+  }
 
   Promise.all([
+    fetch('../data/endurance-catalogue-full.json').then(function (r) { return r.json(); }),
     fetch('../data/render-model.json').then(function (r) { return r.json(); }),
-    fetch('../data/endurance-catalogue-full.json').then(function (r) { return r.json(); })
+    fetch('../data/style-categories.json').then(function (r) { return r.json(); }).catch(function () { return null; })
   ]).then(function (res) {
-    MODEL = res[0]; CAT = res[1];
-    COMP = window.HD_DD_Preview.create(document.getElementById('door'), { model: MODEL, assetBase: MODEL._assetBase });
-    buildControls(Object.keys(MODEL.types)[0]);
+    var full = res[0], model = res[1], categories = res[2];
+    var customerView = buildCustomerView(full);
+    // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host.
+    window.HD_DD_CONFIG = { assetBase: model._assetBase };
+    statusEl.textContent = 'Loaded ' + customerView.types.length + ' door types · assetBase ' + model._assetBase;
+    mount.innerHTML = '';
+    new window.HD_DD_App(mount, customerView, model, categories).render();
   }).catch(function (e) {
-    controls.textContent = 'Failed to load data — are you serving via http (python -m http.server)? ' + e;
+    mount.textContent = 'Failed to load data — are you serving over http (python -m http.server)? ' + e;
   });
-
-  function opt(label) { var o = document.createElement('option'); o.value = label; o.textContent = label; return o; }
-  function select(name, values, onChange, current) {
-    var lab = document.createElement('label'); lab.textContent = name;
-    var sel = document.createElement('select');
-    values.forEach(function (v) { sel.appendChild(opt(v)); });
-    if (current) sel.value = current;
-    sel.addEventListener('change', function () { onChange(sel.value); });
-    lab.appendChild(sel); return { label: lab, select: sel };
-  }
-
-  function set(heading, label) { DESIGN[heading] = { label: label }; }
-
-  function buildControls(type) {
-    DESIGN = {};
-    set('Door Type', type);
-    controls.innerHTML = '';
-    var T = MODEL.types[type];
-    var C = CAT[type];
-    var styleList = Object.keys(T.styles);
-    var colours = (C.fields['Door Colour (External)'].choices || []).map(function (c) { return c.label; });
-    var frames = Object.keys(T.frames);
-    var handles = Object.keys(T.handles);
-    var knockers = Object.keys(T.knockers);
-
-    // type
-    controls.appendChild(select('Door Type', Object.keys(MODEL.types), function (v) { buildControls(v); }, type).label);
-    // style
-    var style0 = styleList[0]; set('Door Design', style0);
-    controls.appendChild(select('Door Design (style)', styleList, function (v) { set('Door Design', v); refreshGlass(type); render(); }, style0).label);
-    // frame shape (drives sidelights)
-    var frameShapes = ((C.fields['Frame Design'] || {}).choices || []).map(function (c) { return c.label; });
-    if (frameShapes.length > 1) {
-      set('Frame Design', frameShapes[0]);
-      controls.appendChild(select('Frame shape', frameShapes, function (v) { set('Frame Design', v); render(); }, frameShapes[0]).label);
-    }
-    // colour
-    set('Door Colour (External)', colours[0]);
-    controls.appendChild(select('Door Colour (External)', colours, function (v) { set('Door Colour (External)', v); render(); }, colours[0]).label);
-    // glass (depends on style) — placeholder, filled by refreshGlass
-    var glassWrap = document.createElement('div'); glassWrap.id = 'glassWrap'; controls.appendChild(glassWrap);
-    // frame
-    set('Frame Colour', frames[0]);
-    controls.appendChild(select('Frame Colour', frames, function (v) { set('Frame Colour', v); render(); }, frames[0]).label);
-    // handle
-    set('Handle', handles[0]);
-    controls.appendChild(select('Handle', handles, function (v) { set('Handle', v); render(); }, handles[0]).label);
-    // knocker
-    if (knockers.length) { set('Knocker', knockers[0]); controls.appendChild(select('Knocker', knockers, function (v) { set('Knocker', v); render(); }, knockers[0]).label); }
-    // hinge side ('Door Hinged On' for Single/Stable/Avantal, 'Master Leaf' for Double)
-    var hingeField = C.fields['Door Hinged On'] ? 'Door Hinged On' : (C.fields['Master Leaf'] ? 'Master Leaf' : null);
-    if (hingeField) {
-      var hingeChoices = (C.fields[hingeField].choices || []).map(function (c) { return c.label; });
-      set(hingeField, hingeChoices[0]);
-      controls.appendChild(select('Hinge side (' + hingeField + ')', hingeChoices, function (v) { set(hingeField, v); render(); }, hingeChoices[0]).label);
-    }
-
-    refreshGlass(type);
-    render();
-  }
-
-  function refreshGlass(type) {
-    var C = CAT[type];
-    var style = DESIGN['Door Design'].label;
-    var glasses = ['(none)'].concat(((C.glazingByStyle && C.glazingByStyle[style]) || []).map(function (g) { return g.label; }));
-    set('Door Glass', glasses[1] || '(none)');
-    var wrap = document.getElementById('glassWrap'); wrap.innerHTML = '';
-    wrap.appendChild(select('Door Glass', glasses, function (v) { set('Door Glass', v === '(none)' ? '' : v); render(); }, DESIGN['Door Glass'].label).label);
-  }
-
-  function render() {
-    var type = DESIGN['Door Type'].label;
-    var layers = window.HD_DD_RenderModel.assemble(MODEL, type, DESIGN);
-    layersEl.textContent = layers.map(function (l) { return '[' + l.slot + '] ' + l.url.split('/').slice(3).join('/'); }).join('\n');
-    statusEl.textContent = layers.length + ' layers';
-    COMP.render(type, DESIGN);
-  }
 })();
 </script>
 </body>

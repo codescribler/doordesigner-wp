@@ -1,13 +1,23 @@
 /*
- * HD Door Designer — front-end app controller.
+ * HD Door Designer — guided wizard bootstrap (Layout C: one step at a time).
  * ------------------------------------------------------------------
- * Mounts into [data-hd-door-designer], fetches the compact customer catalogue
- * over REST, drives the cascading 12-field picker (with the per-type rules), and
- * ends in the enquiry form which POSTs the design (keyed by exact Endurance
- * headings) back to the plugin.
+ * Thin orchestrator. It does NOT own any pipeline logic — it wires the parts:
  *
- * The visual door preview (faithful layer compositing) is wired separately once
- * the upgraded extractor's layer model is in — renderPreview() is the seam.
+ *   HD_DD_Wizard        — state machine (which steps apply, current step, design)
+ *   HD_DD_StepConfig    — step catalogue + per-type applicability
+ *   HD_DD_StepRenderer  — paints the active step's tiles into the body
+ *   HD_DD_Review        — the final summary + "get a quote" CTA
+ *   HD_DD_Preview       — canvas compositor that repaints the door each change
+ *   HD_DD_RenderModel   — (used by the compositor) layer assembler
+ *
+ * The App takes its three data sources PRELOADED (customerView, renderModel,
+ * categories) so the browser QA harness can construct it directly without REST.
+ * startFromConfig() is the WordPress entry: it fetches those three over REST/asset
+ * then constructs the App.
+ *
+ * `design` is keyed by the real Endurance heading -> { label, id }. The wizard owns
+ * it; we only read it. One UI-only key, `_styleCategory`, is stored on it by the
+ * step renderer (category-first style picker) and stripped before submit.
  */
 (function () {
 	'use strict';
@@ -15,307 +25,359 @@
 	var CFG = window.HD_DD_CONFIG || {};
 	var I18N = CFG.i18n || {};
 
-	// Cascade step order. `heading` is the exact Endurance field key (or a token
-	// resolved per type). Steps render only when visible() passes for the type.
-	var STEPS = [
-		{ key: 'type', heading: 'Door Type', label: 'Door type' },
-		{ key: 'frame', heading: 'Frame Design', label: 'Frame shape', visible: function (c) { return c.flags.hasFrameShape; } },
-		{ key: 'style', heading: 'Door Design', label: 'Door style' },
-		{ key: 'extColour', heading: 'Door Colour (External)', label: 'Door colour' },
-		{ key: 'intColour', heading: 'Door Colour (Internal)', label: 'Internal colour', visible: function (c) { return c.flags.hasInternalColour; } },
-		{ key: 'sidelightType', heading: 'Sidelight Type', label: 'Sidelight', source: 'sidelightType', visible: function (c) { return c.sidelit; } },
-		{ key: 'sidelightGlass', heading: 'Sidelight Glass', label: 'Sidelight glass', source: 'sidelightGlass', visible: function (c) { return c.sidelit; } },
-		{ key: 'glazing', heading: 'Door Glass', label: 'Glazing', source: 'glazing' },
-		{ key: 'hinge', heading: '__hinge__', label: 'Hinge side' },
-		{ key: 'frameColour', heading: 'Frame Colour', label: 'Frame colour' },
-		{ key: 'hardware', heading: 'Hardware Type', label: 'Hardware colour' },
-		{ key: 'handle', heading: 'Handle', label: 'Handle' },
-		{ key: 'letterplate', heading: 'Letterplate', label: 'Letter plate' },
-		{ key: 'knocker', heading: 'Knocker', label: 'Knocker', source: 'knocker', visible: function (c) { return c.flags.hasKnocker; } }
-	];
+	// Hardware-finish swatch chips (no per-finish thumbnail asset exists).
+	var HARDWARE_HEX = {
+		Chrome: '#cfd2d6', Black: '#222', Gold: '#caa44a',
+		'Matt Black': '#2b2b2b', 'Satin Steel': '#b9bcc0', 'Brushed Stainless': '#c4c7cb'
+	};
 
-	function el(tag, attrs, children) {
-		var node = document.createElement(tag);
-		attrs = attrs || {};
-		Object.keys(attrs).forEach(function (k) {
-			if (k === 'class') { node.className = attrs[k]; }
-			else if (k === 'text') { node.textContent = attrs[k]; }
-			else if (attrs[k] === true) { node.setAttribute(k, k); }
-			else if (attrs[k] !== false && attrs[k] != null) { node.setAttribute(k, attrs[k]); }
-		});
-		(children || []).forEach(function (c) { if (c) { node.appendChild(c); } });
-		return node;
+	function el(tag, cls, txt) {
+		var n = document.createElement(tag);
+		if (cls) { n.className = cls; }
+		if (txt != null) { n.textContent = txt; }
+		return n;
+	}
+
+	// Drop UI-only keys (anything prefixed with "_") from the design payload.
+	function cleanDesign(design) {
+		var out = {};
+		Object.keys(design).forEach(function (h) { if (h.charAt(0) !== '_') { out[h] = design[h]; } });
+		return out;
 	}
 
 	function api(path, opts) {
 		opts = opts || {};
-		opts.headers = Object.assign({ 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce }, opts.headers || {});
-		return fetch(CFG.restUrl + path, opts).then(function (r) {
+		var headers = { 'Content-Type': 'application/json' };
+		if (CFG.nonce) { headers['X-WP-Nonce'] = CFG.nonce; }
+		if (opts.headers) { Object.keys(opts.headers).forEach(function (k) { headers[k] = opts.headers[k]; }); }
+		opts.headers = headers;
+		return fetch((CFG.restUrl || '') + path, opts).then(function (r) {
 			return r.json().then(function (body) { return { ok: r.ok, status: r.status, body: body }; });
 		});
 	}
 
-	function App(root) {
+	// ---- App ----------------------------------------------------------------
+	function App(root, customerView, renderModel, categories) {
 		this.root = root;
-		this.catalogue = null;      // customer view { types, byType }
-		this.state = { design: {} }; // heading -> { label, id }
+		this.customerView = customerView;
+		this.renderModel = renderModel || null;
+		this.categories = categories || null;
+		this.wiz = HD_DD_Wizard.create(customerView, HD_DD_StepConfig);
+		this.compositor = null;
+		// key of the step painted on the PREVIOUS render — used by the _styleCategory
+		// reset rule so the category picker re-shows on a fresh arrival at the style step.
+		this._lastKey = null;
+		this._built = false;
 	}
 
-	App.prototype.start = function () {
-		var self = this;
-		Promise.all([
-			api('catalogue'),
-			api('render-model').catch(function () { return { ok: false }; })
-		]).then(function (r) {
-			var cat = r[0], rm = r[1];
-			if (!cat.ok || !cat.body || !cat.body.available || !cat.body.catalogue) {
-				self.renderUnavailable();
-				return;
-			}
-			self.catalogue = cat.body.catalogue;
-			self.renderModel = (rm && rm.ok && rm.body && rm.body.available) ? rm.body.model : null;
-			self.renderShell();
-			var seed = self.root.getAttribute('data-door-type');
-			self.selectType(seed && self.typeNode(seed) ? seed : self.catalogue.types[0]);
-		}).catch(function () { self.renderUnavailable(); });
+	App.prototype.assetBase = function () {
+		return CFG.assetBase || (this.renderModel && this.renderModel._assetBase) || '';
 	};
 
-	App.prototype.renderUnavailable = function () {
-		this.root.innerHTML = '';
-		this.root.appendChild(el('div', { class: 'hd-dd__notice', text: I18N.notLoaded || 'The door designer is being set up.' }));
-	};
-
-	// --- Catalogue accessors -------------------------------------------------
-	App.prototype.typeNode = function (type) {
-		return this.catalogue.byType && this.catalogue.byType[type] ? this.catalogue.byType[type] : null;
-	};
 	App.prototype.activeType = function () {
-		return this.state.design['Door Type'] ? this.state.design['Door Type'].label : '';
-	};
-	App.prototype.selectedLabel = function (heading) {
-		return this.state.design[heading] ? this.state.design[heading].label : '';
+		var d = this.wiz.state().design;
+		return d['Door Type'] ? d['Door Type'].label : '';
 	};
 
-	// Resolve the choices + actual heading for a step, given the active type.
-	App.prototype.resolveStep = function (step) {
-		var type = this.activeType();
-		var node = this.typeNode(type);
-		if (!node) { return null; }
+	// Build the persistent shell once (progress + back, stage/canvas, body, sticky
+	// Continue, hidden enquiry form). Subsequent renders only mutate the body and
+	// the control states — no listeners are re-attached, so nothing leaks.
+	App.prototype.buildShell = function () {
+		var self = this;
+		this.root.innerHTML = '';
+		var layout = el('div', 'hd-dd hd-dd--wizard');
 
-		var heading = step.heading;
-		var choices = null;
+		var head = el('div', 'hd-dd__wizhead');
+		this.backBtn = el('button', 'hd-dd__back', I18N.back || 'Back');
+		this.backBtn.type = 'button';
+		this.backBtn.addEventListener('click', function () { self.advance('back'); });
+		this.progressEl = el('div', 'hd-dd__progress');
+		head.appendChild(this.backBtn);
+		head.appendChild(this.progressEl);
+		layout.appendChild(head);
 
-		if (step.source === 'glazing') {
-			var style = this.selectedLabel('Door Design');
-			if (style && node.glazingByStyle && node.glazingByStyle[style]) { choices = node.glazingByStyle[style]; }
-			else if (node.fields['Door Glass']) { choices = node.fields['Door Glass']; }
-		} else if (step.source === 'knocker') {
-			// Per-style knocker availability (empty for styles like Kit/Sanford Georgian);
-			// falls back to the full list until the per-style data is captured.
-			var kstyle = this.selectedLabel('Door Design');
-			if (kstyle && node.knockerByStyle && node.knockerByStyle[kstyle]) { choices = node.knockerByStyle[kstyle]; }
-			else if (node.fields['Knocker']) { choices = node.fields['Knocker']; }
-		} else if (step.source === 'sidelightType' || step.source === 'sidelightGlass') {
-			choices = node.sidelights ? node.sidelights[step.source] : null;
-		} else if (heading === '__hinge__') {
-			heading = node.hingeSideField || 'Door Hinged On';
-			choices = node.fields[heading];
-		} else {
-			choices = node.fields[heading];
+		var stage = el('div', 'hd-dd__stage');
+		this.canvas = el('canvas', 'hd-dd__canvas');
+		stage.appendChild(this.canvas);
+		layout.appendChild(stage);
+		if (this.renderModel && window.HD_DD_Preview) {
+			this.compositor = window.HD_DD_Preview.create(this.canvas, { model: this.renderModel, assetBase: this.assetBase() });
 		}
 
-		return choices && choices.length ? { heading: heading, choices: choices } : null;
+		this.body = el('div', 'hd-dd__body');
+		layout.appendChild(this.body);
+
+		this.continueBtn = el('button', 'hd-dd__continue', I18N.next || 'Continue');
+		this.continueBtn.type = 'button';
+		this.continueBtn.addEventListener('click', function () { self.advance('next'); });
+		layout.appendChild(this.continueBtn);
+
+		this.root.appendChild(layout);
+
+		this.form = this.buildFormShell();
+		this.root.appendChild(this.form);
+
+		this._built = true;
 	};
 
-	// Context flags used by step.visible().
-	App.prototype.stepContext = function () {
-		var node = this.typeNode(this.activeType()) || {};
-		var shape = this.selectedLabel('Frame Design');
+	// ---- Render loop --------------------------------------------------------
+	App.prototype.render = function () {
+		if (!this._built) { this.buildShell(); }
+		var st = this.wiz.state();
+		var design = st.design;
+
+		// No type chosen yet → show the type chooser. The type step is intentionally
+		// NOT a counted wizard step (the catalogue has no per-node "Door Type" field),
+		// so we render it ourselves and let selectType() drop us at the first real step.
+		if (!design['Door Type']) {
+			this._lastKey = null;
+			this.renderTypeChooser();
+			this.progressEl.innerHTML = '';
+			this.backBtn.disabled = true;
+			this.continueBtn.hidden = true;
+			return;
+		}
+
+		var activeType = design['Door Type'].label;
+		var step = st.atReview ? null : st.steps[st.stepIndex];
+		var key = st.atReview ? '__review__' : (step && step.key);
+
+		// _styleCategory reset rule: clear it ONLY on a fresh arrival at the style step
+		// (the previous render painted a different step). While we remain on the style
+		// step — a category click or a style-tile select re-renders in place — it is
+		// preserved so the chosen category's tiles stay visible.
+		if (key === 'style' && this._lastKey !== 'style') { delete design._styleCategory; }
+
+		if (st.atReview) {
+			HD_DD_Review.render(this.body, this.reviewCtx(st));
+			this.continueBtn.hidden = true;
+		} else {
+			HD_DD_StepRenderer.renderStep(this.body, step, this.stepCtx(st, step));
+			this.continueBtn.hidden = false;
+			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
+			this.continueBtn.disabled = !(step.optional || !!design[step.heading]);
+		}
+
+		this.renderProgress(st.progress);
+		this.backBtn.disabled = false;
+
+		this.repaintPreview(activeType, design);
+
+		this._lastKey = key;
+	};
+
+	App.prototype.renderTypeChooser = function () {
+		var self = this;
+		this.body.innerHTML = '';
+		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.chooseType || 'What kind of door?'));
+		var row = el('div', 'hd-dd__carousel');
+		(this.customerView.types || []).forEach(function (label) {
+			var t = el('button', 'hd-dd__tile');
+			t.type = 'button';
+			t.appendChild(el('span', 'hd-dd__tile-label', label));
+			t.addEventListener('click', function () { self.wiz.selectType(label); self.render(); });
+			row.appendChild(t);
+		});
+		this.body.appendChild(row);
+	};
+
+	App.prototype.renderProgress = function (p) {
+		this.progressEl.innerHTML = '';
+		var total = (p && p.total) || 0;
+		var current = (p && p.current) || 0;
+		for (var i = 1; i <= total; i++) {
+			this.progressEl.appendChild(el('span', 'hd-dd__progress-seg' + (i <= current ? ' is-done' : '')));
+		}
+	};
+
+	App.prototype.repaintPreview = function (type, design) {
+		if (!this.compositor || !type) { return; }
+		try { this.compositor.render(type, design); } catch (e) { /* tolerate a missing asset */ }
+	};
+
+	// ---- Context objects handed to the renderers ----------------------------
+	App.prototype.stepCtx = function (st, step) {
+		var self = this;
 		return {
-			flags: {
-				hasFrameShape: !!node.hasFrameShape,
-				hasInternalColour: !!node.hasInternalColour,
-				hasKnocker: !!node.hasKnocker
-			},
-			sidelit: !!node.hasFrameShape && /sidelight|half flag/i.test(shape || '')
+			design: st.design,
+			heading: step.heading,
+			thumbFor: function (s, c) { return self.thumbFor(s, c); },
+			onSelect: function (heading, choice) { self.onSelect(heading, choice); },
+			categoryOf: function (label) { return self.categoryOf(label); },
+			rerender: function () { self.render(); }
 		};
 	};
 
-	// --- Render --------------------------------------------------------------
-	App.prototype.renderShell = function () {
-		this.root.innerHTML = '';
-		var layout = el('div', { class: 'hd-dd__layout' });
+	App.prototype.reviewCtx = function (st) {
+		var self = this;
+		return {
+			steps: st.steps,
+			design: st.design,
+			onEdit: function (key) { self.wiz.jumpTo(key); self.render(); },
+			onSubmitClick: function () { self.mountReviewSubmit(); }
+		};
+	};
 
-		var stage = el('div', { class: 'hd-dd__stage' });
-		if (this.renderModel && window.HD_DD_Preview) {
-			this.canvas = el('canvas', { class: 'hd-dd__canvas' });
-			stage.appendChild(this.canvas);
-			this.compositor = window.HD_DD_Preview.create(this.canvas, {
-				model: this.renderModel,
-				assetBase: CFG.assetBase || this.renderModel._assetBase || ''
-			});
+	// A tile tap. Door-type tiles live in the chooser and call selectType directly;
+	// this guard keeps onSelect correct should a "Door Type" heading ever flow through.
+	App.prototype.onSelect = function (heading, choice) {
+		if (heading === 'Door Type') { this.wiz.selectType(choice.label); this.render(); return; }
+
+		// The wizard's select() runs pruneInvalid(), which strips any design key that
+		// isn't a current step heading — including the step renderer's UI-only
+		// `_styleCategory`. Capture it and, when we're choosing a style (so we stay on
+		// the category-first style step), restore it so the chosen category's tiles
+		// remain visible with the new selection highlighted rather than bouncing back
+		// to the category picker.
+		var savedCat = this.wiz.state().design._styleCategory;
+		this.wiz.select(heading, choice);
+		if (heading === 'Door Design' && savedCat != null) {
+			this.wiz.state().design._styleCategory = savedCat;
 		}
-		this.previewEl = el('div', { class: 'hd-dd__preview' });
-		stage.appendChild(this.previewEl);
-
-		var panel = el('div', { class: 'hd-dd__panel' });
-		this.stepsEl = el('div', { class: 'hd-dd__steps' });
-		panel.appendChild(this.stepsEl);
-		panel.appendChild(this.buildCta());
-
-		layout.appendChild(stage);
-		layout.appendChild(panel);
-		this.root.appendChild(layout);
-		this.root.appendChild(this.buildFormShell());
+		this.render();
 	};
 
-	App.prototype.selectType = function (type) {
-		var node = this.typeNode(type);
-		if (!node) { return; }
-		var typeChoice = (node.fields['Door Type'] || []).filter(function (c) { return c.label === type; })[0]
-			|| { label: type, id: null };
-		this.state.design = {}; // changing type resets the whole design.
-		this.state.design['Door Type'] = { label: typeChoice.label, id: typeChoice.id };
-		this.renderSteps();
+	App.prototype.advance = function (dir) {
+		var st = this.wiz.state();
+		if (dir === 'back') {
+			// Backing out of the first real step returns to the type chooser. The wizard
+			// has no "clear type", so we re-create it (changing type resets the design
+			// anyway, so nothing meaningful is lost).
+			if (!st.atReview && st.stepIndex === 0) {
+				this.wiz = HD_DD_Wizard.create(this.customerView, HD_DD_StepConfig);
+				this._lastKey = null;
+			} else {
+				this.wiz.back();
+			}
+		} else {
+			this.wiz.next();
+		}
+		this.render();
 	};
 
-	App.prototype.renderSteps = function () {
-		var self = this;
-		this.stepsEl.innerHTML = '';
-		var ctx = this.stepContext();
+	// ---- Thumbnails ---------------------------------------------------------
+	// {kind:'img', url} | {kind:'swatch', color} | null. Image URLs hotlink from the
+	// asset base; when it's empty (or the render model is absent) image kinds return
+	// null and the tile falls back to a label only.
+	App.prototype.thumbFor = function (step, choice) {
+		if (step.key === 'hardware') {
+			return { kind: 'swatch', color: HARDWARE_HEX[choice.label] || '#ccc' };
+		}
+		var base = this.assetBase();
+		var T = (this.renderModel && this.renderModel.types) ? this.renderModel.types[this.activeType()] : null;
+		if (!base || !T) { return null; }
 
-		STEPS.forEach(function (step) {
-			if (step.visible && !step.visible(ctx)) { return; }
-			var resolved = self.resolveStep(step);
-			if (!resolved) { return; }
-			self.stepsEl.appendChild(self.renderField(step, resolved.heading, resolved.choices));
-		});
+		var BLANKS = '/Assets/CompositeDoors/Images/DoorBlanks/';
+		function img(url) { return { kind: 'img', url: encodeURI(url) }; }
 
-		this.renderPreview();
-	};
-
-	App.prototype.renderField = function (step, heading, choices) {
-		var self = this;
-		var wrap = el('fieldset', { class: 'hd-dd__field', 'data-step': step.key });
-		wrap.appendChild(el('legend', { class: 'hd-dd__field-legend', text: step.label }));
-		var grid = el('div', { class: 'hd-dd__choices' });
-
-		choices.forEach(function (choice) {
-			var selected = self.selectedLabel(heading) === choice.label;
-			var btn = el('button', {
-				type: 'button',
-				class: 'hd-dd__choice' + (selected ? ' is-selected' : ''),
-				'aria-pressed': selected ? 'true' : 'false',
-				title: choice.label
-			});
-			btn.appendChild(el('span', { class: 'hd-dd__choice-label', text: choice.label }));
-			btn.addEventListener('click', function () { self.select(step, heading, choice); });
-			grid.appendChild(btn);
-		});
-
-		wrap.appendChild(grid);
-		return wrap;
-	};
-
-	App.prototype.select = function (step, heading, choice) {
-		if (step.key === 'type') { this.selectType(choice.label); return; }
-
-		this.state.design[heading] = { label: choice.label, id: choice.id != null ? choice.id : null };
-
-		// Style change invalidates glazing (per-style lists) and may drop a knocker
-		// the new style doesn't offer.
 		if (step.key === 'style') {
-			delete this.state.design['Door Glass'];
-			this.pruneKnocker(choice.label);
+			var s = T.styles[choice.label];
+			if (s && s.mould) { return img(base + BLANKS + s.mould + '/Thumbnails/' + T.baselineColour + '.jpg'); }
+			return null;
 		}
-		// Frame-shape change may hide sidelight steps → drop stale sidelight picks.
-		if (step.key === 'frame' && !/sidelight|half flag/i.test(choice.label)) {
-			delete this.state.design['Sidelight Type'];
-			delete this.state.design['Sidelight Glass'];
+		if (step.key === 'extColour' || step.key === 'intColour') {
+			if (T.baselineMould) { return img(base + BLANKS + T.baselineMould + '/Thumbnails/' + choice.label + '.jpg'); }
+			return null;
 		}
-		this.renderSteps();
+		if (step.key === 'glazing') {
+			var design = this.wiz.state().design;
+			var st = T.styles[design['Door Design'] && design['Door Design'].label];
+			if (st && st.cassetteKey) {
+				return img(base + '/Assets/CompositeDoors/Images/DoorGlazing/' + choice.label + '/Thumbnails/' + st.cassetteKey + '.png');
+			}
+			return null;
+		}
+		if (step.key === 'handle') {
+			var h = T.handles[choice.label];
+			if (h && h.url) { return img(base + '/' + h.url); }
+			return null;
+		}
+		if (step.key === 'knocker') {
+			var k = T.knockers[choice.label];
+			if (k && k.url) { return img(base + '/' + k.url); }
+			return null;
+		}
+		// type, frame, letterplate, hinge, sidelightGlass → label/icon only.
+		return null;
 	};
 
-	// Drop a selected knocker if the newly chosen style doesn't offer it.
-	App.prototype.pruneKnocker = function (styleLabel) {
-		var node = this.typeNode(this.activeType());
-		var list = node && node.knockerByStyle ? node.knockerByStyle[styleLabel] : null;
-		var cur = this.state.design['Knocker'];
-		if (list && cur && !list.some(function (k) { return k.label === cur.label; })) {
-			delete this.state.design['Knocker'];
-		}
+	App.prototype.categoryOf = function (label) {
+		var map = this.categories && this.categories[this.activeType()];
+		return (map && map[label]) || null;
 	};
 
-	// --- Preview (interim: design summary; swapped for the compositor later) ---
-	App.prototype.renderPreview = function () {
-		// Paint the composited door (if the render model + assets are available).
-		if (this.compositor) {
-			try { this.compositor.render(this.activeType(), this.state.design); } catch (e) { /* keep the summary */ }
-		}
-		if (!this.previewEl) { return; }
-		this.previewEl.innerHTML = '';
-		this.previewEl.appendChild(el('div', { class: 'hd-dd__preview-note', text: 'Your design' }));
-
-		var list = el('dl', { class: 'hd-dd__summary' });
-		var self = this;
-		STEPS.forEach(function (step) {
-			var resolved = self.resolveStep(step);
-			var heading = resolved ? resolved.heading : step.heading;
-			var val = self.selectedLabel(heading);
-			if (!val) { return; }
-			list.appendChild(el('dt', { text: step.label }));
-			list.appendChild(el('dd', { text: val }));
-		});
-		this.previewEl.appendChild(list);
-	};
-
-	// --- CTA + enquiry form --------------------------------------------------
-	App.prototype.buildCta = function () {
-		var cta = el('button', { type: 'button', class: 'hd-dd__cta', text: I18N.enquire || 'Enquire about this door' });
-		cta.addEventListener('click', function () {
-			var form = document.getElementById('hd-dd-form');
-			if (form) { form.hidden = false; form.scrollIntoView({ behavior: 'smooth' }); }
-		});
-		return cta;
+	// ---- Enquiry form (revealed from the review CTA) ------------------------
+	App.prototype.mountReviewSubmit = function () {
+		if (!this.form) { return; }
+		this.form.hidden = false;
+		try { this.form.scrollIntoView({ behavior: 'smooth' }); } catch (e) { /* older browsers */ }
 	};
 
 	App.prototype.buildFormShell = function () {
 		var self = this;
-		var form = el('form', { id: 'hd-dd-form', class: 'hd-dd__form', hidden: true, novalidate: true });
-		form.appendChild(el('h3', { class: 'hd-dd__form-title', text: I18N.enquire || 'Enquire about this door' }));
+		var form = document.createElement('form');
+		form.id = 'hd-dd-form';
+		form.className = 'hd-dd__form';
+		form.hidden = true;
+		form.setAttribute('novalidate', 'novalidate');
+		form.appendChild(el('h3', 'hd-dd__form-title', I18N.enquire || 'Enquire about this door'));
 
 		[
 			{ name: 'name', label: 'Name', type: 'text', autocomplete: 'name' },
 			{ name: 'telephone', label: 'Telephone', type: 'tel', autocomplete: 'tel' },
 			{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email' },
 			{ name: 'postcode', label: 'Post code', type: 'text', autocomplete: 'postal-code' }
-		].forEach(function (f) {
-			var row = el('label', { class: 'hd-dd__form-row' });
-			row.appendChild(el('span', { class: 'hd-dd__form-label', text: f.label }));
-			row.appendChild(el('input', { class: 'hd-dd__form-input', type: f.type, name: f.name, autocomplete: f.autocomplete, required: true }));
-			row.appendChild(el('span', { class: 'hd-dd__form-error', 'data-error-for': f.name }));
+		].forEach(function (fld) {
+			var row = el('label', 'hd-dd__form-row');
+			row.appendChild(el('span', 'hd-dd__form-label', fld.label));
+			var input = document.createElement('input');
+			input.className = 'hd-dd__form-input';
+			input.type = fld.type;
+			input.name = fld.name;
+			input.required = true;
+			input.setAttribute('autocomplete', fld.autocomplete);
+			row.appendChild(input);
+			var err = el('span', 'hd-dd__form-error');
+			err.setAttribute('data-error-for', fld.name);
+			row.appendChild(err);
 			form.appendChild(row);
 		});
 
-		form.appendChild(el('input', { type: 'text', name: 'hd_hp', tabindex: '-1', autocomplete: 'off', class: 'hd-dd__hp', 'aria-hidden': 'true' }));
+		// Honeypot (bots fill it; humans never see it).
+		var hp = document.createElement('input');
+		hp.type = 'text';
+		hp.name = 'hd_hp';
+		hp.className = 'hd-dd__hp';
+		hp.tabIndex = -1;
+		hp.setAttribute('autocomplete', 'off');
+		hp.setAttribute('aria-hidden', 'true');
+		form.appendChild(hp);
 
-		var consentRow = el('label', { class: 'hd-dd__consent' });
-		consentRow.appendChild(el('input', { type: 'checkbox', name: 'consent', required: true }));
-		consentRow.appendChild(el('span', { text: I18N.consent || 'I agree to be contacted about this enquiry.' }));
-		form.appendChild(consentRow);
+		var consent = el('label', 'hd-dd__consent');
+		var cb = document.createElement('input');
+		cb.type = 'checkbox';
+		cb.name = 'consent';
+		cb.required = true;
+		consent.appendChild(cb);
+		consent.appendChild(el('span', null, I18N.consent || 'I agree to be contacted about this enquiry.'));
+		form.appendChild(consent);
 
-		form.appendChild(el('button', { type: 'submit', class: 'hd-dd__submit', text: I18N.enquire || 'Send enquiry' }));
-		form.appendChild(el('div', { class: 'hd-dd__form-status', role: 'status', 'aria-live': 'polite' }));
+		var submit = el('button', 'hd-dd__submit', I18N.enquire || 'Send enquiry');
+		submit.type = 'submit';
+		form.appendChild(submit);
+		form.appendChild(el('div', 'hd-dd__form-status'));
+		var statusEl = form.querySelector('.hd-dd__form-status');
+		statusEl.setAttribute('role', 'status');
+		statusEl.setAttribute('aria-live', 'polite');
 
 		form.addEventListener('submit', function (e) { e.preventDefault(); self.submit(form); });
 		return form;
 	};
 
 	App.prototype.submit = function (form) {
-		var self = this;
 		var statusEl = form.querySelector('.hd-dd__form-status');
 		var submitBtn = form.querySelector('.hd-dd__submit');
-		var f = form.elements; // access named controls safely (form.name is shadowed by the form's own name).
+		var f = form.elements; // named access (form.name is shadowed by the control named "name").
 		var data = {
 			name: f['name'].value,
 			telephone: f['telephone'].value,
@@ -323,19 +385,25 @@
 			postcode: f['postcode'].value,
 			consent: f['consent'].checked,
 			hd_hp: f['hd_hp'].value,
-			design: this.state.design
+			design: cleanDesign(this.wiz.state().design)
 		};
+
+		// QA harness has no WordPress REST endpoint — acknowledge without posting.
+		if (!CFG.restUrl) {
+			statusEl.textContent = I18N.previewOnly || 'Preview mode — enquiry not sent.';
+			return;
+		}
+
 		statusEl.textContent = '…';
 		submitBtn.disabled = true;
-
 		api('enquiry', { method: 'POST', body: JSON.stringify(data) }).then(function (res) {
 			submitBtn.disabled = false;
 			if (res.ok && res.body && res.body.ok) {
 				form.innerHTML = '';
-				form.appendChild(el('div', { class: 'hd-dd__success', text: res.body.message || 'Thank you — your design has been sent.' }));
+				form.appendChild(el('div', 'hd-dd__success', res.body.message || 'Thank you — your design has been sent.'));
 				return;
 			}
-			form.querySelectorAll('.hd-dd__form-error').forEach(function (n) { n.textContent = ''; });
+			Array.prototype.forEach.call(form.querySelectorAll('.hd-dd__form-error'), function (n) { n.textContent = ''; });
 			var fieldErrors = res.body && res.body.data && res.body.data.fields;
 			if (fieldErrors) {
 				Object.keys(fieldErrors).forEach(function (k) {
@@ -350,8 +418,31 @@
 		});
 	};
 
+	// ---- WordPress entry ----------------------------------------------------
+	function startFromConfig(root) {
+		var catUrl = CFG.catalogueUrl || (CFG.restUrl + 'catalogue');
+		var rmUrl = CFG.renderModelUrl || (CFG.restUrl + 'render-model');
+		Promise.all([
+			fetch(catUrl).then(function (r) { return r.json(); }),
+			fetch(rmUrl).then(function (r) { return r.json(); }).catch(function () { return null; }),
+			window.HD_DD_CATEGORIES ? Promise.resolve(window.HD_DD_CATEGORIES)
+				: (CFG.categoriesUrl ? fetch(CFG.categoriesUrl).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null))
+		]).then(function (res) {
+			var cv = res[0] && res[0].catalogue ? res[0].catalogue : res[0];
+			var rm = res[1] && res[1].model ? res[1].model : res[1];
+			if (!cv || !cv.byType) {
+				root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
+				return;
+			}
+			new App(root, cv, rm, res[2]).render();
+		}).catch(function () {
+			root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
+		});
+	}
+
+	// Expose for the QA harness; auto-start every shortcode container.
+	window.HD_DD_App = App;
 	document.addEventListener('DOMContentLoaded', function () {
-		var roots = document.querySelectorAll('[data-hd-door-designer]');
-		Array.prototype.forEach.call(roots, function (root) { new App(root).start(); });
+		Array.prototype.forEach.call(document.querySelectorAll('[data-hd-door-designer]'), startFromConfig);
 	});
 })();
