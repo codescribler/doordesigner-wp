@@ -1,177 +1,399 @@
 /*
- * HD Door Designer — scoped front-end styles.
+ * HD Door Designer — Architectural Mono design system
  * ------------------------------------------------------------------
- * Everything is namespaced under .hd-dd so the plugin's CSS neither leaks into
- * nor is broken by the theme. Typography is inherited from the theme; colours
- * come from the brand variables below.
+ * Scoped under .hd-dd — no styles leak to or from the host theme.
+ * Layout C: progress bar + back → stage canvas → step title →
+ *           horizontal carousel tiles → sticky CTA → review list.
+ * Typography inherited from theme. Tokens drive everything.
  *
- * BRAND TODO: the values below are placeholders. Sample hertfordshiredoors.co.uk
- * (primary CTA colour, body/heading fonts, button radius) and replace them so the
- * configurator reads as part of the site, not a bolted-on widget.
+ * Sections
+ *   1. Token block
+ *   2. App shell
+ *   3. Progress bar + back button
+ *   4. Stage area (door preview canvas)
+ *   5. Step title
+ *   6. Carousel + tiles
+ *   7. CTA (continue button)
+ *   8. Review summary list
+ *   9. Enquiry form (carried + restyled)
+ *  10. Success state
+ *  11. Notice / loading states
+ *  12. Honeypot
+ *  13. Responsive
  */
 
-.hd-dd {
-	/* --- Brand tokens (replace by sampling the live site) --- */
-	--hd-brand: #1d4f3f;          /* primary CTA / accent — PLACEHOLDER */
-	--hd-brand-ink: #ffffff;      /* text on brand */
-	--hd-brand-dark: #163b2f;     /* hover state — PLACEHOLDER */
-	--hd-surface: #ffffff;
-	--hd-surface-alt: #f5f5f3;
-	--hd-border: #dcdcd6;
-	--hd-ink: #222222;
-	--hd-muted: #6b6b66;
-	--hd-radius: 6px;
-	--hd-gap: 1rem;
 
-	color: var(--hd-ink);
-	font-family: inherit;        /* inherit the theme's body font */
-	line-height: 1.5;
-	box-sizing: border-box;
+/* ==========================================================================
+   1. TOKEN BLOCK
+   ========================================================================== */
+
+.hd-dd {
+  --ink:    #161616;
+  --paper:  #fff;
+  --line:   #e6e6e6;
+  --muted:  #8a8e96;
+  --stage:  #f3f3f1;
+  --brand:  #1d4f3f;   /* TODO: replace with sampled Hertfordshire Doors accent */
+  --radius: 6px;
+  --gap:    16px;
+  --maxw:   480px;
+
+  color: var(--ink);
+  background: var(--paper);
+  font-family: inherit;
+  line-height: 1.45;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
 }
-.hd-dd *, .hd-dd *::before, .hd-dd *::after { box-sizing: inherit; }
+
+.hd-dd *,
+.hd-dd *::before,
+.hd-dd *::after { box-sizing: inherit; }
+
+
+/* ==========================================================================
+   2. APP SHELL — Layout C wrapper
+   ========================================================================== */
+
+.hd-dd__app {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ==========================================================================
+   3. PROGRESS BAR + BACK BUTTON
+   ========================================================================== */
+
+.hd-dd__progress {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 14px 16px 8px;
+}
+
+.hd-dd__seg {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.hd-dd__seg.is-on { background: var(--ink); }
+
+.hd-dd__back {
+  background: none;
+  border: 0;
+  font-size: 20px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0 6px 0 0;
+}
+
+.hd-dd__back:hover { opacity: .7; }
+
+
+/* ==========================================================================
+   4. STAGE AREA — door preview canvas
+   ========================================================================== */
+
+.hd-dd__stage {
+  background: var(--stage);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+}
+
+.hd-dd__canvas {
+  width: 100%;
+  height: auto;
+  max-width: 360px;
+  display: block;
+}
+
+
+/* ==========================================================================
+   5. STEP TITLE
+   ========================================================================== */
+
+.hd-dd__steptitle {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin: 16px 16px 4px;
+  letter-spacing: -.01em;
+}
+
+
+/* ==========================================================================
+   6. CAROUSEL + TILES
+   ========================================================================== */
+
+.hd-dd__carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 8px 16px;
+  justify-content: flex-start;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;          /* Firefox */
+}
+
+.hd-dd__carousel::-webkit-scrollbar { display: none; } /* Chrome / Safari */
+
+/* Choice tile */
+.hd-dd__tile {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  width: 120px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-family: inherit;
+  transition: box-shadow .15s, border-color .15s;
+}
+
+.hd-dd__tile:hover { border-color: var(--muted); }
+
+.hd-dd__tile.is-selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+/* Media element inside tile (image or video still) */
+.hd-dd__tile-media {
+  width: 100%;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--stage);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Colour swatch (background applied by JS; no image) */
+.hd-dd__swatch {
+  width: 100%;
+  height: 90px;
+  border-radius: 4px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hd-dd__tile-label {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+
+/* ==========================================================================
+   7. CTA — continue / proceed button
+   ========================================================================== */
+
+.hd-dd__cta {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 16px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity .15s;
+  text-align: center;
+}
+
+.hd-dd__cta:hover { opacity: .85; }
+.hd-dd__cta:disabled { opacity: .45; cursor: default; }
+
+
+/* ==========================================================================
+   8. REVIEW SUMMARY LIST
+   ========================================================================== */
+
+.hd-dd__review dl {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 12px;
+  margin: 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.hd-dd__review dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hd-dd__review dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Inline edit button next to each review row */
+.hd-dd__edit {
+  background: none;
+  border: 0;
+  color: var(--brand);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hd-dd__edit:hover { text-decoration: underline; }
+
+
+/* ==========================================================================
+   9. ENQUIRY FORM  (carried from previous sheet, restyled to new tokens)
+   ========================================================================== */
+
+.hd-dd__form {
+  margin: calc(var(--gap) * 2) 16px 16px;
+  padding: calc(var(--gap) * 1.5);
+  background: var(--stage);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hd-dd__form-title {
+  margin-top: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.hd-dd__form-row {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.hd-dd__form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.hd-dd__form-input {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.hd-dd__form-input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+  border-color: var(--brand);
+}
+
+.hd-dd__form-error {
+  display: block;
+  color: #b00020;
+  font-size: 12px;
+  min-height: 1em;
+  margin-top: 3px;
+}
+
+.hd-dd__consent {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 12px 0;
+  line-height: 1.4;
+}
+
+.hd-dd__form-status {
+  margin-top: 8px;
+  min-height: 1.2em;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Form submit button — styled to match .hd-dd__cta */
+.hd-dd__submit {
+  display: inline-block;
+  padding: 12px 20px;
+  background: var(--ink);
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.hd-dd__submit:hover { opacity: .85; }
+.hd-dd__submit:disabled { opacity: .45; cursor: default; }
+
+
+/* ==========================================================================
+   10. SUCCESS STATE
+   ========================================================================== */
+
+.hd-dd__success {
+  padding: 24px 16px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+
+/* ==========================================================================
+   11. NOTICE / LOADING STATES
+   ========================================================================== */
 
 .hd-dd__loading,
 .hd-dd__notice {
-	padding: 2rem;
-	text-align: center;
-	color: var(--hd-muted);
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
 }
 
-/* --- Layout: preview + panel --- */
-.hd-dd__layout {
-	display: grid;
-	grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.1fr);
-	gap: calc(var(--hd-gap) * 2);
-	align-items: start;
-}
-@media (max-width: 860px) {
-	.hd-dd__layout { grid-template-columns: 1fr; }
-}
 
-.hd-dd__stage {
-	position: sticky;
-	top: 1rem;
-	background: var(--hd-surface-alt);
-	border: 1px solid var(--hd-border);
-	border-radius: var(--hd-radius);
-	padding: var(--hd-gap);
-	display: flex;
-	justify-content: center;
-}
-.hd-dd__canvas {
-	display: block;
-	width: 100%;
-	height: auto;
-	max-width: 420px;
-	margin: 0 auto 1rem;
-}
+/* ==========================================================================
+   12. HONEYPOT — hidden from humans, visible to bots
+   ========================================================================== */
 
-/* Interim preview = a live design summary (replaced by the layer compositor). */
-.hd-dd__preview { width: 100%; }
-.hd-dd__preview-note { font-weight: 700; margin-bottom: 0.6rem; }
-.hd-dd__summary {
-	display: grid;
-	grid-template-columns: auto 1fr;
-	gap: 0.25rem 0.75rem;
-	margin: 0;
-	font-size: 0.9rem;
-}
-.hd-dd__summary dt { color: var(--hd-muted); }
-.hd-dd__summary dd { margin: 0; font-weight: 600; }
-
-/* --- Steps / fields --- */
-.hd-dd__field {
-	border: 0;
-	border-top: 1px solid var(--hd-border);
-	margin: 0;
-	padding: var(--hd-gap) 0;
-}
-.hd-dd__field-legend {
-	font-weight: 700;
-	padding: 0;
-	margin-bottom: 0.5rem;
-}
-.hd-dd__choices {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-	gap: 0.5rem;
-}
-.hd-dd__choice {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.35rem;
-	padding: 0.4rem;
-	background: var(--hd-surface);
-	border: 1px solid var(--hd-border);
-	border-radius: var(--hd-radius);
-	cursor: pointer;
-	font: inherit;
-	font-size: 0.78rem;
-	text-align: center;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-	will-change: border-color;
-}
-.hd-dd__choice:hover { border-color: var(--hd-brand); }
-.hd-dd__choice.is-selected {
-	border-color: var(--hd-brand);
-	box-shadow: inset 0 0 0 2px var(--hd-brand);
-}
-.hd-dd__choice-img {
-	width: 100%;
-	height: 56px;
-	object-fit: contain;
-}
-.hd-dd__choice-label { color: var(--hd-muted); }
-
-/* --- CTA --- */
-.hd-dd__cta,
-.hd-dd__submit {
-	display: inline-block;
-	margin-top: var(--hd-gap);
-	padding: 0.85rem 1.5rem;
-	background: var(--hd-brand);
-	color: var(--hd-brand-ink);
-	border: 0;
-	border-radius: var(--hd-radius);
-	font: inherit;
-	font-weight: 700;
-	cursor: pointer;
-	transition: background-color 0.15s ease;
-}
-.hd-dd__cta:hover,
-.hd-dd__submit:hover { background: var(--hd-brand-dark); }
-.hd-dd__submit:disabled { opacity: 0.6; cursor: default; }
-
-/* --- Enquiry form --- */
-.hd-dd__form {
-	margin-top: calc(var(--hd-gap) * 2);
-	padding: calc(var(--hd-gap) * 1.5);
-	background: var(--hd-surface-alt);
-	border: 1px solid var(--hd-border);
-	border-radius: var(--hd-radius);
-	max-width: 460px;
-}
-.hd-dd__form-title { margin-top: 0; }
-.hd-dd__form-row { display: block; margin-bottom: 0.85rem; }
-.hd-dd__form-label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
-.hd-dd__form-input {
-	width: 100%;
-	padding: 0.6rem 0.7rem;
-	border: 1px solid var(--hd-border);
-	border-radius: var(--hd-radius);
-	font: inherit;
-}
-.hd-dd__form-input:focus { outline: 2px solid var(--hd-brand); outline-offset: 1px; }
-.hd-dd__form-error { display: block; color: #b00020; font-size: 0.8rem; min-height: 1em; }
-.hd-dd__consent { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.85rem; margin: 0.5rem 0; }
-.hd-dd__form-status { margin-top: 0.5rem; min-height: 1.2em; color: var(--hd-muted); }
-.hd-dd__success { padding: 1rem; font-weight: 600; }
-
-/* Honeypot — hidden from humans, visible to bots. */
 .hd-dd__hp {
-	position: absolute !important;
-	left: -9999px !important;
-	width: 1px; height: 1px;
-	overflow: hidden;
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+
+/* ==========================================================================
+   13. RESPONSIVE — wider viewports
+   ========================================================================== */
+
+@media (min-width: 860px) {
+  .hd-dd__app { --maxw: 520px; }
 }
