@@ -1,7 +1,7 @@
-# Dependencies (vendor the update-checker into the release zip, but don't track
-# the whole composer tree in dev). Comment the next line out if you prefer to
-# commit the vendored library for releases-from-source.
-/vendor/
+# Dependencies: ignore the composer tree EXCEPT the vendored update-checker,
+# which must ship with the plugin so wp-admin auto-updates work.
+/vendor/*
+!/vendor/plugin-update-checker/
 
 # Composer
 composer.lock

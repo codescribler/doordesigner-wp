@@ -1,0 +1,11 @@
+# Keep the release asset (built with `git archive`) a clean runtime plugin:
+# exclude dev-only files so they don't ship to WordPress installs.
+/docs/                       export-ignore
+/tools/                      export-ignore
+/samples/                    export-ignore
+/.github/                    export-ignore
+/.gitignore                  export-ignore
+/.gitattributes              export-ignore
+/HANDOFF.md                  export-ignore
+/endurance-catalogue.json    export-ignore
+/data/endurance-patch.json   export-ignore
