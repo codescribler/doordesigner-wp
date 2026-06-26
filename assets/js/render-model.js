@@ -17,6 +17,15 @@
 
 	function slotOf(u) { var m = String(u).match(/Images\/([^/]+)\//); return m ? m[1] : '?'; }
 
+	// Sidelight glass is an OVERLAY on the wide frame (which already renders the solid
+	// side panels). Endurance draws it only when the sidelight is Glazed; picking
+	// Unglazed simply omits the overlay. Default to Glazed (Endurance's own default)
+	// so the preview shows glass the moment a sidelit frame is chosen.
+	function sidelightGlazed(design) {
+		var t = design['Sidelight Type'];
+		return !t || t.label !== 'Unglazed';
+	}
+
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';
 
 	function assemble(model, type, design) {
@@ -52,7 +61,10 @@
 		var sd = (T.sidelights && T.sidelights.shapes) ? T.sidelights.shapes[get('Frame Design')] : null;
 		if (sd) {
 			layers.forEach(function (l) { l.cx += sd.doorOffsetX; });
-			(sd.panels || []).forEach(function (p) { push(p.url, p.geom); layers[layers.length - 1].slot = 'Side'; });
+			// Side-glass overlays only when Glazed; Unglazed shows the frame's solid panels.
+			if (sidelightGlazed(design)) {
+				(sd.panels || []).forEach(function (p) { push(p.url, p.geom); layers[layers.length - 1].slot = 'Side'; });
+			}
 			if (frame) {
 				push(frame.url.replace(/(\/DoorFrames\/)[^/]+(\/)/, '$1' + sd.frameVariant + '$2'), sd.frameGeom);
 			}
