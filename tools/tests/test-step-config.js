@@ -45,12 +45,25 @@ assert.ok(!steps.includes('knocker'), 'Ketu hides knocker (per-style: none)');
 steps = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).map((s) => s.key);
 assert.ok(steps.includes('glazing') && steps.includes('knocker'), 'Abbott shows glazing + knocker');
 
-// "No Sidelights" must NOT surface the sidelight-glass step (regex must not match the label).
+// "No Sidelights" must NOT surface either sidelight step (regex must not match the label).
 const noSL = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'No Sidelights' } }).map((s) => s.key);
+assert.ok(noSL.indexOf('sidelightType') === -1, 'No Sidelights hides the sidelight-type step');
 assert.ok(noSL.indexOf('sidelightGlass') === -1, 'No Sidelights hides the sidelight-glass step');
-// A real sidelit frame DOES surface it.
-const withSL = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'Double Sidelight' } }).map((s) => s.key);
-assert.ok(withSL.indexOf('sidelightGlass') !== -1, 'Double Sidelight shows the sidelight-glass step');
+
+// A real sidelit frame surfaces the sidelight-TYPE step first; the glass step only
+// appears once the sidelight is Glazed (Unglazed sidelights have no glass pattern).
+const slBase = { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'Double Sidelight' } };
+let slKeys = SC.applicableSteps(sd, slBase).map((s) => s.key);
+assert.ok(slKeys.indexOf('sidelightType') !== -1, 'Double Sidelight shows the sidelight-type step');
+assert.ok(slKeys.indexOf('sidelightGlass') === -1, 'Sidelight glass hidden until the sidelight is Glazed');
+
+const slGlazed = Object.assign({}, slBase, { 'Sidelight Type': { label: 'Glazed', id: 20 } });
+slKeys = SC.applicableSteps(sd, slGlazed).map((s) => s.key);
+assert.ok(slKeys.indexOf('sidelightGlass') !== -1, 'Glazed sidelight shows the glass step');
+
+const slUnglazed = Object.assign({}, slBase, { 'Sidelight Type': { label: 'Unglazed', id: 10 } });
+slKeys = SC.applicableSteps(sd, slUnglazed).map((s) => s.key);
+assert.ok(slKeys.indexOf('sidelightGlass') === -1, 'Unglazed sidelight hides the glass step');
 
 // Avantal hides internal colour + knocker (no such fields).
 const av = view('Avantal');

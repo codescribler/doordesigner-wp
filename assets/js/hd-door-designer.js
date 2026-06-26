@@ -31,6 +31,11 @@
 		'Matt Black': '#2b2b2b', 'Satin Steel': '#b9bcc0', 'Brushed Stainless': '#c4c7cb'
 	};
 
+	// Customer-facing display names for internal/trade labels. The stored design keeps
+	// the EXACT Endurance label; this only changes what the customer reads on screen.
+	var DISPLAY_LABELS = { 'Avantal': 'Aluminium' };
+	function displayLabel(label) { return DISPLAY_LABELS[label] || label; }
+
 	function el(tag, cls, txt) {
 		var n = document.createElement(tag);
 		if (cls) { n.className = cls; }
@@ -174,7 +179,7 @@
 		(this.customerView.types || []).forEach(function (label) {
 			var t = el('button', 'hd-dd__tile');
 			t.type = 'button';
-			t.appendChild(el('span', 'hd-dd__tile-label', label));
+			t.appendChild(el('span', 'hd-dd__tile-label', displayLabel(label)));
 			t.addEventListener('click', function () { self.wiz.selectType(label); self.render(); });
 			row.appendChild(t);
 		});
@@ -213,6 +218,7 @@
 		return {
 			steps: st.steps,
 			design: st.design,
+			typeLabel: st.design['Door Type'] ? displayLabel(st.design['Door Type'].label) : '',
 			onEdit: function (key) { self.wiz.jumpTo(key); self.render(); },
 			onSubmitClick: function () { self.mountReviewSubmit(); }
 		};
@@ -429,7 +435,7 @@
 				: (CFG.categoriesUrl ? fetch(CFG.categoriesUrl).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null))
 		]).then(function (res) {
 			var cv = res[0] && res[0].catalogue ? res[0].catalogue : res[0];
-			var rm = res[1] && res[1].model ? res[1].model : res[1];
+			var rm = (res[1] && res[1].available && res[1].model) ? res[1].model : null;
 			if (!cv || !cv.byType) {
 				root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
 				return;

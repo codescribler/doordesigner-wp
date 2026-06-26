@@ -10,6 +10,10 @@
     container.appendChild(el('div', 'hd-dd__steptitle', 'Your door'));
     var wrap = el('div', 'hd-dd__review');
     var dl = document.createElement('dl');
+    if (ctx.typeLabel) {
+      dl.appendChild(el('dt', null, 'Door type'));
+      dl.appendChild(el('dd', null, ctx.typeLabel));
+    }
     ctx.steps.forEach(function (s) {
       var chosen = ctx.design[s.heading];
       if (!chosen) { return; }

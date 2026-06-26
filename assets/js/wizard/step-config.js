@@ -14,13 +14,15 @@
     { key: 'extColour', label: 'Choose your colour', heading: 'Door Colour (External)', tileType: 'swatch' },
     { key: 'intColour', label: 'Inside colour', heading: 'Door Colour (Internal)', tileType: 'swatch',
       optional: true, defaultLabel: 'White', visibleWhen: function (n) { return !!n.hasInternalColour; } },
-    { key: 'sidelightGlass', label: 'Side panel glass', heading: 'Sidelight Glass', tileType: 'glass', source: 'sidelightGlass',
+    { key: 'sidelightType', label: 'Side panels: glazed or solid?', heading: 'Sidelight Type', tileType: 'choice', source: 'sidelightType',
       visibleWhen: function (n, d) { return sidelit(n, d); } },
+    { key: 'sidelightGlass', label: 'Side panel glass', heading: 'Sidelight Glass', tileType: 'glass', source: 'sidelightGlass',
+      visibleWhen: function (n, d) { return sidelit(n, d) && sidelightGlazed(d); } },
     { key: 'glazing', label: 'Choose your glass', heading: 'Door Glass', tileType: 'glass', source: 'glazing' },
     { key: 'hardware', label: 'Hardware finish', heading: 'Hardware Type', tileType: 'swatch' },
     { key: 'handle', label: 'Choose your handle', heading: 'Handle', tileType: 'handle' },
     { key: 'letterplate', label: 'Add a letterplate?', heading: 'Letterplate', tileType: 'choice', optional: true, defaultLabel: 'No Letterplate' },
-    { key: 'knocker', label: 'Add a knocker?', heading: 'Knocker', tileType: 'choice', source: 'knocker', optional: true,
+    { key: 'knocker', label: 'Add a knocker?', heading: 'Knocker', tileType: 'choice', source: 'knocker', optional: true, defaultLabel: 'No Knocker',
       visibleWhen: function (n) { return !!n.hasKnocker; } },
     { key: 'hinge', label: 'Hinge side', heading: '__hinge__', tileType: 'choice' }
   ];
@@ -29,6 +31,10 @@
     if (!n.hasFrameShape) { return false; }
     var shape = (d['Frame Design'] && d['Frame Design'].label) || '';
     return shape !== 'No Sidelights' && /sidelight|half flag/i.test(shape);
+  }
+
+  function sidelightGlazed(d) {
+    return !!(d['Sidelight Type'] && d['Sidelight Type'].label === 'Glazed');
   }
 
   // Resolve the real heading + choice list for a step given the active type+design.
@@ -42,6 +48,8 @@
     } else if (step.source === 'knocker') {
       var ks = d['Door Design'] && d['Door Design'].label;
       choices = (ks && n.knockerByStyle && n.knockerByStyle[ks]) ? n.knockerByStyle[ks] : n.fields['Knocker'];
+    } else if (step.source === 'sidelightType') {
+      choices = n.sidelights ? n.sidelights.sidelightType : null;
     } else if (step.source === 'sidelightGlass') {
       choices = n.sidelights ? n.sidelights.sidelightGlass : null;
     } else { choices = n.fields[heading]; }
