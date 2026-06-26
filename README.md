@@ -18,14 +18,14 @@ preserved exactly.
 | Plugin backbone (activation, shortcode, scoped assets, REST, DB, admin, updater) | ✅ built |
 | Enquiry capture → validate → save → email (with structured payload) | ✅ built |
 | GitHub auto-update wiring | ✅ wired (needs the library vendored + repo URL set) |
-| Cascading 12-field picker | ✅ built against the real data, per-type rules (Double=no frame-shape/+Master Leaf; Avantal=no internal-colour/knocker; hinge-side targets the right field) |
+| Guided visual wizard (one step at a time, category-first styles, live preview, progress, back/edit) | ✅ built — `assets/js/wizard/` implements Layout C flow; `tools/tests/test-wizard-controller.js` validates controller logic; step-config resolves per-type rules (Double=no frame-shape/+Master Leaf; Avantal=no internal-colour/knocker) |
 | Compact "customer view" catalogue (REST) | ✅ built — serves 176 KB instead of the 1.2 MB full file |
 | Layer model + assembler (`tools/build-render-model.js`, `assets/js/render-model.js`) | ✅ built & validated across all 4 types — shared Node/browser assembler resolves style/colour/cassette/glazing/frame/handle/knocker + double-door leaves into geometry-placed layers (`data/render-model.json`, 253 KB) |
 | Browser compositor (canvas) + UI wiring | ✅ built — `assets/js/preview.js` paints the layers; app fetches `/render-model`, renders on every change; `/preview-test.html` is a standalone QA harness (no WordPress needed) |
 | Sidelight rendering | ✅ built — door shifts into the centre, frame swaps to the wide variant, side panels drawn (Left/Right/Double + midrail/half-flag). Approximation: side glass uses the captured representative pattern (per-glass/solid-slab fidelity is a fast-follow); toplight shapes not yet captured |
-| Image mirroring (download Endurance assets, serve locally) | ⏳ to build (Daniel chose mirror over hotlink) — enumerate combo URLs from the render model + catalogue; set **Preview image base URL** in Settings to the mirror |
+| Image mirroring (download Endurance assets, serve locally) | ✅ built (`tools/mirror-images.js`) — downloads all captured image URLs to `assets/img/endurance/`; set **Preview image base URL** in Settings to the mirror |
 | Handle/knocker hardware-colour recolour | ⚙️ best-effort (uses captured baseline colour); full recolour is a fast-follow |
-| Brand styling (fonts/colours of hertfordshiredoors.co.uk) | ⚙️ placeholders in `assets/css` — sample the live site |
+| Brand styling (fonts/colours of hertfordshiredoors.co.uk) | ⚙️ brand accent colour + Glazed/Contemporary category split are tunables in `assets/css`; base templates shipped |
 
 ## Installation
 
