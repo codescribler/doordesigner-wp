@@ -64,14 +64,9 @@
 		// Stage derived from the actual layers so sidelit doors (wider) size correctly.
 		var stage = deriveStage(layers, T.canvas);
 
-		// Hinge side mirrors the whole door (handle moves to the other side) — but NOT
-		// when sidelights are present (the side is fixed by the frame shape, and the
-		// captured sidelit composites are at the left-hinge baseline).
-		var frameShape = (design['Frame Design'] && design['Frame Design'].label) || '';
-		var sidelit = !!(T.sidelights && T.sidelights.shapes && T.sidelights.shapes[frameShape]);
-		var hinge = (design['Door Hinged On'] && design['Door Hinged On'].label) ||
-			(design['Master Leaf'] && design['Master Leaf'].label) || '';
-		var flipDoor = !sidelit && /right/i.test(hinge);
+		// Hinge side mirrors the whole door (handle moves to the other side). The decision
+		// lives in the shared render model so the Node build + browser agree and can't drift.
+		var flipDoor = window.HD_DD_RenderModel.shouldFlip(this.model, type, design);
 
 		// Size the backing canvas to the stage aspect (crisp on hi-dpi).
 		var cssW = this.canvas.clientWidth || 360;

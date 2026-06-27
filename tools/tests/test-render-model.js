@@ -9,7 +9,7 @@
 const assert = require('node:assert/strict');
 const path = require('path');
 const fs = require('fs');
-const { assemble } = require(path.join(__dirname, '..', '..', 'assets/js/render-model.js'));
+const { assemble, shouldFlip } = require(path.join(__dirname, '..', '..', 'assets/js/render-model.js'));
 const model = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data/render-model.json'), 'utf8'));
 
 const TYPE = 'Single Door';
@@ -55,5 +55,26 @@ assert.equal(dd.filter((l) => l.slot === 'DoorFrames').length, 1, 'Double-door f
 // 6. A borrowed handle (no native double-door layer) still draws on the canvas.
 const ddh = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Handle': { label: 'Premium Stainless Lever Handles' } }).filter((l) => /Handles/i.test(l.slot));
 assert.ok(ddh.length > 0 && /PremiumLever/i.test(ddh[0].url), 'Borrowed lever handle is drawn on the double-door canvas');
+
+// 7. Hinge orientation. The captured baseline is a RIGHT-hinged / RIGHT-leaf door
+//    (handle on the latch side, opposite the hinges). The whole-door mirror must
+//    therefore flip ONLY when the customer picks the OPPOSITE (left) hinge — never for
+//    the baseline (right). Flipping the baseline is what put the handle on the wrong
+//    side / hard against the edge.
+const single = (hinge) => ({ 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Door Hinged On': { label: hinge } });
+assert.equal(shouldFlip(model, 'Single Door', single('Hinges on Right')), false, 'Hinges on Right = baseline → no flip (handle stays on the left/latch side)');
+assert.equal(shouldFlip(model, 'Single Door', single('Hinges on Left')), true, 'Hinges on Left → flip so the handle moves to the right');
+const sidelitLeft = Object.assign({}, single('Hinges on Left'), { 'Frame Colour': { label: 'Anthracite Grey/White' }, 'Frame Design': { label: 'Double Sidelight' } });
+assert.equal(shouldFlip(model, 'Single Door', sidelitLeft), false, 'A sidelit door never flips (the frame fixes the side)');
+assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Right Leaf' } }), false, 'Right Leaf master = baseline → no flip');
+assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Left Leaf' } }), true, 'Left Leaf master → flip');
+
+// 8. Letterplate is composited onto the door (it has captured image + geometry, exactly
+//    like a knocker). A selected letterplate must add a Letterplates layer; "No Letterplate"
+//    adds nothing.
+const withLetter = assemble(model, 'Single Door', { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Letterplate': { label: 'Letterplate' } });
+assert.ok(withLetter.some((l) => l.slot === 'Letterplates'), 'A selected letterplate draws a Letterplates layer');
+const noLetter = assemble(model, 'Single Door', { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Letterplate': { label: 'No Letterplate' } });
+assert.ok(!noLetter.some((l) => l.slot === 'Letterplates'), 'No Letterplate draws no Letterplates layer');
 
 console.log('render-model OK');

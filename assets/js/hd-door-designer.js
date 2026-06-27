@@ -353,7 +353,12 @@
 			if (k && k.url) { return img(base + '/' + k.url); }
 			return null;
 		}
-		// type, frame, letterplate, hinge, sidelightGlass → label/icon only.
+		if (step.key === 'letterplate') {
+			var lp = T.letterplates && T.letterplates[choice.label];
+			if (lp && lp.url) { return img(base + '/' + lp.url); }
+			return null;
+		}
+		// type, frame, hinge, sidelightGlass → label/icon only.
 		return null;
 	};
 

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handle placement probe</title>
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:20px;background:#fafafa;}
+  .row{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start;}
+  .case{background:#f3f3f1;border:1px solid #ddd;border-radius:8px;padding:10px;}
+  .case h3{margin:0 0 8px;font-size:.85rem;font-weight:600;text-align:center;}
+  .stagewrap{position:relative;width:240px;}
+  canvas{width:240px;height:auto;display:block;}
+  /* leaf-edge + handle-centre guides drawn as positioned lines via JS */
+  .guide{position:absolute;top:0;bottom:0;width:1px;}
+  .edge{background:rgba(220,40,40,.8);} .centre{background:rgba(20,120,40,.85);}
+  #log{font:12px monospace;white-space:pre;margin-top:16px;color:#333;}
+</style>
+</head>
+<body>
+<h2 style="font-size:1rem">Handle placement probe — red = door-leaf edges, green = handle centre</h2>
+<div class="row" id="row"></div>
+<div id="log"></div>
+<script>
+(function(){
+  var CASES=[
+    { id:'sL', title:'Single — Hinges on Left', type:'Single Door',
+      design:{'Door Design':{label:'Ben Nevis'},'Door Colour (External)':{label:'Anthracite Grey'},'Door Hinged On':{label:'Hinges on Left'}} },
+    { id:'sR', title:'Single — Hinges on Right', type:'Single Door',
+      design:{'Door Design':{label:'Ben Nevis'},'Door Colour (External)':{label:'Anthracite Grey'},'Door Hinged On':{label:'Hinges on Right'}} },
+    { id:'dL', title:'Double — Left Leaf master', type:'Double Door',
+      design:{'Door Design':{label:'Ben Nevis'},'Door Colour (External)':{label:'Anthracite Grey'},'Master Leaf':{label:'Left Leaf'}} }
+  ];
+  var row=document.getElementById('row'), log=document.getElementById('log');
+  fetch('../data/render-model.json').then(function(r){return r.json();}).then(function(model){
+    var lines=[];
+    CASES.forEach(function(c){
+      var T=model.types[c.type];
+      var wrap=document.createElement('div'); wrap.className='case';
+      wrap.innerHTML='<h3>'+c.title+'</h3>';
+      var sw=document.createElement('div'); sw.className='stagewrap';
+      var cv=document.createElement('canvas'); sw.appendChild(cv); wrap.appendChild(sw); row.appendChild(wrap);
+      var comp=window.HD_DD_Preview.create(cv,{model:model,assetBase:model._assetBase});
+      var design={}; design['Door Type']={label:c.type};
+      Object.keys(c.design).forEach(function(k){design[k]=c.design[k];});
+      comp.render(c.type,design).then(function(){
+        // compute geometry to place guide lines (post-render canvas px -> css px ratio)
+        var layers=window.HD_DD_RenderModel.assemble(model,c.type,design);
+        var blank=layers.filter(function(l){return /DoorBlanks/.test(l.url);})[0];
+        var handle=layers.filter(function(l){return /Handles/.test(l.url);})[0];
+        var stageW=0; layers.forEach(function(l){stageW=Math.max(stageW,(l.cx||0)+(l.w||0)/2);});
+        var flipped=window.HD_DD_RenderModel.shouldFlip(model,c.type,design);
+        var cssW=240, k=cssW/stageW;
+        function vline(xStage,cls){ var d=document.createElement('div'); d.className='guide '+cls;
+          var x=flipped? (stageW - xStage) : xStage; // mirror guides too when door is flipped
+          d.style.left=(x*k)+'px'; sw.appendChild(d); }
+        if(blank){ vline(blank.cx-blank.w/2,'edge'); vline(blank.cx+blank.w/2,'edge'); }
+        if(handle){ vline(handle.cx,'centre');
+          var leafL=blank.cx-blank.w/2, leafR=blank.cx+blank.w/2;
+          var hL=handle.cx-handle.w/2, hR=handle.cx+handle.w/2;
+          lines.push(c.title+': leaf['+leafL.toFixed(1)+'..'+leafR.toFixed(1)+'] handle cx='+handle.cx.toFixed(1)+
+            ' span['+hL.toFixed(1)+'..'+hR.toFixed(1)+'] flipped='+flipped+
+            '  | inset L='+(hL-leafL).toFixed(1)+' inset R='+(leafR-hR).toFixed(1));
+          log.textContent=lines.join('\n');
+        }
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

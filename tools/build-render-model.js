@@ -127,6 +127,12 @@ function buildType(node) {
   const kf = node.fields['Knocker'];
   (kf ? kf.choices : []).forEach((c) => { const k = keep(c.delta, 'Knockers')[0]; if (k) knockers[c.label] = { url: strip(k.url), geom: geom(k) }; });
 
+  // LETTERPLATES: label -> captured layer (same shape as knockers — the source catalogue
+  // records a Letterplates/* image + geometry under each Letterplate choice's delta).
+  const letterplates = {};
+  const ltf = node.fields['Letterplate'];
+  (ltf ? ltf.choices : []).forEach((c) => { const lp = keep(c.delta, 'Letterplates')[0]; if (lp) letterplates[c.label] = { url: strip(lp.url), geom: geom(lp) }; });
+
   const dripbar = keep(base, 'DripBars')[0];
 
   // Z-order from the baseline composite's folder sequence.
@@ -142,6 +148,7 @@ function buildType(node) {
     handles, baseHandle: baseHandle ? { url: strip(baseHandle.url), geom: geom(baseHandle) } : null,
     hardwareSuffix,
     knockers,
+    letterplates,
     dripbar: dripbar ? { url: strip(dripbar.url), geom: geom(dripbar) } : null,
     sidelights: buildSidelights(node),
     segments: node.segments || null

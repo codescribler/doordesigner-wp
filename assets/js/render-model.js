@@ -39,6 +39,22 @@
 		return !t || t.label !== 'Unglazed';
 	}
 
+	// Whole-door horizontal mirror for the chosen hinge side. The captured baseline is a
+	// RIGHT-hinged / RIGHT-leaf door, so its handle already sits on the correct (left/latch)
+	// side. We therefore mirror ONLY when the customer picks the OPPOSITE (left) hinge.
+	// Sidelit doors never mirror — the frame shape fixes the side, and the sidelit
+	// composites are captured at the left-hinge baseline.
+	function shouldFlip(model, type, design) {
+		var T = model && model.types ? model.types[type] : null;
+		if (!T) { return false; }
+		var frameShape = (design['Frame Design'] && design['Frame Design'].label) || '';
+		var sidelit = !!(T.sidelights && T.sidelights.shapes && T.sidelights.shapes[frameShape]);
+		if (sidelit) { return false; }
+		var hinge = (design['Door Hinged On'] && design['Door Hinged On'].label) ||
+			(design['Master Leaf'] && design['Master Leaf'].label) || '';
+		return /left/i.test(hinge);
+	}
+
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';
 
 	function assemble(model, type, design) {
@@ -80,6 +96,9 @@
 		// knocker
 		var knock = T.knockers[get('Knocker')];
 		if (knock) { push(knock.url, knock.geom); }
+		// letterplate
+		var letter = T.letterplates && T.letterplates[get('Letterplate')];
+		if (letter) { push(letter.url, letter.geom); }
 		// drip bar
 		if (T.dripbar) { push(T.dripbar.url, T.dripbar.geom); }
 
@@ -127,5 +146,5 @@
 		return layers;
 	}
 
-	return { assemble: assemble, slotOf: slotOf };
+	return { assemble: assemble, slotOf: slotOf, shouldFlip: shouldFlip };
 }));
