@@ -140,7 +140,18 @@ function buildType(node, typeName) {
   const frames = {};
   const fc = node.fields['Frame Colour'];
   (fc ? fc.choices : []).forEach((c) => { const f = keep(c.delta, 'DoorFrames')[0]; if (f) frames[c.label] = { url: strip(f.url), geom: geom(f) }; });
-  const baseFrame = keep(base, 'DoorFrames')[0];
+  let baseFrame = keep(base, 'DoorFrames')[0];
+  let baseFrameGeom = baseFrame ? geom(baseFrame) : null;
+  // The Stable Door was captured with the DOUBLE-door frame (293px wide) → it rendered on a
+  // too-wide canvas with the door shoved to the left (white space on the right). Endurance
+  // renders the stable door at single-door proportions; rewrite its frame to the Single-width
+  // variant + geometry. (Verified: Endurance stable canvas is 900px wide, blank centred.)
+  if (typeName === 'Stable Door') {
+    const SINGLE_FRAME = { cx: 77.625, cy: 159, w: 155.25, h: 318, rotation: 0, flipH: false, leftSlab: true, urlRight: '' };
+    const toSingle = (u) => String(u).replace('/DoorFrames/Double/', '/DoorFrames/Single/');
+    Object.keys(frames).forEach((k) => { frames[k] = { url: toSingle(frames[k].url), geom: Object.assign({}, SINGLE_FRAME) }; });
+    if (baseFrame) { baseFrame.url = toSingle(strip(baseFrame.url)); baseFrameGeom = Object.assign({}, SINGLE_FRAME); }
+  }
 
   // HANDLES: handle label -> captured layer (baseline hardware colour) + derived base name.
   const handles = {};
@@ -199,9 +210,9 @@ function buildType(node, typeName) {
   return {
     baselineColour, baselineMould, baselineCassetteKey,
     zOrder,
-    canvas: deriveCanvas(base),
+    canvas: typeName === 'Stable Door' ? { width: 156, height: deriveCanvas(base).height } : deriveCanvas(base),
     styles,
-    frames, baseFrame: baseFrame ? { url: strip(baseFrame.url), geom: geom(baseFrame) } : null,
+    frames, baseFrame: baseFrame ? { url: strip(baseFrame.url), geom: baseFrameGeom } : null,
     handles, baseHandle: baseHandle ? { url: strip(baseHandle.url), geom: baseHandleGeom } : null,
     hardwareSuffix,
     knockers,

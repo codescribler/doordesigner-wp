@@ -109,4 +109,10 @@ const hdCyFor = (type, style) => {
 assert.equal(hdCyFor('Stable Door', 'Ben Nevis Stable'), 144, 'Stable handle sits at cy 144 (just above the split)');
 assert.equal(hdCyFor('Single Door', 'Abbott'), 160.5, 'Single handle unchanged at door centre (160.5)');
 
+// 13. The stable door renders at single-door width — it was captured with the double-door frame
+//     (293px) which shoved the door to the left of a too-wide canvas.
+assert.equal(model.types['Stable Door'].canvas.width, 156, 'Stable door canvas is single-width (156), not double (294)');
+assert.ok(/DoorFrames\/Single\//.test(model.types['Stable Door'].baseFrame.url), 'Stable door uses the Single-width frame, not the Double frame');
+assert.equal(model.types['Stable Door'].baseFrame.geom.w, 155.25, 'Stable frame is single-width (155.25)');
+
 console.log('render-model OK');
