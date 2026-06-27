@@ -25,6 +25,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Assets */
 	public $assets;
 
+	/** @var HD_DD_Image_Proxy */
+	public $image_proxy;
+
 	/** @var HD_DD_Enquiry */
 	public $enquiry;
 
@@ -49,15 +52,17 @@ final class HD_DD_Plugin {
 	private function __construct() {
 		load_plugin_textdomain( 'hd-door-designer', false, dirname( HD_DD_BASENAME ) . '/languages' );
 
-		$this->repository = new HD_DD_Repository();
-		$this->catalogue  = new HD_DD_Catalogue();
-		$this->assets     = new HD_DD_Assets( $this->catalogue );
+		$this->repository  = new HD_DD_Repository();
+		$this->catalogue   = new HD_DD_Catalogue();
+		$this->image_proxy = new HD_DD_Image_Proxy( $this->catalogue );
+		$this->assets      = new HD_DD_Assets( $this->catalogue );
 		$this->shortcode  = new HD_DD_Shortcode( $this->assets );
 		$this->enquiry    = new HD_DD_Enquiry( $this->repository, $this->catalogue );
 		$this->admin      = new HD_DD_Admin( $this->repository );
 		$this->updater    = new HD_DD_Updater();
 
 		$this->catalogue->register();
+		$this->image_proxy->register();
 		$this->assets->register();
 		$this->shortcode->register();
 		$this->enquiry->register();

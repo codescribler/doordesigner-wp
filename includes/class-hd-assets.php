@@ -106,17 +106,14 @@ class HD_DD_Assets {
 		return is_readable( $path ) ? (string) filemtime( $path ) : HD_DD_VERSION;
 	}
 
-	/** Get the asset base URL: setting override, else local mirror if present, else empty. */
+	/** Get the asset base URL: setting override (e.g. a CDN), else the on-demand image
+	 *  cache endpoint, which serves images from this site (fetched + cached from upstream). */
 	private function get_asset_base() {
 		$setting = HD_DD_Plugin::settings()['asset_base'];
 		if ( $setting ) {
 			return $setting;
 		}
-		$mirror_dir = HD_DD_DIR . 'assets/img/endurance';
-		if ( is_dir( $mirror_dir ) ) {
-			return HD_DD_URL . 'assets/img/endurance';
-		}
-		return '';
+		return esc_url_raw( rest_url( HD_DD_REST_NS . '/img' ) );
 	}
 
 	/** Strings the JS app needs (kept here so they're translatable). */

@@ -79,6 +79,9 @@ class HD_DD_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Door Designer Settings', 'hd-door-designer' ); ?></h1>
+			<?php if ( isset( $_GET['hd_dd_cache_cleared'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Cached preview images cleared.', 'hd-door-designer' ); ?></p></div>
+			<?php endif; ?>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'hd_dd_settings_group' ); ?>
 				<table class="form-table" role="presentation">
@@ -110,6 +113,18 @@ class HD_DD_Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+
+			<hr>
+			<h2><?php esc_html_e( 'Preview images', 'hd-door-designer' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Door preview images are fetched from the supplier once and cached on this site. Clear the cache if the supplier updates their artwork — images re-download on next view.', 'hd-door-designer' ); ?>
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="hd_dd_clear_img_cache" />
+				<?php wp_nonce_field( 'hd_dd_clear_img_cache' ); ?>
+				<?php submit_button( __( 'Clear cached preview images', 'hd-door-designer' ), 'secondary', 'submit', false ); ?>
+			</form>
+
 			<p class="description" style="margin-top:1.5em">
 				Built by <a href="https://dreamfree.co.uk" target="_blank" rel="noopener">Dreamfree</a>
 				&middot; Support: <a href="mailto:daniel@dreamfree.co.uk">daniel@dreamfree.co.uk</a>
