@@ -123,6 +123,7 @@ class HD_DD_Assets {
 	private function i18n_strings() {
 		return array(
 			'next'         => __( 'Continue', 'hd-door-designer' ),
+			'skip'         => __( 'Skip', 'hd-door-designer' ),
 			'back'         => __( 'Back', 'hd-door-designer' ),
 			'chooseType'   => __( 'What kind of door?', 'hd-door-designer' ),
 			'intro'        => __( 'Design your door and get a free, no-obligation quote — it takes about two minutes.', 'hd-door-designer' ),

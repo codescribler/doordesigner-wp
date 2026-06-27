@@ -8,7 +8,7 @@
   // tileType: how the renderer draws choices; visibleWhen/choicesFor decide inclusion.
   var STEPS = [
     { key: 'type', label: 'What kind of door?', name: 'Door type', heading: 'Door Type', tileType: 'icon' },
-    { key: 'frame', label: 'Just the door, or side panels too?', name: 'Side panels', heading: 'Frame Design', tileType: 'icon',
+    { key: 'frame', label: 'Just the door, or side panels too?', name: 'Side panels', heading: 'Frame Design', tileType: 'icon', groupFirst: true,
       visibleWhen: function (n) { return !!n.hasFrameShape; } },
     { key: 'style', label: 'Pick your style', name: 'Style', heading: 'Door Design', tileType: 'door', categoryFirst: true },
     { key: 'extColour', label: 'Choose your colour', name: 'Colour', heading: 'Door Colour (External)', tileType: 'swatch' },
@@ -37,6 +37,15 @@
     return !!(d['Sidelight Type'] && d['Sidelight Type'].label === 'Glazed');
   }
 
+  // High-level grouping for the Frame Design step's progressive disclosure: a layperson
+  // first picks one of these three, then sees only the matching variants.
+  function frameGroup(label) {
+    if (/^no sidelights$/i.test(label)) { return 'Just the door'; } // must precede the /sidelight/ test
+    if (/toplight/i.test(label)) { return 'With a window above'; }
+    if (/sidelight|half flag/i.test(label)) { return 'With side panels'; }
+    return 'Just the door';
+  }
+
   // Resolve the real heading + choice list for a step given the active type+design.
   function resolve(step, n, d) {
     var heading = step.heading;
@@ -63,10 +72,10 @@
       var r = resolve(step, n, d);
       if (!r.choices || !r.choices.length) { return; }
       out.push({ key: step.key, label: step.label, name: step.name || step.label, heading: r.heading, tileType: step.tileType,
-        optional: !!step.optional, defaultLabel: step.defaultLabel, categoryFirst: !!step.categoryFirst, choices: r.choices });
+        optional: !!step.optional, defaultLabel: step.defaultLabel, categoryFirst: !!step.categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
     });
     return out;
   }
 
-  return { steps: STEPS, applicableSteps: applicableSteps, sidelit: sidelit };
+  return { steps: STEPS, applicableSteps: applicableSteps, sidelit: sidelit, frameGroup: frameGroup };
 }));

@@ -72,6 +72,7 @@
 		// key of the step painted on the PREVIOUS render — used by the _styleCategory
 		// reset rule so the category picker re-shows on a fresh arrival at the style step.
 		this._lastKey = null;
+		this._lastView = null; // last view name sent to analytics (funnel de-dup)
 		this._built = false;
 	}
 
@@ -139,13 +140,14 @@
 		// NOT a counted wizard step (the catalogue has no per-node "Door Type" field),
 		// so we render it ourselves and let selectType() drop us at the first real step.
 		if (!design['Door Type']) {
-			this._lastKey = null; this._atForm = false;
+			this._lastKey = null; this._atForm = false; this._frameGroup = null;
 			if (this.heroImg && CFG.heroImage) { this.heroImg.hidden = false; }
 			this.canvas.hidden = true;
 			this.renderTypeChooser();
 			this.progressEl.innerHTML = '';
 			this.backBtn.disabled = true;
 			this.continueBtn.hidden = true;
+			this.trackView('start');
 			return;
 		}
 		if (this.heroImg) { this.heroImg.hidden = true; }
@@ -160,6 +162,7 @@
 		// step — a category click or a style-tile select re-renders in place — it is
 		// preserved so the chosen category's tiles stay visible.
 		if (key === 'style' && this._lastKey !== 'style') { delete design._styleCategory; }
+		if (key === 'frame' && this._lastKey !== 'frame') { this._frameGroup = null; }
 
 		if (st.atReview) {
 			// The enquiry form renders in the body (not a separate block) so the door
@@ -172,6 +175,13 @@
 			this.continueBtn.hidden = false;
 			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
 			this.continueBtn.disabled = !(step.optional || !!design[step.heading]);
+			// Optional extras (letterplate, knocker, inside colour) are pre-filled with a
+			// sensible default, so they read as skippable: while the selection is still that
+			// untouched default the primary button says "Skip"; it becomes "Continue" once
+			// the visitor actively chooses a different option.
+			var sel = design[step.heading];
+			var skippable = step.optional && (!sel || (step.defaultLabel && sel.label === step.defaultLabel));
+			this.continueBtn.textContent = skippable ? (I18N.skip || 'Skip') : (I18N.next || 'Continue');
 		}
 
 		this.renderProgress(st.progress);
@@ -179,7 +189,18 @@
 
 		this.repaintPreview(activeType, design);
 
+		// One funnel event per distinct view, so the analytics show where people drop off.
+		this.trackView(st.atReview ? (this._atForm ? 'form' : 'review') : key);
+
 		this._lastKey = key;
+	};
+
+	// Fire a Clarity event the first time each view is shown in a run, de-duped so
+	// re-renders of the same step (a tile click, a category switch) don't double-count.
+	App.prototype.trackView = function (viewKey) {
+		if (!viewKey || viewKey === this._lastView) { return; }
+		this._lastView = viewKey;
+		this.track('door_step_' + viewKey);
 	};
 
 	App.prototype.renderTypeChooser = function () {
@@ -212,6 +233,12 @@
 		try { this.compositor.render(type, design); } catch (e) { /* tolerate a missing asset */ }
 	};
 
+	// Funnel tracking (Microsoft Clarity, if installed) — fire a custom event per view so
+	// you can see exactly which step loses people. Best-effort: a no-op if Clarity is absent.
+	App.prototype.track = function (name) {
+		try { if (typeof window.clarity === 'function') { window.clarity('event', name); } } catch (e) { /* analytics is best-effort */ }
+	};
+
 	// ---- Context objects handed to the renderers ----------------------------
 	App.prototype.stepCtx = function (st, step) {
 		var self = this;
@@ -221,6 +248,10 @@
 			thumbFor: function (s, c) { return self.thumbFor(s, c); },
 			onSelect: function (heading, choice) { self.onSelect(heading, choice); },
 			categoryOf: function (label) { return self.categoryOf(label); },
+			groupOf: function (label) { return HD_DD_StepConfig.frameGroup(label); },
+			frameGroup: function () { return self._frameGroup || null; },
+			setFrameGroup: function (g) { self._frameGroup = g; self.render(); },
+			clearChoice: function (heading) { delete self.wiz.state().design[heading]; self._frameGroup = null; self.render(); },
 			rerender: function () { self.render(); }
 		};
 	};
@@ -417,6 +448,7 @@
 	};
 
 	App.prototype.submit = function (form) {
+		var self = this;
 		var statusEl = form.querySelector('.hd-dd__form-status');
 		var submitBtn = form.querySelector('.hd-dd__submit');
 		var f = form.elements; // named access (form.name is shadowed by the control named "name").
@@ -441,6 +473,7 @@
 		api('enquiry', { method: 'POST', body: JSON.stringify(data) }).then(function (res) {
 			submitBtn.disabled = false;
 			if (res.ok && res.body && res.body.ok) {
+				self.track('door_quote_submitted'); // the conversion event — the whole funnel's goal
 				form.innerHTML = '';
 				form.appendChild(el('div', 'hd-dd__success', res.body.message || 'Thank you — your design has been sent.'));
 				return;

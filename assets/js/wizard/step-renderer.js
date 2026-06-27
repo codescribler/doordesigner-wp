@@ -31,6 +31,36 @@
 	function renderStep(container, step, ctx) {
 		container.innerHTML = '';
 		container.appendChild(el('div', 'hd-dd__steptitle', step.label));
+
+		// Frame Design: progressive disclosure — pick a high-level group (Just the door /
+		// With side panels / With a window above), then only its variants are shown.
+		if (step.groupFirst) {
+			var sel = ctx.design[step.heading];
+			var activeGroup = (sel ? ctx.groupOf(sel.label) : null) || ctx.frameGroup();
+			if (!activeGroup) {
+				var grow = el('div', 'hd-dd__carousel');
+				uniqueGroups(step, ctx).forEach(function (g) {
+					var b = el('button', 'hd-dd__tile'); b.type = 'button';
+					b.appendChild(el('span', 'hd-dd__tile-label', g));
+					b.addEventListener('click', function () {
+						var opts = step.choices.filter(function (c) { return ctx.groupOf(c.label) === g; });
+						if (opts.length === 1) { ctx.onSelect(step.heading, opts[0]); } else { ctx.setFrameGroup(g); }
+					});
+					grow.appendChild(b);
+				});
+				container.appendChild(grow);
+				return;
+			}
+			var change = el('button', 'hd-dd__change', '‹ Change'); change.type = 'button';
+			change.addEventListener('click', function () { ctx.clearChoice(step.heading); });
+			container.appendChild(change);
+			var fcar = el('div', 'hd-dd__carousel');
+			step.choices.filter(function (c) { return ctx.groupOf(c.label) === activeGroup; })
+				.forEach(function (c) { fcar.appendChild(tile(step, c, ctx)); });
+			container.appendChild(fcar);
+			return;
+		}
+
 		if (step.categoryFirst && !ctx.design._styleCategory) {
 			var cats = uniqueCategories(step, ctx);
 			var row = el('div', 'hd-dd__carousel');
@@ -53,6 +83,12 @@
 	function uniqueCategories(step, ctx) {
 		var seen = {}; var out = [];
 		step.choices.forEach(function (c) { var k = ctx.categoryOf(c.label); if (k && !seen[k]) { seen[k] = 1; out.push(k); } });
+		return out;
+	}
+
+	function uniqueGroups(step, ctx) {
+		var seen = {}; var out = [];
+		step.choices.forEach(function (c) { var k = ctx.groupOf(c.label); if (k && !seen[k]) { seen[k] = 1; out.push(k); } });
 		return out;
 	}
 

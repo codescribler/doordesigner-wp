@@ -153,6 +153,20 @@
   letter-spacing: -.01em;
 }
 
+/* "‹ Change" link back to the group picker (Frame Design progressive disclosure). */
+.hd-dd__change {
+  display: block;
+  background: none;
+  border: 0;
+  color: var(--brand);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  margin: 0 16px 6px;
+  padding: 0;
+}
+.hd-dd__change:hover { text-decoration: underline; }
+
 
 /* ==========================================================================
    6. CAROUSEL + TILES
