@@ -81,4 +81,15 @@ assert.ok(!noLetter.some((l) => l.slot === 'Letterplates'), 'No Letterplate draw
 const ddLetter = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Letterplate': { label: 'Letterplate' } });
 assert.equal(ddLetter.filter((l) => l.slot === 'Letterplates').length, 1, 'Double door draws exactly one letterplate (not one per leaf)');
 
+// 10. Letterplate HEIGHT is mould-dependent — the same letterplate sits at different cy on
+//     different door pressings (Endurance render truth: Abbott central rail, Brecon bottom rail).
+const lpCyFor = (type, style) => {
+  const ls = assemble(model, type, { 'Door Type': { label: type }, 'Door Design': { label: style }, 'Letterplate': { label: 'Letterplate' } }).filter((l) => l.slot === 'Letterplates');
+  return ls.length ? ls[0].cy : null;
+};
+assert.equal(lpCyFor('Single Door', 'Abbott'), 152, 'Abbott (Mould 10) letterplate sits in the central rail (cy 152)');
+assert.equal(lpCyFor('Single Door', 'Brecon'), 288, 'Brecon (Mould 6) letterplate sits in the bottom rail (cy 288)');
+assert.notEqual(lpCyFor('Single Door', 'Abbott'), lpCyFor('Single Door', 'Brecon'), 'Letterplate height varies by mould');
+assert.equal(lpCyFor('Stable Door', 'Ben Nevis Stable'), 277, 'Stable Ben Nevis letterplate cy 277');
+
 console.log('render-model OK');

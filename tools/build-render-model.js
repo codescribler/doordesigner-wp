@@ -56,13 +56,26 @@ function parseGlazing(url) {
   return m ? { glass: m[1], cassetteKey: m[2], ext: m[3] } : null;
 }
 
-// Endurance's option-delta geometry for the letterplate is unreliable on some door
-// types — Single/Double captured it ~30px too high (up at handle height instead of the
-// lower-central rail). The TRUE render position, read from Endurance's own renderer
-// (mJobState.Job.Drawing.Elements, canvas-space scaled to our 318-tall stage), is a fixed
-// height per type. Override the captured cy with that verified value where they disagree.
-// Stable (183) and Avantal (194) already matched the renderer and need no override.
-const LETTERPLATE_CY = { 'Single Door': 182, 'Double Door': 182 };
+// The letterplate's vertical position is MOULD-dependent — the plate drops into a panel
+// gap that moves with the door pressing, so it ranges from the central rail (~152) to the
+// bottom rail (~299) depending on the style's mould. The captured option-delta geometry
+// stored a single (wrong-for-most) value; these are the true positions read from Endurance's
+// own renderer (mJobState.Job.Drawing.Elements, scaled to our 318-tall stage). Single and
+// Double doors share the same moulds.
+const LP_CY_BY_MOULD = {
+  'Single Door': {
+    'Door Mould 10': 152, 'Door Mould 2': 182, 'Door Mould 3': 182,
+    '3 Panel Mould': 288, 'Door Mould 1': 288, 'Door Mould 11 Flipped': 296, 'Door Mould 12': 299,
+    'Door Mould 4': 287, 'Door Mould 5': 288, 'Door Mould 6': 288, 'Door Mould 7': 288,
+    'Door Mould 8': 288, 'Door Mould 9': 287
+  },
+  'Stable Door': {
+    'Door Mould 1': 183, 'Door Mould 10': 183,
+    'Door Mould 2': 277, 'Door Mould 3': 277, 'Door Mould 4': 277, 'Door Mould 5': 277, 'Door Mould 6': 277
+  },
+  'Avantal': { 'Avantal': 194 }
+};
+LP_CY_BY_MOULD['Double Door'] = LP_CY_BY_MOULD['Single Door'];
 
 function buildType(node, typeName) {
   const baseSel = node.baseSelection || {};
@@ -140,10 +153,10 @@ function buildType(node, typeName) {
   const letterplates = {};
   const ltf = node.fields['Letterplate'];
   (ltf ? ltf.choices : []).forEach((c) => { const lp = keep(c.delta, 'Letterplates')[0]; if (lp) letterplates[c.label] = { url: strip(lp.url), geom: geom(lp) }; });
-  // Correct the unreliable captured letterplate height with Endurance's verified render position.
-  if (LETTERPLATE_CY[typeName] != null) {
-    Object.keys(letterplates).forEach((k) => { letterplates[k].geom.cy = LETTERPLATE_CY[typeName]; });
-  }
+  // Stamp each style's mould-specific letterplate height onto its style record, so assemble()
+  // places the plate where Endurance does for whatever style the customer picks.
+  const lpByMould = LP_CY_BY_MOULD[typeName] || {};
+  Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (lpByMould[md] != null) { styles[s].letterplateCy = lpByMould[md]; } });
 
   const dripbar = keep(base, 'DripBars')[0];
 

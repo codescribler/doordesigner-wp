@@ -96,15 +96,20 @@
 		// knocker
 		var knock = T.knockers[get('Knocker')];
 		if (knock) { push(knock.url, knock.geom); }
-		// letterplate — one only. A double door must not get one per leaf (Endurance flags
-		// the letterplate excludeDouble), so mark it leftSlab:false to skip the leaf-mirror below.
+		// letterplate. Its HEIGHT is mould-dependent (the plate sits in a panel gap that moves
+		// with the style's pressing), so take the cy from the chosen style. And a double door
+		// must not get one per leaf (Endurance flags it excludeDouble), so mark it leftSlab:false
+		// to skip the leaf-mirror below.
 		var letter = T.letterplates && T.letterplates[get('Letterplate')];
 		if (letter) {
 			var lgeom = letter.geom;
-			if (type === 'Double Door') {
+			var lpStyle = T.styles[get('Door Design')];
+			var lpCy = lpStyle && lpStyle.letterplateCy;
+			if (type === 'Double Door' || lpCy != null) {
 				lgeom = {};
 				for (var lk in letter.geom) { if (Object.prototype.hasOwnProperty.call(letter.geom, lk)) { lgeom[lk] = letter.geom[lk]; } }
-				lgeom.leftSlab = false;
+				if (lpCy != null) { lgeom.cy = lpCy; }
+				if (type === 'Double Door') { lgeom.leftSlab = false; }
 			}
 			push(letter.url, lgeom);
 		}
