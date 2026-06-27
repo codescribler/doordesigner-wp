@@ -145,7 +145,7 @@
 			this.canvas.hidden = true;
 			this.renderTypeChooser();
 			this.progressEl.innerHTML = '';
-			this.backBtn.disabled = true;
+			this.backBtn.hidden = true; // first page — nothing to go back to
 			this.continueBtn.hidden = true;
 			this.trackView('start');
 			return;
@@ -185,6 +185,7 @@
 		}
 
 		this.renderProgress(st.progress);
+		this.backBtn.hidden = false;
 		this.backBtn.disabled = false;
 
 		this.repaintPreview(activeType, design);
