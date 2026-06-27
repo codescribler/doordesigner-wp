@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recreate probe</title>
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#fff;}
+  #wrap{max-width:420px;}
+  canvas{width:400px;height:auto;display:block;border:1px solid #eee;background:#f3f3f1;}
+  pre{font:11px monospace;white-space:pre-wrap;color:#333;background:#fafafa;padding:8px;border:1px solid #eee;}
+  h2{font-size:.95rem;margin:0 0 8px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h2 id="title">Recreate probe</h2>
+  <canvas id="cv"></canvas>
+  <pre id="spec"></pre>
+</div>
+<script>
+(function(){
+  // design passed as URL hash: #<encodeURIComponent(JSON.stringify({type, design}))>
+  var raw = decodeURIComponent(location.hash.slice(1) || '');
+  var req = {};
+  try { req = JSON.parse(raw); } catch(e) {}
+  var type = req.type || 'Single Door';
+  var design = req.design || {};
+  document.getElementById('title').textContent = type;
+  document.getElementById('spec').textContent = JSON.stringify(req, null, 1);
+  fetch('../data/render-model.json').then(function(r){return r.json();}).then(function(model){
+    var cv=document.getElementById('cv');
+    var comp=window.HD_DD_Preview.create(cv,{model:model,assetBase:model._assetBase});
+    var d={}; d['Door Type']={label:type};
+    Object.keys(design).forEach(function(k){ d[k]={label:design[k]}; });
+    comp.render(type,d).then(function(){ document.title='rendered: '+type; });
+  });
+})();
+</script>
+</body>
+</html>

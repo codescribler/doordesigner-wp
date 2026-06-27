@@ -77,4 +77,8 @@ assert.ok(withLetter.some((l) => l.slot === 'Letterplates'), 'A selected letterp
 const noLetter = assemble(model, 'Single Door', { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Letterplate': { label: 'No Letterplate' } });
 assert.ok(!noLetter.some((l) => l.slot === 'Letterplates'), 'No Letterplate draws no Letterplates layer');
 
+// 9. A DOUBLE door takes exactly ONE letterplate — it must NOT be mirrored onto both leaves.
+const ddLetter = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Letterplate': { label: 'Letterplate' } });
+assert.equal(ddLetter.filter((l) => l.slot === 'Letterplates').length, 1, 'Double door draws exactly one letterplate (not one per leaf)');
+
 console.log('render-model OK');

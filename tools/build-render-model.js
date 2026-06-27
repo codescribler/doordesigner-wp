@@ -56,7 +56,15 @@ function parseGlazing(url) {
   return m ? { glass: m[1], cassetteKey: m[2], ext: m[3] } : null;
 }
 
-function buildType(node) {
+// Endurance's option-delta geometry for the letterplate is unreliable on some door
+// types — Single/Double captured it ~30px too high (up at handle height instead of the
+// lower-central rail). The TRUE render position, read from Endurance's own renderer
+// (mJobState.Job.Drawing.Elements, canvas-space scaled to our 318-tall stage), is a fixed
+// height per type. Override the captured cy with that verified value where they disagree.
+// Stable (183) and Avantal (194) already matched the renderer and need no override.
+const LETTERPLATE_CY = { 'Single Door': 182, 'Double Door': 182 };
+
+function buildType(node, typeName) {
   const baseSel = node.baseSelection || {};
   const base = node.baseComposite || [];
   const baselineColour = baseSel['Door Colour (External)'] ? baseSel['Door Colour (External)'].label : '';
@@ -132,6 +140,10 @@ function buildType(node) {
   const letterplates = {};
   const ltf = node.fields['Letterplate'];
   (ltf ? ltf.choices : []).forEach((c) => { const lp = keep(c.delta, 'Letterplates')[0]; if (lp) letterplates[c.label] = { url: strip(lp.url), geom: geom(lp) }; });
+  // Correct the unreliable captured letterplate height with Endurance's verified render position.
+  if (LETTERPLATE_CY[typeName] != null) {
+    Object.keys(letterplates).forEach((k) => { letterplates[k].geom.cy = LETTERPLATE_CY[typeName]; });
+  }
 
   const dripbar = keep(base, 'DripBars')[0];
 
@@ -190,7 +202,7 @@ function deriveCanvas(layers) {
 
 function build(raw) {
   const model = { _assetBase: raw._assetBase, _builtFrom: raw._capturedAt, types: {} };
-  ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t]); });
+  ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });
   return model;
 }
 

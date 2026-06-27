@@ -96,9 +96,18 @@
 		// knocker
 		var knock = T.knockers[get('Knocker')];
 		if (knock) { push(knock.url, knock.geom); }
-		// letterplate
+		// letterplate — one only. A double door must not get one per leaf (Endurance flags
+		// the letterplate excludeDouble), so mark it leftSlab:false to skip the leaf-mirror below.
 		var letter = T.letterplates && T.letterplates[get('Letterplate')];
-		if (letter) { push(letter.url, letter.geom); }
+		if (letter) {
+			var lgeom = letter.geom;
+			if (type === 'Double Door') {
+				lgeom = {};
+				for (var lk in letter.geom) { if (Object.prototype.hasOwnProperty.call(letter.geom, lk)) { lgeom[lk] = letter.geom[lk]; } }
+				lgeom.leftSlab = false;
+			}
+			push(letter.url, lgeom);
+		}
 		// drip bar
 		if (T.dripbar) { push(T.dripbar.url, T.dripbar.geom); }
 
