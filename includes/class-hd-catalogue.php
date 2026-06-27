@@ -227,7 +227,10 @@ class HD_DD_Catalogue {
 			return new WP_REST_Response( array( 'available' => false ), 200 );
 		}
 		$response = new WP_REST_Response( array( 'available' => true, 'model' => $model ), 200 );
-		$response->header( 'Cache-Control', 'public, max-age=3600' );
+		// Never cache the catalogue/render-model in browsers or CDNs: it changes with the
+		// data, and a stale copy silently breaks the preview. The payload is small + gzips
+		// well, and the actual door images are cached separately (long-lived, immutable).
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
 		return $response;
 	}
 
@@ -254,7 +257,10 @@ class HD_DD_Catalogue {
 			),
 			200
 		);
-		$response->header( 'Cache-Control', 'public, max-age=3600' );
+		// Never cache the catalogue/render-model in browsers or CDNs: it changes with the
+		// data, and a stale copy silently breaks the preview. The payload is small + gzips
+		// well, and the actual door images are cached separately (long-lived, immutable).
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
 		return $response;
 	}
 }

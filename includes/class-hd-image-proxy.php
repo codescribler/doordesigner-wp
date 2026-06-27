@@ -64,16 +64,31 @@ class HD_DD_Image_Proxy {
 
 	public function serve( WP_REST_Request $request ) {
 		$raw = (string) $request['path'];
-		if ( false !== strpos( $raw, '%' ) ) {
-			$raw = rawurldecode( $raw ); // some hosts pass the path still URL-encoded.
+		if ( '' === $raw ) {
+			// Some setups don't populate a slash-containing named param — recover the path
+			// from the matched route (everything after ".../img/").
+			$raw = (string) preg_replace( '#^.*/img/#', '', (string) $request->get_route() );
 		}
+		$raw = rawurldecode( $raw );             // handle %20 / %28 etc.
+		if ( false !== strpos( $raw, '%' ) ) {   // and any accidental double-encoding.
+			$raw = rawurldecode( $raw );
+		}
+
 		$path = self::validate_path( $raw );
 		if ( false === $path ) {
-			return new WP_REST_Response( array( 'error' => 'bad path' ), 400 );
+			return new WP_REST_Response( array( 'error' => 'bad path', 'received' => $raw ), 400 );
 		}
 
 		$file = $this->cache_file( $path );
 		if ( ! file_exists( $file ) && ! $this->fetch_and_store( $path, $file ) ) {
+			// Couldn't cache it (uploads not writable, transient upstream issue, …) — redirect
+			// to the upstream image so the preview never breaks worse than direct loading.
+			$host = $this->source_host();
+			if ( $host ) {
+				$encoded = implode( '/', array_map( 'rawurlencode', explode( '/', $path ) ) );
+				wp_redirect( $host . '/' . $encoded, 302 ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- fixed trusted upstream host.
+				exit;
+			}
 			return new WP_REST_Response( array( 'error' => 'not found upstream' ), 404 );
 		}
 
