@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Door Designer — page 1 chooser mockups</title>
+<!--
+  DESIGN MOCKUP (not shipped). Shows two treatments for the first wizard page
+  side by side so Daniel can choose a direction:
+    Option A — real door render, ONE consistent style across single/double/stable
+    Option B — refined, style-neutral silhouettes
+  Serve from the plugin root:  python -m http.server 8080
+  then open http://localhost:8080/tools/page1-mockup.html
+-->
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<style>
+  :root {
+    --ink:#161616; --paper:#fff; --line:#e6e6e6; --muted:#8a8e96;
+    --stage:#f3f3f1; --brand:#1d4f3f; --radius:8px;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink);
+         background:#fafafa; margin:0; padding:28px 24px 60px; }
+  .page { max-width:1180px; margin:0 auto; }
+  h1 { font-size:1.15rem; font-weight:650; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.9rem; margin:0 0 28px; }
+
+  .option { background:var(--paper); border:1px solid var(--line); border-radius:14px;
+            padding:22px 22px 26px; margin-bottom:26px; }
+  .option > h2 { font-size:1rem; margin:0 0 2px; display:flex; align-items:center; gap:9px; }
+  .badge { font-size:.7rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+           background:var(--brand); color:#fff; border-radius:20px; padding:3px 10px; }
+  .option > .note { color:var(--muted); font-size:.85rem; margin:4px 0 20px; max-width:760px; }
+
+  .steptitle { font-size:1.05rem; font-weight:600; margin:0 0 14px; }
+
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media (max-width:780px){ .grid { grid-template-columns:repeat(2,1fr); } }
+
+  .tile { border:1px solid var(--line); border-radius:var(--radius); background:var(--paper);
+          overflow:hidden; text-align:left; cursor:pointer; transition:border-color .12s, box-shadow .12s;
+          display:flex; flex-direction:column; }
+  .tile:hover { border-color:var(--muted); }
+  .tile .media { background:var(--stage); aspect-ratio:1/1; display:flex; align-items:center;
+                 justify-content:center; padding:14px; }
+  .tile canvas, .tile svg { width:auto; max-width:100%; height:100%; max-height:170px; display:block; }
+  .tile .body { padding:11px 13px 14px; }
+  .tile .label { font-weight:600; font-size:.96rem; }
+  .tile .desc { color:var(--muted); font-size:.8rem; line-height:1.3; margin-top:3px; }
+  #status { color:var(--muted); font-size:.8rem; text-align:center; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>First page of the wizard — “What kind of door?”</h1>
+  <p class="sub">Two ways to make the four options self-explanatory. Same labels, same descriptor lines — only the visual treatment differs.</p>
+
+  <!-- OPTION A -->
+  <section class="option">
+    <h2><span class="badge">Option A</span> Real door render — one consistent style</h2>
+    <p class="note">Every tile shows the <strong>same</strong> door (Ben Nevis panel, Anthracite Grey) so no single style is “pushed” — the customer sees only how the <em>structure</em> changes. Aluminium is its own look on purpose (it’s a material, not a shape).</p>
+    <div class="steptitle">What kind of door?</div>
+    <div class="grid" id="gridA"></div>
+    <div id="status">Rendering doors…</div>
+  </section>
+
+  <!-- OPTION B -->
+  <section class="option">
+    <h2><span class="badge">Option B</span> Refined silhouette</h2>
+    <p class="note">Clean, style-neutral line illustrations — reads as a door (frame, panels, handle, glazing) without committing to any style. Lighter than rendering, scales anywhere, zero style anxiety.</p>
+    <div class="steptitle">What kind of door?</div>
+    <div class="grid" id="gridB"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var TYPES = [
+    { type:'Single Door',  label:'Single Door',
+      desc:'One solid leaf — the classic front door.',
+      design:{ 'Door Design':{label:'Ben Nevis'}, 'Door Colour (External)':{label:'Anthracite Grey'} } },
+    { type:'Double Door',  label:'Double Door',
+      desc:'Two leaves that open from the centre — wide, grand entrances.',
+      design:{ 'Door Design':{label:'Ben Nevis'}, 'Door Colour (External)':{label:'Anthracite Grey'} } },
+    { type:'Stable Door',  label:'Stable Door',
+      desc:'Split across the middle — open the top half on its own.',
+      design:{ 'Door Design':{label:'Ben Nevis Stable'}, 'Door Colour (External)':{label:'Anthracite Grey'} } },
+    { type:'Avantal',      label:'Aluminium',
+      desc:'Sleek aluminium with slim frames and more glass.',
+      design:{ 'Door Design':{label:'Sirius'}, 'Door Colour (External)':{label:'Anthracite Grey (Smooth)'} } }
+  ];
+
+  // ---- style-neutral silhouettes (Option B) -------------------------------
+  var S = 'stroke:#222;stroke-width:2.4;fill:#fff;stroke-linejoin:round';
+  var Sg = 'stroke:#cfcfcf;stroke-width:1.6;fill:none';
+  var GLASS = 'fill:#dbe7ee;stroke:#bcd0da;stroke-width:1.6';
+  var H = 'fill:#1d4f3f';
+  function svg(inner){ return '<svg viewBox="0 0 110 210" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>'; }
+  var SIL = {
+    'Single Door': svg(
+      '<rect x="22" y="10" width="66" height="190" rx="3" style="'+S+'"/>'+
+      '<rect x="30" y="20" width="50" height="170" rx="2" style="'+Sg+'"/>'+
+      '<line x1="36" y1="64" x2="74" y2="64" style="'+Sg+'"/>'+
+      '<line x1="36" y1="108" x2="74" y2="108" style="'+Sg+'"/>'+
+      '<line x1="36" y1="152" x2="74" y2="152" style="'+Sg+'"/>'+
+      '<rect x="72" y="104" width="5" height="20" rx="2.5" style="'+H+'"/>'),
+    'Double Door': svg(
+      '<rect x="10" y="10" width="90" height="190" rx="3" style="'+S+'"/>'+
+      '<line x1="55" y1="12" x2="55" y2="198" style="stroke:#222;stroke-width:2.4"/>'+
+      '<rect x="17" y="20" width="32" height="170" rx="2" style="'+Sg+'"/>'+
+      '<rect x="61" y="20" width="32" height="170" rx="2" style="'+Sg+'"/>'+
+      '<rect x="48" y="100" width="5" height="24" rx="2.5" style="'+H+'"/>'+
+      '<rect x="57" y="100" width="5" height="24" rx="2.5" style="'+H+'"/>'),
+    'Stable Door': svg(
+      '<rect x="22" y="10" width="66" height="190" rx="3" style="'+S+'"/>'+
+      '<rect x="30" y="20" width="50" height="78" rx="2" style="'+Sg+'"/>'+
+      '<rect x="30" y="112" width="50" height="78" rx="2" style="'+Sg+'"/>'+
+      '<rect x="26" y="99" width="58" height="12" rx="2" style="fill:#eee;stroke:#222;stroke-width:2.2"/>'+
+      '<rect x="72" y="70" width="5" height="18" rx="2.5" style="'+H+'"/>'+
+      '<rect x="72" y="124" width="5" height="18" rx="2.5" style="'+H+'"/>'),
+    'Avantal': svg(
+      '<rect x="24" y="10" width="62" height="190" rx="2" style="stroke:#222;stroke-width:2;fill:#fff"/>'+
+      '<rect x="31" y="17" width="48" height="158" rx="1.5" style="'+GLASS+'"/>'+
+      '<line x1="55" y1="17" x2="55" y2="175" style="stroke:#cfdde4;stroke-width:1.4"/>'+
+      '<rect x="31" y="180" width="48" height="14" rx="1.5" style="fill:#eef0f1;stroke:#cfcfcf;stroke-width:1.4"/>'+
+      '<rect x="74" y="70" width="4.5" height="70" rx="2.2" style="'+H+'"/>')
+  };
+
+  function tile(t, mediaHTML){
+    return '<div class="tile"><div class="media">'+mediaHTML+'</div>'+
+           '<div class="body"><div class="label">'+t.label+'</div>'+
+           '<div class="desc">'+t.desc+'</div></div></div>';
+  }
+
+  // Option B — silhouettes (synchronous)
+  document.getElementById('gridB').innerHTML = TYPES.map(function(t){ return tile(t, SIL[t.type]); }).join('');
+
+  // Option A — real renders via the compositor
+  fetch('../data/render-model.json').then(function(r){ return r.json(); }).then(function(model){
+    var gridA = document.getElementById('gridA');
+    gridA.innerHTML = TYPES.map(function(t,i){
+      return tile(t, '<canvas id="cv'+i+'"></canvas>');
+    }).join('');
+    var jobs = TYPES.map(function(t,i){
+      var cv = document.getElementById('cv'+i);
+      var comp = window.HD_DD_Preview.create(cv, { model:model, assetBase:model._assetBase });
+      var design = {}; design['Door Type'] = { label:t.type };
+      Object.keys(t.design).forEach(function(k){ design[k] = t.design[k]; });
+      return comp.render(t.type, design).catch(function(){ /* tolerate */ });
+    });
+    Promise.all(jobs).then(function(){
+      document.getElementById('status').textContent = 'Rendered ' + TYPES.length + ' doors (same style on single / double / stable; aluminium is its own look).';
+    });
+  }).catch(function(e){
+    document.getElementById('status').textContent = 'Could not load render model: ' + e;
+  });
+})();
+</script>
+</body>
+</html>
