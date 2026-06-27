@@ -95,6 +95,9 @@ class HD_DD_Assets {
 				// Asset base for preview images: a setting override, else the model's own
 				// captured origin (Endurance host). Empty during dev = use model._assetBase.
 				'assetBase'      => $this->get_asset_base(),
+				// Hero image for the opening screen (before a door type is chosen). Override
+				// with the `hd_dd_hero_image` filter or set it empty to show nothing.
+				'heroImage'      => esc_url_raw( apply_filters( 'hd_dd_hero_image', 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' ) ),
 				'i18n'           => $this->i18n_strings(),
 			)
 		);
@@ -122,6 +125,11 @@ class HD_DD_Assets {
 			'next'         => __( 'Continue', 'hd-door-designer' ),
 			'back'         => __( 'Back', 'hd-door-designer' ),
 			'chooseType'   => __( 'What kind of door?', 'hd-door-designer' ),
+			'intro'        => __( 'Design your door and get a free, no-obligation quote — it takes about two minutes.', 'hd-door-designer' ),
+			'formTitle'    => __( 'Get your free quote', 'hd-door-designer' ),
+			'reassure'     => __( 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.', 'hd-door-designer' ),
+			'submit'       => __( 'Send my free quote request', 'hd-door-designer' ),
+			'trust'        => __( 'No spam, ever — your details are only used to prepare your quote.', 'hd-door-designer' ),
 			'enquire'      => __( 'Enquire about this door', 'hd-door-designer' ),
 			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),

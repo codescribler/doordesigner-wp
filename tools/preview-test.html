@@ -102,7 +102,7 @@
     var full = res[0], model = res[1], categories = res[2];
     var customerView = buildCustomerView(full);
     // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host.
-    window.HD_DD_CONFIG = { assetBase: model._assetBase };
+    window.HD_DD_CONFIG = { assetBase: model._assetBase, heroImage: 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' };
     statusEl.textContent = 'Loaded ' + customerView.types.length + ' door types · assetBase ' + model._assetBase;
     mount.innerHTML = '';
     new window.HD_DD_App(mount, customerView, model, categories).render();

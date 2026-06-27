@@ -102,6 +102,14 @@
 		layout.appendChild(head);
 
 		var stage = el('div', 'hd-dd__stage');
+		// Hero image — shown before a door type is chosen (when the canvas is empty), so
+		// the first screen looks like a real door rather than a blank box.
+		this.heroImg = el('img', 'hd-dd__hero');
+		this.heroImg.alt = 'Composite front door';
+		this.heroImg.loading = 'lazy';
+		this.heroImg.hidden = true;
+		if (CFG.heroImage) { this.heroImg.onerror = function () { self.heroImg.hidden = true; }; this.heroImg.src = CFG.heroImage; }
+		stage.appendChild(this.heroImg);
 		this.canvas = el('canvas', 'hd-dd__canvas');
 		stage.appendChild(this.canvas);
 		layout.appendChild(stage);
@@ -118,10 +126,6 @@
 		layout.appendChild(this.continueBtn);
 
 		this.root.appendChild(layout);
-
-		this.form = this.buildFormShell();
-		this.root.appendChild(this.form);
-
 		this._built = true;
 	};
 
@@ -135,13 +139,17 @@
 		// NOT a counted wizard step (the catalogue has no per-node "Door Type" field),
 		// so we render it ourselves and let selectType() drop us at the first real step.
 		if (!design['Door Type']) {
-			this._lastKey = null;
+			this._lastKey = null; this._atForm = false;
+			if (this.heroImg && CFG.heroImage) { this.heroImg.hidden = false; }
+			this.canvas.hidden = true;
 			this.renderTypeChooser();
 			this.progressEl.innerHTML = '';
 			this.backBtn.disabled = true;
 			this.continueBtn.hidden = true;
 			return;
 		}
+		if (this.heroImg) { this.heroImg.hidden = true; }
+		this.canvas.hidden = false;
 
 		var activeType = design['Door Type'].label;
 		var step = st.atReview ? null : st.steps[st.stepIndex];
@@ -154,9 +162,12 @@
 		if (key === 'style' && this._lastKey !== 'style') { delete design._styleCategory; }
 
 		if (st.atReview) {
-			HD_DD_Review.render(this.body, this.reviewCtx(st));
+			// The enquiry form renders in the body (not a separate block) so the door
+			// preview stays visible right up to the moment of submission.
+			if (this._atForm) { this.renderForm(); } else { HD_DD_Review.render(this.body, this.reviewCtx(st)); }
 			this.continueBtn.hidden = true;
 		} else {
+			this._atForm = false;
 			HD_DD_StepRenderer.renderStep(this.body, step, this.stepCtx(st, step));
 			this.continueBtn.hidden = false;
 			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
@@ -174,6 +185,7 @@
 	App.prototype.renderTypeChooser = function () {
 		var self = this;
 		this.body.innerHTML = '';
+		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door and get a free, no-obligation quote — it takes about two minutes.'));
 		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.chooseType || 'What kind of door?'));
 		var row = el('div', 'hd-dd__carousel');
 		(this.customerView.types || []).forEach(function (label) {
@@ -220,7 +232,7 @@
 			design: st.design,
 			typeLabel: st.design['Door Type'] ? displayLabel(st.design['Door Type'].label) : '',
 			onEdit: function (key) { self.wiz.jumpTo(key); self.render(); },
-			onSubmitClick: function () { self.mountReviewSubmit(); }
+			onSubmitClick: function () { self._atForm = true; self.render(); try { self.root.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ } }
 		};
 	};
 
@@ -246,6 +258,8 @@
 	App.prototype.advance = function (dir) {
 		var st = this.wiz.state();
 		if (dir === 'back') {
+			// On the enquiry form, Back returns to the review summary (not a wizard step).
+			if (st.atReview && this._atForm) { this._atForm = false; this.render(); return; }
 			// Backing out of the first real step returns to the type chooser. The wizard
 			// has no "clear type", so we re-create it (changing type resets the design
 			// anyway, so nothing meaningful is lost).
@@ -331,21 +345,22 @@
 		return (map && map[label]) || null;
 	};
 
-	// ---- Enquiry form (revealed from the review CTA) ------------------------
-	App.prototype.mountReviewSubmit = function () {
-		if (!this.form) { return; }
-		this.form.hidden = false;
-		try { this.form.scrollIntoView({ behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+	// ---- Enquiry form (rendered in the body so the door preview stays visible) -----
+	App.prototype.renderForm = function () {
+		this.body.innerHTML = '';
+		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.formTitle || 'Get your free quote'));
+		this.body.appendChild(el('p', 'hd-dd__form-reassure',
+			I18N.reassure || 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.'));
+		if (!this._formEl) { this._formEl = this.buildForm(); }
+		this.body.appendChild(this._formEl);
 	};
 
-	App.prototype.buildFormShell = function () {
+	App.prototype.buildForm = function () {
 		var self = this;
 		var form = document.createElement('form');
 		form.id = 'hd-dd-form';
 		form.className = 'hd-dd__form';
-		form.hidden = true;
 		form.setAttribute('novalidate', 'novalidate');
-		form.appendChild(el('h3', 'hd-dd__form-title', I18N.enquire || 'Enquire about this door'));
 
 		[
 			{ name: 'name', label: 'Name', type: 'text', autocomplete: 'name' },
@@ -387,9 +402,11 @@
 		consent.appendChild(el('span', null, I18N.consent || 'I agree to be contacted about this enquiry.'));
 		form.appendChild(consent);
 
-		var submit = el('button', 'hd-dd__submit', I18N.enquire || 'Send enquiry');
+		var submit = el('button', 'hd-dd__submit', I18N.submit || 'Send my free quote request');
 		submit.type = 'submit';
 		form.appendChild(submit);
+		form.appendChild(el('p', 'hd-dd__form-trust',
+			I18N.trust || 'No spam, ever — your details are only used to prepare your quote.'));
 		form.appendChild(el('div', 'hd-dd__form-status'));
 		var statusEl = form.querySelector('.hd-dd__form-status');
 		statusEl.setAttribute('role', 'status');

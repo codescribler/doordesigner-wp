@@ -122,6 +122,24 @@
   display: block;
 }
 
+/* Hero image shown on the opening screen before a door type is chosen. */
+.hd-dd__hero {
+  width: 100%;
+  height: auto;
+  max-width: 360px;
+  display: block;
+  border-radius: 4px;
+}
+
+/* Friendly one-liner above the first question. */
+.hd-dd__intro {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 16px 16px 0;
+}
+
 
 /* ==========================================================================
    5. STEP TITLE
@@ -225,24 +243,37 @@
    8. REVIEW SUMMARY LIST
    ========================================================================== */
 
-.hd-dd__review dl {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px 12px;
-  margin: 0 16px;
-  padding: 0;
-  list-style: none;
+.hd-dd__review {
+  margin: 8px 16px 0;
 }
 
-.hd-dd__review dt {
+/* One self-contained row per choice → an entry without an Edit button can't shift
+   the columns (the cause of the earlier misaligned summary). */
+.hd-dd__review-row {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr auto;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.hd-dd__review-label {
   color: var(--muted);
   font-size: 13px;
 }
 
-.hd-dd__review dd {
-  margin: 0;
+.hd-dd__review-value {
   font-size: 13px;
   font-weight: 600;
+}
+
+/* Reassurance line above the review CTA. */
+.hd-dd__review-note {
+  margin: 14px 16px 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
 /* Inline edit button next to each review row */
@@ -264,11 +295,26 @@
    ========================================================================== */
 
 .hd-dd__form {
-  margin: calc(var(--gap) * 2) 16px 16px;
-  padding: calc(var(--gap) * 1.5);
+  margin: 10px 16px 16px;
+  padding: calc(var(--gap) * 1.25);
   background: var(--stage);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+
+/* Reassurance copy: above the fields and below the submit button. */
+.hd-dd__form-reassure {
+  margin: 6px 16px 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.hd-dd__form-trust {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .hd-dd__form-title {
