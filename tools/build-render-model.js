@@ -103,14 +103,18 @@ function buildType(node) {
   // HANDLES: handle label -> captured layer (baseline hardware colour) + derived base name.
   const handles = {};
   const hf = node.fields['Handle'];
-  (hf ? hf.choices : []).forEach((c) => { const h = keep(c.delta, 'Handles').concat(keep(c.delta, 'HandlesRight'))[0]; if (h) handles[c.label] = { url: strip(h.url), geom: geom(h) }; });
+  // Double-door handles are captured as right-slab HandlesRight/* layers, whose images
+  // 404 on the asset host; the parallel left-slab Handles/* versions exist (HTTP 200).
+  // Rewrite to the path that actually resolves so every handle shows a real image.
+  const leftHandle = (u) => strip(u).replace('/HandlesRight/', '/Handles/');
+  (hf ? hf.choices : []).forEach((c) => { const h = keep(c.delta, 'Handles').concat(keep(c.delta, 'HandlesRight'))[0]; if (h) handles[c.label] = { url: leftHandle(h.url), geom: geom(h) }; });
   const baseHandle = keep(base, 'Handles').concat(keep(base, 'HandlesRight'))[0];
   // The baseline handle never appears in a delta (it's already in the baseline composite),
   // so the loop above gives it no thumbnail. Add it explicitly from the baseline layer so
   // EVERY handle — including the default (e.g. Lever/Lever) — has an image.
   const baseHandleLabel = baseSel['Handle'] && baseSel['Handle'].label;
   if (baseHandleLabel && baseHandle && !handles[baseHandleLabel]) {
-    handles[baseHandleLabel] = { url: strip(baseHandle.url), geom: geom(baseHandle) };
+    handles[baseHandleLabel] = { url: leftHandle(baseHandle.url), geom: geom(baseHandle) };
   }
 
   // HARDWARE COLOUR suffix mapping (best-effort): Hardware Type delta handle URLs.

@@ -83,8 +83,11 @@ class HD_DD_Assets {
 			'HD_DD_CONFIG',
 			array(
 				'restUrl'        => esc_url_raw( rest_url( HD_DD_REST_NS . '/' ) ),
-				'catalogueUrl'   => esc_url_raw( rest_url( HD_DD_REST_NS . '/catalogue' ) ),
-				'renderModelUrl' => esc_url_raw( rest_url( HD_DD_REST_NS . '/render-model' ) ),
+				// Cache-bust the data fetches with the plugin version: the REST responses set a
+				// 1-hour Cache-Control, so without this the browser keeps serving the OLD
+				// catalogue/render-model for up to an hour after a plugin update.
+				'catalogueUrl'   => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/catalogue' ) ) ),
+				'renderModelUrl' => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/render-model' ) ) ),
 				'categoriesUrl'  => esc_url_raw( HD_DD_URL . 'data/style-categories.json' ),
 				'nonce'          => wp_create_nonce( 'wp_rest' ),
 				'catalogueReady' => $this->catalogue->is_available(),
