@@ -66,10 +66,12 @@
 		if (!handle) {
 			var borrowed = handleFromAnyType(model, get('Handle'));
 			if (borrowed && T.baseHandle) {
-				var bg = T.baseHandle.geom;
-				// Borrowed-from is captured on its own leaf's latch edge; here it sits on the
-				// opposite (meeting-stile) edge, so mirror it to keep a lever pointing inward.
-				handle = { url: borrowed.url, geom: { cx: bg.cx, cy: bg.cy, w: borrowed.geom.w, h: borrowed.geom.h, rotation: borrowed.geom.rotation || 0, flipH: !borrowed.geom.flipH, leftSlab: bg.leftSlab } };
+				// The borrowed handle was captured on its source leaf's latch edge. The two
+				// leaves are geometrically identical, so place it on THIS leaf at the mirror
+				// position — the meeting-stile side, on the slab (not over the centre split) —
+				// and flip it so an asymmetric lever points inward.
+				var leafCx = (style.blankGeom && style.blankGeom.cx) || T.baseHandle.geom.cx;
+				handle = { url: borrowed.url, geom: { cx: 2 * leafCx - borrowed.geom.cx, cy: borrowed.geom.cy, w: borrowed.geom.w, h: borrowed.geom.h, rotation: borrowed.geom.rotation || 0, flipH: !borrowed.geom.flipH, leftSlab: false } };
 			} else {
 				handle = T.baseHandle;
 			}
