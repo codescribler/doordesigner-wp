@@ -230,7 +230,9 @@
 /* ---- Page-1 door-type chooser: richer tiles with a silhouette + description ---- */
 .hd-dd__typegrid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .hd-dd__typetile { padding: 12px 10px 14px; }
-.hd-dd__typetile .hd-dd__tile-media { height: 132px; padding: 10px; }
+/* The silhouettes are line drawings — sit them directly on the tile (no grey stage
+   panel behind them, which otherwise reads as a box floating over the door frame). */
+.hd-dd__typetile .hd-dd__tile-media { height: 132px; padding: 6px; background: transparent; border-radius: 0; }
 .hd-dd__typetile .hd-dd__tile-label { color: var(--ink); font-weight: 600; font-size: 14px; }
 .hd-dd__tile-desc { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; margin-top: 3px; }
 
