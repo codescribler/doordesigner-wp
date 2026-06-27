@@ -17,6 +17,19 @@
 
 	function slotOf(u) { var m = String(u).match(/Images\/([^/]+)\//); return m ? m[1] : '?'; }
 
+	// Borrow a handle's captured layer from any door type that has it (handle products
+	// are identical across types; some types didn't capture every handle's layer).
+	function handleFromAnyType(model, label) {
+		var types = (model && model.types) || {};
+		for (var t in types) {
+			if (Object.prototype.hasOwnProperty.call(types, t)) {
+				var h = types[t].handles && types[t].handles[label];
+				if (h && h.url) { return h; }
+			}
+		}
+		return null;
+	}
+
 	// Sidelight glass is an OVERLAY on the wide frame (which already renders the solid
 	// side panels). Endurance draws it only when the sidelight is Glazed; picking
 	// Unglazed simply omits the overlay. Default to Glazed (Endurance's own default)
@@ -46,8 +59,19 @@
 		if (glass && !/^unglazed$/i.test(glass) && style.cassetteKey && (style.glazingGeom || []).length) {
 			style.glazingGeom.forEach(function (g) { push(ASSET_PREFIX + 'DoorGlazing/' + glass + '/Thumbnails/' + style.cassetteKey + '.png', g); });
 		}
-		// handle (best-effort: captured baseline hardware colour)
-		var handle = T.handles[get('Handle')] || T.baseHandle;
+		// handle. Some types didn't capture every handle's layer (e.g. levers on double
+		// doors) — borrow the image from a type that has it, drawn at this type's handle
+		// position with the handle's own size, so the selected handle shows on the door.
+		var handle = T.handles[get('Handle')];
+		if (!handle) {
+			var borrowed = handleFromAnyType(model, get('Handle'));
+			if (borrowed && T.baseHandle) {
+				var bg = T.baseHandle.geom;
+				handle = { url: borrowed.url, geom: { cx: bg.cx, cy: bg.cy, w: borrowed.geom.w, h: borrowed.geom.h, rotation: borrowed.geom.rotation || 0, flipH: bg.flipH, leftSlab: bg.leftSlab } };
+			} else {
+				handle = T.baseHandle;
+			}
+		}
 		if (handle) { push(handle.url, handle.geom); }
 		// knocker
 		var knock = T.knockers[get('Knocker')];
@@ -70,6 +94,25 @@
 			}
 		} else if (frame) {
 			push(frame.url, frame.geom);
+		}
+
+		// --- Double door: the capture records only the LEFT leaf plus the full-width
+		// frame. Endurance draws the right leaf by mirroring the left across the door
+		// centre (the DrawOnLeftSlab flag). Reproduce that — mirror every per-leaf layer;
+		// the full-width frame and absolutely-placed layers (the handle) draw once. ---
+		if (type === 'Double Door' && !sd) {
+			var cx0 = (T.canvas && T.canvas.width ? T.canvas.width : 294) / 2;
+			var right = [];
+			layers.forEach(function (l) {
+				if (l.slot === 'DoorFrames' || l.leftSlab === false) { return; }
+				var m = {};
+				for (var k in l) { if (Object.prototype.hasOwnProperty.call(l, k)) { m[k] = l[k]; } }
+				m.cx = 2 * cx0 - l.cx;
+				m.flipH = !l.flipH;
+				if (l.urlRight) { m.url = l.urlRight; m.slot = slotOf(l.urlRight); }
+				right.push(m);
+			});
+			layers = layers.concat(right);
 		}
 
 		// paint order

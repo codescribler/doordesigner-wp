@@ -44,4 +44,16 @@ assert.ok(frameLayers(unglazed).length >= 1, 'Unglazed sidelit door still draws 
 assert.deepEqual(nonSide(unglazed), nonSide(glazed), 'Unglazed keeps the exact same non-side layers as Glazed');
 assert.equal(frameLayers(unglazed)[0].url, frameLayers(glazed)[0].url, 'Same wide frame variant in both states');
 
+// 5. Double door: the right leaf is mirrored from the captured left leaf (the capture
+//    only records the left slab + the full-width frame).
+const center = model.types['Double Door'].canvas.width / 2;
+const dd = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Door Colour (External)': { label: 'White' }, 'Frame Colour': { label: 'White' } });
+const ddBlanks = dd.filter((l) => l.slot === 'DoorBlanks');
+assert.ok(ddBlanks.some((l) => l.cx < center) && ddBlanks.some((l) => l.cx > center), 'Double door draws both leaves (a blank either side of centre)');
+assert.equal(dd.filter((l) => l.slot === 'DoorFrames').length, 1, 'Double-door frame is drawn once (full width)');
+
+// 6. A borrowed handle (no native double-door layer) still draws on the canvas.
+const ddh = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Handle': { label: 'Premium Stainless Lever Handles' } }).filter((l) => /Handles/i.test(l.slot));
+assert.ok(ddh.length > 0 && /PremiumLever/i.test(ddh[0].url), 'Borrowed lever handle is drawn on the double-door canvas');
+
 console.log('render-model OK');
