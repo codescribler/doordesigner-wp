@@ -93,9 +93,20 @@
 			}
 		}
 		if (handle) { push(handle.url, handle.geom); }
-		// knocker
+		// knocker. Its HEIGHT is mould-dependent too (it sits in an upper panel gap), so take
+		// the cy from the chosen style — same approach as the letterplate.
 		var knock = T.knockers[get('Knocker')];
-		if (knock) { push(knock.url, knock.geom); }
+		if (knock) {
+			var kgeom = knock.geom;
+			var knStyle = T.styles[get('Door Design')];
+			var knCy = knStyle && knStyle.knockerCy;
+			if (knCy != null) {
+				kgeom = {};
+				for (var kk in knock.geom) { if (Object.prototype.hasOwnProperty.call(knock.geom, kk)) { kgeom[kk] = knock.geom[kk]; } }
+				kgeom.cy = knCy;
+			}
+			push(knock.url, kgeom);
+		}
 		// letterplate. Its HEIGHT is mould-dependent (the plate sits in a panel gap that moves
 		// with the style's pressing), so take the cy from the chosen style. And a double door
 		// must not get one per leaf (Endurance flags it excludeDouble), so mark it leftSlab:false

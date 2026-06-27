@@ -77,6 +77,27 @@ const LP_CY_BY_MOULD = {
 };
 LP_CY_BY_MOULD['Double Door'] = LP_CY_BY_MOULD['Single Door'];
 
+// The knocker is mould-dependent too (it sits in an upper panel gap). Same story as the
+// letterplate — the captured single value is right for only one mould. Verified positions
+// from Endurance's renderer (Drawing.Elements, scaled to our 318-tall stage). Mould 9 has no
+// knocker option in Endurance, so it's omitted (falls back to the captured geom, unused).
+const KNOCKER_CY_BY_MOULD = {
+  'Single Door': {
+    'Door Mould 10': 80,
+    'Door Mould 1': 97, 'Door Mould 2': 97, 'Door Mould 3': 97, 'Door Mould 4': 97,
+    'Door Mould 5': 95, 'Door Mould 6': 95, 'Door Mould 7': 95, 'Door Mould 8': 95,
+    '3 Panel Mould': 104, 'Door Mould 12': 112, 'Door Mould 11 Flipped': 140
+  },
+  'Stable Door': {
+    'Door Mould 10': 95,
+    'Door Mould 1': 81, 'Door Mould 2': 81, 'Door Mould 3': 81, 'Door Mould 4': 81, 'Door Mould 5': 81, 'Door Mould 6': 81
+  }
+};
+
+// The stable-door HANDLE was captured ~50px too low (cy 196 vs Endurance's constant 144 —
+// the lever sits just above the centre split). Single/Double/Avantal handles already match.
+const HANDLE_CY_BY_TYPE = { 'Stable Door': 144 };
+
 function buildType(node, typeName) {
   const baseSel = node.baseSelection || {};
   const base = node.baseComposite || [];
@@ -147,6 +168,9 @@ function buildType(node, typeName) {
   const knockers = {};
   const kf = node.fields['Knocker'];
   (kf ? kf.choices : []).forEach((c) => { const k = keep(c.delta, 'Knockers')[0]; if (k) knockers[c.label] = { url: strip(k.url), geom: geom(k) }; });
+  // Stamp each style's mould-specific knocker height (same approach as the letterplate).
+  const knByMould = KNOCKER_CY_BY_MOULD[typeName] || {};
+  Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (knByMould[md] != null) { styles[s].knockerCy = knByMould[md]; } });
 
   // LETTERPLATES: label -> captured layer (same shape as knockers — the source catalogue
   // records a Letterplates/* image + geometry under each Letterplate choice's delta).
@@ -157,6 +181,14 @@ function buildType(node, typeName) {
   // places the plate where Endurance does for whatever style the customer picks.
   const lpByMould = LP_CY_BY_MOULD[typeName] || {};
   Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (lpByMould[md] != null) { styles[s].letterplateCy = lpByMould[md]; } });
+
+  // Correct the captured handle height where it disagrees with Endurance's renderer (Stable).
+  let baseHandleGeom = baseHandle ? geom(baseHandle) : null;
+  const handleCyOverride = HANDLE_CY_BY_TYPE[typeName];
+  if (handleCyOverride != null) {
+    Object.keys(handles).forEach((k) => { handles[k].geom.cy = handleCyOverride; });
+    if (baseHandleGeom) { baseHandleGeom.cy = handleCyOverride; }
+  }
 
   const dripbar = keep(base, 'DripBars')[0];
 
@@ -170,7 +202,7 @@ function buildType(node, typeName) {
     canvas: deriveCanvas(base),
     styles,
     frames, baseFrame: baseFrame ? { url: strip(baseFrame.url), geom: geom(baseFrame) } : null,
-    handles, baseHandle: baseHandle ? { url: strip(baseHandle.url), geom: geom(baseHandle) } : null,
+    handles, baseHandle: baseHandle ? { url: strip(baseHandle.url), geom: baseHandleGeom } : null,
     hardwareSuffix,
     knockers,
     letterplates,

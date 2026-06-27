@@ -92,4 +92,21 @@ assert.equal(lpCyFor('Single Door', 'Brecon'), 288, 'Brecon (Mould 6) letterplat
 assert.notEqual(lpCyFor('Single Door', 'Abbott'), lpCyFor('Single Door', 'Brecon'), 'Letterplate height varies by mould');
 assert.equal(lpCyFor('Stable Door', 'Ben Nevis Stable'), 277, 'Stable Ben Nevis letterplate cy 277');
 
+// 11. Knocker height is mould-dependent too (verified against Endurance's renderer).
+const knCyFor = (type, style) => {
+  const ks = assemble(model, type, { 'Door Type': { label: type }, 'Door Design': { label: style }, 'Knocker': { label: 'Chrome Doctors Knocker' } }).filter((l) => l.slot === 'Knockers');
+  return ks.length ? ks[0].cy : null;
+};
+assert.equal(knCyFor('Single Door', 'Abbott'), 80, 'Abbott (Mould 10) knocker cy 80');
+assert.equal(knCyFor('Single Door', 'Berwyn'), 112, 'Berwyn (Mould 12) knocker cy 112');
+assert.notEqual(knCyFor('Single Door', 'Abbott'), knCyFor('Single Door', 'Berwyn'), 'Knocker height varies by mould');
+
+// 12. The stable-door handle sits at Endurance's height (144), not the captured-too-low 196.
+const hdCyFor = (type, style) => {
+  const hs = assemble(model, type, { 'Door Type': { label: type }, 'Door Design': { label: style } }).filter((l) => /Handles/i.test(l.slot));
+  return hs.length ? hs[0].cy : null;
+};
+assert.equal(hdCyFor('Stable Door', 'Ben Nevis Stable'), 144, 'Stable handle sits at cy 144 (just above the split)');
+assert.equal(hdCyFor('Single Door', 'Abbott'), 160.5, 'Single handle unchanged at door centre (160.5)');
+
 console.log('render-model OK');
