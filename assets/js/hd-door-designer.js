@@ -295,7 +295,11 @@
 		}
 		if (step.key === 'handle') {
 			var h = T.handles[choice.label];
-			if (h && h.url) { return img(base + '/' + h.url); }
+			// Handle products look identical on every door type, but some types (e.g.
+			// double doors) didn't capture every handle's layer — borrow the image from
+			// whichever type has it so every handle shows a thumbnail.
+			var hurl = ( h && h.url ) || this.handleImageFromAnyType( choice.label );
+			if (hurl) { return img(base + '/' + hurl); }
 			return null;
 		}
 		if (step.key === 'knocker') {
@@ -304,6 +308,21 @@
 			return null;
 		}
 		// type, frame, letterplate, hinge, sidelightGlass → label/icon only.
+		return null;
+	};
+
+	// Borrow a handle's image from any door type that captured it (handle products are
+	// identical across types). Used for thumbnails only — the canvas keeps each type's
+	// own captured geometry, falling back to the baseline handle when a type lacks one.
+	App.prototype.handleImageFromAnyType = function (label) {
+		var types = this.renderModel && this.renderModel.types;
+		if (!types) { return null; }
+		for (var t in types) {
+			if (Object.prototype.hasOwnProperty.call(types, t)) {
+				var hh = types[t].handles && types[t].handles[label];
+				if (hh && hh.url) { return hh.url; }
+			}
+		}
 		return null;
 	};
 
