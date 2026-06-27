@@ -227,6 +227,26 @@
   line-height: 1.3;
 }
 
+/* ---- Page-1 door-type chooser: richer tiles with a silhouette + description ---- */
+.hd-dd__typegrid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.hd-dd__typetile { padding: 12px 10px 14px; }
+.hd-dd__typetile .hd-dd__tile-media { height: 132px; padding: 10px; }
+.hd-dd__typetile .hd-dd__tile-label { color: var(--ink); font-weight: 600; font-size: 14px; }
+.hd-dd__tile-desc { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; margin-top: 3px; }
+
+/* Style-neutral door silhouettes (the type-chooser visuals). Tokenised so they track
+   the brand + ink palette; no specific door style is implied. */
+.hd-dd__sil { height: 100%; width: auto; max-width: 100%; display: block; margin: 0 auto; }
+.hd-dd__sil-frame { fill: #fff; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; }
+.hd-dd__sil-frame--slim { stroke-width: 2; }
+.hd-dd__sil-panel { fill: none; stroke: #cfcfcf; stroke-width: 1.6; }
+.hd-dd__sil-line { stroke: #cfcfcf; stroke-width: 1.6; }
+.hd-dd__sil-split { fill: #eee; stroke: var(--ink); stroke-width: 2.2; }
+.hd-dd__sil-glass { fill: #dbe7ee; stroke: #bcd0da; stroke-width: 1.6; }
+.hd-dd__sil-mullion { stroke: #cfdde4; stroke-width: 1.4; }
+.hd-dd__sil-kick { fill: #eef0f1; stroke: #cfcfcf; stroke-width: 1.4; }
+.hd-dd__sil-handle { fill: var(--brand); }
+
 
 /* ==========================================================================
    7. CTA — continue / proceed button

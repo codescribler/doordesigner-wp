@@ -36,6 +36,53 @@
 	var DISPLAY_LABELS = { 'Avantal': 'Aluminium' };
 	function displayLabel(label) { return DISPLAY_LABELS[label] || label; }
 
+	// Page-1 door-type chooser: a refined, style-neutral silhouette + a one-line
+	// description per type, so a layperson grasps the choice (single / double / stable /
+	// aluminium) without a specific STYLE being pushed on them before the style step.
+	var TYPE_SIL = {
+		'Single Door':
+			'<svg viewBox="0 0 110 210" class="hd-dd__sil" aria-hidden="true">' +
+				'<rect class="hd-dd__sil-frame" x="22" y="10" width="66" height="190" rx="3"/>' +
+				'<rect class="hd-dd__sil-panel" x="30" y="20" width="50" height="170" rx="2"/>' +
+				'<line class="hd-dd__sil-line" x1="36" y1="64" x2="74" y2="64"/>' +
+				'<line class="hd-dd__sil-line" x1="36" y1="108" x2="74" y2="108"/>' +
+				'<line class="hd-dd__sil-line" x1="36" y1="152" x2="74" y2="152"/>' +
+				'<rect class="hd-dd__sil-handle" x="72" y="104" width="5" height="20" rx="2.5"/>' +
+			'</svg>',
+		'Double Door':
+			'<svg viewBox="0 0 110 210" class="hd-dd__sil" aria-hidden="true">' +
+				'<rect class="hd-dd__sil-frame" x="10" y="10" width="90" height="190" rx="3"/>' +
+				'<line class="hd-dd__sil-frame" x1="55" y1="12" x2="55" y2="198"/>' +
+				'<rect class="hd-dd__sil-panel" x="17" y="20" width="32" height="170" rx="2"/>' +
+				'<rect class="hd-dd__sil-panel" x="61" y="20" width="32" height="170" rx="2"/>' +
+				'<rect class="hd-dd__sil-handle" x="48" y="100" width="5" height="24" rx="2.5"/>' +
+				'<rect class="hd-dd__sil-handle" x="57" y="100" width="5" height="24" rx="2.5"/>' +
+			'</svg>',
+		'Stable Door':
+			'<svg viewBox="0 0 110 210" class="hd-dd__sil" aria-hidden="true">' +
+				'<rect class="hd-dd__sil-frame" x="22" y="10" width="66" height="190" rx="3"/>' +
+				'<rect class="hd-dd__sil-panel" x="30" y="20" width="50" height="78" rx="2"/>' +
+				'<rect class="hd-dd__sil-panel" x="30" y="112" width="50" height="78" rx="2"/>' +
+				'<rect class="hd-dd__sil-split" x="26" y="99" width="58" height="12" rx="2"/>' +
+				'<rect class="hd-dd__sil-handle" x="72" y="70" width="5" height="18" rx="2.5"/>' +
+				'<rect class="hd-dd__sil-handle" x="72" y="124" width="5" height="18" rx="2.5"/>' +
+			'</svg>',
+		'Avantal':
+			'<svg viewBox="0 0 110 210" class="hd-dd__sil" aria-hidden="true">' +
+				'<rect class="hd-dd__sil-frame hd-dd__sil-frame--slim" x="24" y="10" width="62" height="190" rx="2"/>' +
+				'<rect class="hd-dd__sil-glass" x="31" y="17" width="48" height="158" rx="1.5"/>' +
+				'<line class="hd-dd__sil-mullion" x1="55" y1="17" x2="55" y2="175"/>' +
+				'<rect class="hd-dd__sil-kick" x="31" y="180" width="48" height="14" rx="1.5"/>' +
+				'<rect class="hd-dd__sil-handle" x="74" y="70" width="4.5" height="70" rx="2.2"/>' +
+			'</svg>'
+	};
+	var TYPE_DESC = {
+		'Single Door': 'One solid leaf — the classic front door.',
+		'Double Door': 'Two leaves that open from the centre — wide, grand entrances.',
+		'Stable Door': 'Split across the middle — open the top half on its own.',
+		'Avantal': 'Sleek aluminium with slim frames and more glass.'
+	};
+
 	function el(tag, cls, txt) {
 		var n = document.createElement(tag);
 		if (cls) { n.className = cls; }
@@ -209,11 +256,17 @@
 		this.body.innerHTML = '';
 		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door and get a free, no-obligation quote — it takes about two minutes.'));
 		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.chooseType || 'What kind of door?'));
-		var row = el('div', 'hd-dd__carousel');
+		var row = el('div', 'hd-dd__carousel hd-dd__typegrid');
 		(this.customerView.types || []).forEach(function (label) {
-			var t = el('button', 'hd-dd__tile');
+			var t = el('button', 'hd-dd__tile hd-dd__typetile');
 			t.type = 'button';
-			t.appendChild(el('span', 'hd-dd__tile-label', displayLabel(label)));
+			var media = el('div', 'hd-dd__tile-media');
+			if (TYPE_SIL[label]) { media.innerHTML = TYPE_SIL[label]; }
+			t.appendChild(media);
+			// Show the raw label (so the aluminium range reads "Avantal"); the description
+			// line carries the plain-English clarification ("aluminium").
+			t.appendChild(el('span', 'hd-dd__tile-label', label));
+			if (TYPE_DESC[label]) { t.appendChild(el('span', 'hd-dd__tile-desc', TYPE_DESC[label])); }
 			t.addEventListener('click', function () { self.wiz.selectType(label); self.render(); });
 			row.appendChild(t);
 		});
