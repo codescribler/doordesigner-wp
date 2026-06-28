@@ -525,3 +525,63 @@
 @media (min-width: 1200px) {
   .hd-dd__canvas { max-width: 520px; }
 }
+
+
+/* ==========================================================================
+   14. RESPONSIVE — phone refinements (< 820px)
+   --------------------------------------------------------------------------
+   On phones the stacked layout buried the question, options and action beneath a
+   full-height door preview — a customer landed on just "the door + Back" with no
+   idea what to do or that options lay below. Keep the door visible but compact
+   (sticky + height-capped), surface the options, and pin the Continue action to the
+   bottom so the next step is always on screen. Desktop (>=820px, section 13) is
+   untouched — these rules only match below the two-pane breakpoint.
+   ========================================================================== */
+
+@media (max-width: 819px) {
+  /* Compact, sticky preview — stays in view while the customer scrolls the options,
+     but never eats more than ~40% of the screen, so the question + choices show
+     together. (The door is height-scaled, not stretched.) */
+  .hd-dd__stage {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    max-height: 40vh;
+    padding: 8px;
+    /* Lift the pinned preview above the options that scroll under it. */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .06);
+  }
+  .hd-dd__canvas,
+  .hd-dd__hero {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(40vh - 16px);
+  }
+
+  /* Pin the primary action to the bottom of the screen so the customer always knows
+     how to move on. A soft fade above the bar bleeds the options underneath it,
+     hinting there's more to scroll. */
+  .hd-dd__cta {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0 -1px 0 var(--line), 0 -10px 18px rgba(0, 0, 0, .08);
+  }
+  .hd-dd__cta::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -20px;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--paper));
+    pointer-events: none;
+  }
+
+  /* Clearance so the last option isn't tucked under the pinned action bar. */
+  .hd-dd__body { padding-bottom: 14px; }
+}
