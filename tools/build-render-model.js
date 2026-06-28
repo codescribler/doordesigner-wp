@@ -98,6 +98,17 @@ const KNOCKER_CY_BY_MOULD = {
 // the lever sits just above the centre split). Single/Double/Avantal handles already match.
 const HANDLE_CY_BY_TYPE = { 'Stable Door': 144 };
 
+// Endurance offers a "Letterplate Position" choice (Middle / Bottom) — but only on moulds whose
+// natural (Middle) spot is up in the central rail; on the rest the plate already sits at the
+// bottom so there's no choice. These are the BOTTOM-rail positions for the moulds that offer it
+// (the Middle position is the per-mould value in LP_CY_BY_MOULD). Captured from Endurance's
+// renderer. Single & Double share moulds.
+const LETTERPLATE_BOTTOM_BY_MOULD = {
+  'Single Door': { 'Door Mould 10': 290, 'Door Mould 2': 286, 'Door Mould 3': 286 },
+  'Stable Door': { 'Door Mould 1': 275, 'Door Mould 10': 275 }
+};
+LETTERPLATE_BOTTOM_BY_MOULD['Double Door'] = LETTERPLATE_BOTTOM_BY_MOULD['Single Door'];
+
 function buildType(node, typeName) {
   const baseSel = node.baseSelection || {};
   const base = node.baseComposite || [];
@@ -192,6 +203,9 @@ function buildType(node, typeName) {
   // places the plate where Endurance does for whatever style the customer picks.
   const lpByMould = LP_CY_BY_MOULD[typeName] || {};
   Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (lpByMould[md] != null) { styles[s].letterplateCy = lpByMould[md]; } });
+  // Stamp the BOTTOM letterplate position on styles whose mould offers the Middle/Bottom choice.
+  const lpBottom = LETTERPLATE_BOTTOM_BY_MOULD[typeName] || {};
+  Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (lpBottom[md] != null) { styles[s].letterplateBottomCy = lpBottom[md]; } });
 
   // Correct the captured handle height where it disagrees with Endurance's renderer (Stable).
   let baseHandleGeom = baseHandle ? geom(baseHandle) : null;

@@ -114,6 +114,16 @@
 		this.customerView = customerView;
 		this.renderModel = renderModel || null;
 		this.categories = categories || null;
+		// Mark, per type, the styles whose mould offers the Middle/Bottom letterplate-position
+		// choice (from the render model) so the wizard can show that step only where it applies.
+		if (renderModel && renderModel.types && customerView && customerView.byType) {
+			Object.keys(customerView.byType).forEach(function (t) {
+				var rmStyles = (renderModel.types[t] || {}).styles || {};
+				var posStyles = {};
+				Object.keys(rmStyles).forEach(function (s) { if (rmStyles[s].letterplateBottomCy != null) { posStyles[s] = true; } });
+				customerView.byType[t].letterplatePosStyles = posStyles;
+			});
+		}
 		this.wiz = HD_DD_Wizard.create(customerView, HD_DD_StepConfig);
 		this.compositor = null;
 		// key of the step painted on the PREVIOUS render — used by the _styleCategory

@@ -115,4 +115,18 @@ assert.equal(model.types['Stable Door'].canvas.width, 156, 'Stable door canvas i
 assert.ok(/DoorFrames\/Single\//.test(model.types['Stable Door'].baseFrame.url), 'Stable door uses the Single-width frame, not the Double frame');
 assert.equal(model.types['Stable Door'].baseFrame.geom.w, 155.25, 'Stable frame is single-width (155.25)');
 
+// 14. Letterplate Position choice (Middle / Bottom) — only on moulds whose Middle spot is high.
+const lpPos = (style, pos) => {
+  const d = { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: style }, 'Letterplate': { label: 'Letterplate' } };
+  if (pos) { d['Letterplate Position'] = { label: pos }; }
+  const ls = assemble(model, 'Single Door', d).filter((l) => l.slot === 'Letterplates');
+  return ls.length ? ls[0].cy : null;
+};
+assert.ok(model.types['Single Door'].styles['Abbott'].letterplateBottomCy != null, 'Abbott offers the Middle/Bottom choice (has a bottom position)');
+assert.equal(model.types['Single Door'].styles['Brecon'].letterplateBottomCy, undefined, 'Brecon offers no choice (plate already at the bottom)');
+assert.equal(lpPos('Abbott'), 152, 'Abbott default = Middle (cy 152)');
+assert.equal(lpPos('Abbott', 'Bottom'), 290, 'Abbott Bottom drops the plate to the bottom rail (cy 290)');
+assert.equal(lpPos('Abbott', 'Middle'), 152, 'Abbott Middle is the central rail (cy 152)');
+assert.equal(lpPos('Brecon', 'Bottom'), 288, 'A no-choice mould ignores the position (stays at its fixed cy 288)');
+
 console.log('render-model OK');

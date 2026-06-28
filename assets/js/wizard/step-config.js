@@ -22,6 +22,8 @@
     { key: 'hardware', label: 'Hardware finish', name: 'Hardware', heading: 'Hardware Type', tileType: 'swatch' },
     { key: 'handle', label: 'Choose your handle', name: 'Handle', heading: 'Handle', tileType: 'handle' },
     { key: 'letterplate', label: 'Add a letterplate?', name: 'Letterplate', heading: 'Letterplate', tileType: 'choice', optional: true, defaultLabel: 'No Letterplate' },
+    { key: 'letterplatePosition', label: 'Where should the letterplate sit?', name: 'Letterplate position', heading: 'Letterplate Position', tileType: 'choice', source: 'letterplatePosition', optional: true, defaultLabel: 'Middle',
+      visibleWhen: function (n, d) { return letterplatePosAvailable(n, d); } },
     { key: 'knocker', label: 'Add a knocker?', name: 'Knocker', heading: 'Knocker', tileType: 'choice', source: 'knocker', optional: true, defaultLabel: 'No Knocker',
       visibleWhen: function (n) { return !!n.hasKnocker; } },
     { key: 'hinge', label: 'Hinge side', name: 'Hinge', heading: '__hinge__', tileType: 'choice' }
@@ -35,6 +37,16 @@
 
   function sidelightGlazed(d) {
     return !!(d['Sidelight Type'] && d['Sidelight Type'].label === 'Glazed');
+  }
+
+  // The Middle/Bottom letterplate-position choice only exists on moulds whose default (Middle)
+  // spot is up in the central rail — the App marks those styles (from the render model) as
+  // n.letterplatePosStyles. Only offer it once a real letterplate is chosen.
+  function letterplatePosAvailable(n, d) {
+    var style = d['Door Design'] && d['Door Design'].label;
+    var lp = d['Letterplate'] && d['Letterplate'].label;
+    if (!style || !lp || /^no /i.test(lp)) { return false; }
+    return !!(n.letterplatePosStyles && n.letterplatePosStyles[style]);
   }
 
   // High-level grouping for the Frame Design step's progressive disclosure: a layperson
@@ -61,6 +73,8 @@
       choices = n.sidelights ? n.sidelights.sidelightType : null;
     } else if (step.source === 'sidelightGlass') {
       choices = n.sidelights ? n.sidelights.sidelightGlass : null;
+    } else if (step.source === 'letterplatePosition') {
+      choices = [{ label: 'Middle', id: null }, { label: 'Bottom', id: null }];
     } else { choices = n.fields[heading]; }
     return { heading: heading, choices: choices };
   }

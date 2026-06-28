@@ -116,6 +116,11 @@
 			var lgeom = letter.geom;
 			var lpStyle = T.styles[get('Door Design')];
 			var lpCy = lpStyle && lpStyle.letterplateCy;
+			// On moulds that offer it, "Letterplate Position: Bottom" drops the plate to the
+			// bottom rail; the default (Middle) keeps the per-mould central position.
+			if (lpStyle && lpStyle.letterplateBottomCy != null && /bottom/i.test(get('Letterplate Position'))) {
+				lpCy = lpStyle.letterplateBottomCy;
+			}
 			if (type === 'Double Door' || lpCy != null) {
 				lgeom = {};
 				for (var lk in letter.geom) { if (Object.prototype.hasOwnProperty.call(letter.geom, lk)) { lgeom[lk] = letter.geom[lk]; } }
