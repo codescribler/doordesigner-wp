@@ -35,10 +35,10 @@
     });
     container.appendChild(list);
 
-    container.appendChild(el('p', 'hd-dd__review-note',
+    container.appendChild(el('div', 'hd-dd__review-note',
       'Free, no-obligation quote — no payment now. We usually reply within one working day.'));
 
-    container.appendChild(el('p', 'hd-dd__disclaimer',
+    container.appendChild(el('div', 'hd-dd__disclaimer',
       'We make every effort to show your door as accurately as possible, but this preview is an impression — it should not be taken as a perfect representation of the finished product.'));
 
     var cta = el('button', 'hd-dd__cta', 'Get my free quote'); cta.type = 'button';

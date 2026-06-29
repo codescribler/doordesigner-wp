@@ -231,16 +231,16 @@
 		close.addEventListener('click', function () { self._reloadNote = null; self.render(); });
 		note.appendChild(close);
 		if (this._reloadNote.notFound) {
-			note.appendChild(el('p', 'hd-dd__reload-title', "We couldn't find that saved design — let's start fresh."));
+			note.appendChild(el('div', 'hd-dd__reload-title', "We couldn't find that saved design — let's start fresh."));
 		} else {
 			var dropped = this._reloadNote.dropped || [];
-			note.appendChild(el('p', 'hd-dd__reload-title', 'A few things have changed since you saved this design:'));
+			note.appendChild(el('div', 'hd-dd__reload-title', 'A few things have changed since you saved this design:'));
 			var ul = el('ul', 'hd-dd__reload-list');
 			dropped.forEach(function (d) {
 				ul.appendChild(el('li', null, 'Your ' + d.name + ' (“' + d.label + '”) is no longer available — please choose again.'));
 			});
 			note.appendChild(ul);
-			note.appendChild(el('p', 'hd-dd__reload-foot', 'Everything else has loaded — just re-pick the items above to finish your design.'));
+			note.appendChild(el('div', 'hd-dd__reload-foot', 'Everything else has loaded — just re-pick the items above to finish your design.'));
 		}
 		this.body.insertBefore(note, this.body.firstChild);
 	};
@@ -662,7 +662,7 @@
 	App.prototype.renderForm = function () {
 		this.body.innerHTML = '';
 		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.formTitle || 'Get your free quote'));
-		this.body.appendChild(el('p', 'hd-dd__form-reassure',
+		this.body.appendChild(el('div', 'hd-dd__form-reassure',
 			I18N.reassure || 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.'));
 		if (!this._formEl) { this._formEl = this.buildForm(); }
 		this.body.appendChild(this._formEl);
@@ -684,16 +684,16 @@
 			wrap.appendChild(pic);
 		}
 		wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Thank you — your design is on its way to us.'));
-		wrap.appendChild(el('p', 'hd-dd__thanks-text',
+		wrap.appendChild(el('div', 'hd-dd__thanks-text',
 			'We’ll be in touch shortly with your free, no-obligation quote — usually within one working day. We’ve also emailed you a copy with a link to revisit or tweak this design.'));
-		wrap.appendChild(el('p', 'hd-dd__thanks-price',
+		wrap.appendChild(el('div', 'hd-dd__thanks-price',
 			'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.'));
 
 		var again = el('button', 'hd-dd__thanks-again', 'Design another door');
 		again.type = 'button';
 		again.addEventListener('click', function () { self.designAnother(); });
 		wrap.appendChild(again);
-		wrap.appendChild(el('p', 'hd-dd__thanks-note', 'Quoting for more than one door? Design the next one now — we already have your details.'));
+		wrap.appendChild(el('div', 'hd-dd__thanks-note', 'Quoting for more than one door? Design the next one now — we already have your details.'));
 
 		// A reliable, bookmarkable revisit link (works even if the email doesn't arrive).
 		if (result && result.token) {
@@ -774,7 +774,7 @@
 		var submit = el('button', 'hd-dd__submit', I18N.submit || 'Send my free quote request');
 		submit.type = 'submit';
 		form.appendChild(submit);
-		form.appendChild(el('p', 'hd-dd__form-trust',
+		form.appendChild(el('div', 'hd-dd__form-trust',
 			I18N.trust || 'No spam, ever — your details are only used to prepare your quote.'));
 		form.appendChild(el('div', 'hd-dd__form-status'));
 		var statusEl = form.querySelector('.hd-dd__form-status');
