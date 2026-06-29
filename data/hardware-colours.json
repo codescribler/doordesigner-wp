@@ -1,0 +1,71 @@
+{
+  "tokens": {
+    "Chrome": "Chrome",
+    "Black": "Black",
+    "Gold": "Gold",
+    "Stainless Steel": "Satin",
+    "Antique Black": "AntiqueBlack",
+    "Graphite": "Graphite",
+    "Bronze": "Bronze"
+  },
+  "variants": {
+    "Heritage": [
+      "Chrome",
+      "Gold",
+      "AntiqueBlack",
+      "Graphite"
+    ],
+    "HeritagePull": [
+      "Chrome",
+      "Black",
+      "Gold"
+    ],
+    "Letterplate": [
+      "Chrome",
+      "Black",
+      "Gold",
+      "Satin",
+      "AntiqueBlack",
+      "Graphite",
+      "Bronze"
+    ],
+    "LetterplateArch": [
+      "Chrome",
+      "Gold",
+      "Graphite"
+    ],
+    "LetterplateHeri": [
+      "Chrome",
+      "Gold",
+      "Graphite"
+    ],
+    "LeverLever": [
+      "Chrome",
+      "Black",
+      "Gold",
+      "Satin",
+      "AntiqueBlack",
+      "Graphite",
+      "Bronze"
+    ],
+    "LeverLeverArch": [
+      "Chrome",
+      "Gold",
+      "Graphite"
+    ],
+    "LeverPad": [
+      "Chrome",
+      "Black",
+      "Gold",
+      "Satin",
+      "AntiqueBlack",
+      "Graphite",
+      "Bronze"
+    ],
+    "LeverPadArch": [
+      "Chrome",
+      "Gold",
+      "Graphite"
+    ]
+  }
+}

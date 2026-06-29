@@ -270,8 +270,32 @@ function deriveCanvas(layers) {
   return { width: Math.ceil(maxX) || 160, height: Math.ceil(maxY) || 330 };
 }
 
+// Hardware-colour recolour data (generated read-only by tools/probe-hardware-colours.js):
+//   hardwareColours { <Hardware Colour label>: <filename token> }
+//   furnitureColours { <furniture base>: [<available token>, ...] }
+// assemble() uses these to swap a handle/letterplate's colour-token suffix to the
+// chosen finish, exactly as the Endurance designer does. Optional — if the file is
+// missing the model simply omits recolouring (the build still succeeds).
+function loadHardwareColours() {
+  const file = path.join(__dirname, '..', 'data', 'hardware-colours.json');
+  try {
+    const hc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return { hardwareColours: hc.tokens || {}, furnitureColours: hc.variants || {} };
+  } catch (e) {
+    console.warn('hardware-colours.json not found — preview will not recolour furniture. Run tools/probe-hardware-colours.js.');
+    return { hardwareColours: {}, furnitureColours: {} };
+  }
+}
+
 function build(raw) {
-  const model = { _assetBase: raw._assetBase, _builtFrom: raw._capturedAt, types: {} };
+  const hc = loadHardwareColours();
+  const model = {
+    _assetBase: raw._assetBase,
+    _builtFrom: raw._capturedAt,
+    hardwareColours: hc.hardwareColours,
+    furnitureColours: hc.furnitureColours,
+    types: {},
+  };
   ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });
   return model;
 }

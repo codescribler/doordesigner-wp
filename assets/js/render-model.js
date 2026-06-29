@@ -55,12 +55,45 @@
 		return /left/i.test(hinge);
 	}
 
+	// Recolour a furniture image to the chosen hardware finish, exactly as the Endurance
+	// designer does: swap the filename's trailing colour token (LeverLever`Chrome` ->
+	// LeverLever`Black`). Only swaps when that base actually has the target colour — a
+	// missing variant would 404 and silently drop the handle, so we leave it as captured.
+	// `hwToken` is the selected finish's filename token (from model.hardwareColours);
+	// model.furnitureColours lists the tokens each base provides. Both are built read-only
+	// by tools/probe-hardware-colours.js, so fixed furniture (pull handles, product-colour
+	// knockers) simply has no token to match and is never touched.
+	function recolourFurniture(url, model, hwToken) {
+		if (!hwToken || !url || !model || !model.furnitureColours || !model.hardwareColours) { return url; }
+		var mm = String(url).match(/^(.*\/)([^/]+)(\.\w+)$/);
+		if (!mm) { return url; }
+		var dir = mm[1], stem = mm[2], ext = mm[3];
+		var tokens = [];
+		for (var k in model.hardwareColours) {
+			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, k)) { tokens.push(model.hardwareColours[k]); }
+		}
+		tokens.sort(function (a, b) { return b.length - a.length; }); // AntiqueBlack before Black
+		for (var i = 0; i < tokens.length; i++) {
+			var tok = tokens[i];
+			if (stem.length > tok.length && stem.slice(-tok.length) === tok) {
+				var base = stem.slice(0, -tok.length);
+				var variants = model.furnitureColours[base];
+				if (variants && variants.indexOf(hwToken) !== -1) { return dir + base + hwToken + ext; }
+				return url; // base doesn't offer this finish — keep the captured colour
+			}
+		}
+		return url; // no recognised colour token: fixed / product-colour furniture
+	}
+
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';
 
 	function assemble(model, type, design) {
 		var T = model.types ? model.types[type] : null;
 		if (!T) { return []; }
 		var get = function (h) { return (design[h] && design[h].label) || ''; };
+		// The chosen hardware finish's filename token (null for finishes with no recolour
+		// variant, e.g. Forged Black — those leave the furniture at its captured colour).
+		var hwToken = model.hardwareColours ? model.hardwareColours[get('Hardware Type')] : null;
 		var colour = get('Door Colour (External)') || T.baselineColour;
 		var style = T.styles[get('Door Design')] || { mould: T.baselineMould, cassetteKey: T.baselineCassetteKey, blankGeom: null, cassetteGeom: [], glazingGeom: [] };
 		var layers = [];
@@ -92,7 +125,7 @@
 				handle = T.baseHandle;
 			}
 		}
-		if (handle) { push(handle.url, handle.geom); }
+		if (handle) { push(recolourFurniture(handle.url, model, hwToken), handle.geom); }
 		// knocker. Its HEIGHT is mould-dependent too (it sits in an upper panel gap), so take
 		// the cy from the chosen style — same approach as the letterplate.
 		var knock = T.knockers[get('Knocker')];
@@ -127,7 +160,7 @@
 				if (lpCy != null) { lgeom.cy = lpCy; }
 				if (type === 'Double Door') { lgeom.leftSlab = false; }
 			}
-			push(letter.url, lgeom);
+			push(recolourFurniture(letter.url, model, hwToken), lgeom);
 		}
 		// drip bar
 		if (T.dripbar) { push(T.dripbar.url, T.dripbar.geom); }
