@@ -672,9 +672,17 @@
 	// points to the revisit link, frames price, and invites another design.
 	App.prototype.renderSuccess = function (result) {
 		var self = this;
-		this.setPhase('form'); // single-column layout, sticky preview stays
+		this.setPhase('done'); // a self-contained, centred terminal screen (no sticky preview)
 		this.body.innerHTML = '';
 		var wrap = el('div', 'hd-dd__thanks');
+		// Their designed door, inline at the top — a confirmation visual that reads top-to-bottom
+		// (the wizard's sticky preview is hidden in this phase, so nothing is cut off).
+		if (this._designImage) {
+			var pic = el('img', 'hd-dd__thanks-img');
+			pic.src = this._designImage;
+			pic.alt = 'Your door design';
+			wrap.appendChild(pic);
+		}
 		wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Thank you — your design is on its way to us.'));
 		wrap.appendChild(el('p', 'hd-dd__thanks-text',
 			'We’ll be in touch shortly with your free, no-obligation quote — usually within one working day. We’ve also emailed you a copy with a link to revisit or tweak this design.'));
@@ -697,6 +705,8 @@
 		this.body.appendChild(wrap);
 		this.backBtn.hidden = true;
 		this.continueBtn.hidden = true;
+		// Land at the top so the whole message reads from "Thank you" — not part-scrolled.
+		try { this.root.scrollIntoView({ block: 'start' }); } catch (e) { /* older browsers */ }
 	};
 
 	// "Design another door" — fresh wizard, but keep the entered contact details (the form
@@ -798,6 +808,7 @@
 		// exports cleanly; guard anyway so a stray cross-origin layer can never block a submit.
 		var snapshot = this.snapshotDoor();
 		if (snapshot) { data.image = snapshot; }
+		this._designImage = snapshot || null; // shown on the thank-you screen
 
 		// QA harness has no WordPress REST endpoint — acknowledge without posting.
 		if (!CFG.restUrl) {

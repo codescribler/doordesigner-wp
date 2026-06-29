@@ -776,3 +776,39 @@
   .hd-dd__app--step .hd-dd__carousel  { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); padding: 4px 0 4px; }
   .hd-dd__app--step .hd-dd__change    { margin-left: 0; margin-right: 0; }
 }
+
+
+/* ==========================================================================
+   15. TERMINAL THANK-YOU SCREEN (after submit)
+   --------------------------------------------------------------------------
+   A self-contained, centred card shown identically on every screen size: the
+   door image, then the whole message read from the top. The wizard's sticky
+   preview / header / action bar are hidden in this phase so nothing competes
+   for space or gets cut off (the bug this fixes). Two-class selector so it wins
+   over both the desktop two-pane grid and the mobile sticky rules regardless of
+   source order.
+   ========================================================================== */
+
+.hd-dd__app.hd-dd__app--done {
+  display: block;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 16px 28px;
+}
+.hd-dd__app--done .hd-dd__wizhead,
+.hd-dd__app--done .hd-dd__stage,
+.hd-dd__app--done .hd-dd__cta { display: none; }
+.hd-dd__app--done .hd-dd__body { padding: 0; }
+
+/* Their designed door, sized as a tidy confirmation visual (not a 40vh band). */
+.hd-dd__thanks-img {
+  display: block;
+  margin: 4px auto 16px;
+  width: auto;
+  max-width: 168px;
+  max-height: 42vh;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--stage);
+}
