@@ -22,7 +22,16 @@
 		}
 		else if (media && media.kind === 'swatch') { var sw = el('div', 'hd-dd__swatch'); sw.style.background = media.color; t.appendChild(sw); }
 		t.appendChild(el('span', 'hd-dd__tile-label', friendly(choice.label)));
-		t.addEventListener('click', function () { ctx.onSelect(ctx.heading, choice); });
+		// A handle that doesn't come in the chosen finish is greyed out with a note of the
+		// finishes it does come in, instead of silently rendering in its default colour.
+		var disabledReason = ctx.tileDisabledReason ? ctx.tileDisabledReason(step, choice) : null;
+		if (disabledReason) {
+			t.disabled = true;
+			t.className += ' is-disabled';
+			t.appendChild(el('span', 'hd-dd__tile-note', disabledReason));
+		} else {
+			t.addEventListener('click', function () { ctx.onSelect(ctx.heading, choice); });
+		}
 		return t;
 	}
 

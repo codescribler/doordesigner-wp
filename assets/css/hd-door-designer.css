@@ -210,6 +210,25 @@
   box-shadow: 0 0 0 2px var(--ink);
 }
 
+/* A handle that doesn't come in the chosen finish — greyed, not selectable, with a note
+   of the finishes it does come in. */
+.hd-dd__tile.is-disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.hd-dd__tile.is-disabled .hd-dd__tile-media,
+.hd-dd__tile.is-disabled .hd-dd__swatch { filter: grayscale(1); }
+.hd-dd__tile.is-disabled:hover { border-color: var(--line); }
+
+.hd-dd__tile-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.25;
+  color: var(--muted);
+  font-style: italic;
+}
+
 /* Media element inside tile (image or video still) */
 .hd-dd__tile-media {
   width: 100%;

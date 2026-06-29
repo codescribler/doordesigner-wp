@@ -90,6 +90,13 @@
 		return n;
 	}
 
+	// "Chrome, Gold & Graphite" — for the "…only" note on greyed handle tiles.
+	function formatColourList(arr) {
+		if (!arr || !arr.length) { return ''; }
+		if (arr.length === 1) { return arr[0]; }
+		return arr.slice(0, -1).join(', ') + ' & ' + arr[arr.length - 1];
+	}
+
 	// Drop UI-only keys (anything prefixed with "_") from the design payload.
 	function cleanDesign(design) {
 		var out = {};
@@ -357,12 +364,59 @@
 	};
 
 	// ---- Context objects handed to the renderers ----------------------------
+	// --- Handle ↔ hardware-finish compatibility -----------------------------
+	// Each handle only comes in certain finishes (a lever in all seven, an architectural
+	// lever in just Chrome/Gold/Graphite, a stainless pull in none — it's intrinsically
+	// stainless). Returns the finish LABELS a handle is offered in, or null when the
+	// handle has no colour variants at all (fixed-finish — always shown, never recoloured).
+	App.prototype.handleAvailableColours = function (label) {
+		var model = this.renderModel;
+		var T = (model && model.types) ? model.types[this.activeType()] : null;
+		if (!T || !T.handles[label] || !window.HD_DD_RenderModel) { return null; }
+		var info = window.HD_DD_RenderModel.furnitureColourInfo(model, T.handles[label].url);
+		if (!info) { return null; }
+		var tokenToLabel = {};
+		for (var lbl in model.hardwareColours) {
+			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, lbl)) { tokenToLabel[model.hardwareColours[lbl]] = lbl; }
+		}
+		return info.variants.map(function (t) { return tokenToLabel[t]; }).filter(Boolean);
+	};
+
+	// Why a handle tile is greyed out (or null if selectable). A recolourable handle is
+	// offered only in the finishes it actually comes in; picking it in another finish would
+	// silently fall back to its default ("the colour reverted"), so we disable it and say
+	// which finishes it does come in. Only standard (recolourable) finishes constrain the
+	// list — specialty finishes recolour no handle, so nothing is greyed for them.
+	App.prototype.tileDisabledReason = function (step, choice) {
+		if (step.key !== 'handle') { return null; }
+		var model = this.renderModel;
+		var hw = this.wiz.state().design['Hardware Type'];
+		if (!hw || !model || !model.hardwareColours || !model.hardwareColours[hw.label]) { return null; }
+		var avail = this.handleAvailableColours(choice.label);
+		if (!avail || avail.indexOf(hw.label) !== -1) { return null; } // fixed-finish, or it comes in this finish
+		return formatColourList(avail) + ' only';
+	};
+
+	// When the finish changes, drop a now-incompatible handle so the preview never shows it
+	// in the wrong (default) colour — the door falls back to the default lever in the chosen
+	// finish, and the customer re-picks a handle (incompatible ones greyed). Mirrors how the
+	// Endurance designer resets the handle when you change the hardware colour.
+	App.prototype.resetHandleIfIncompatible = function () {
+		var design = this.wiz.state().design;
+		var model = this.renderModel;
+		var hw = design['Hardware Type'], handle = design['Handle'];
+		if (!hw || !handle || !model || !model.hardwareColours || !model.hardwareColours[hw.label]) { return; }
+		var avail = this.handleAvailableColours(handle.label);
+		if (avail && avail.indexOf(hw.label) === -1) { delete design['Handle']; }
+	};
+
 	App.prototype.stepCtx = function (st, step) {
 		var self = this;
 		return {
 			design: st.design,
 			heading: step.heading,
 			thumbFor: function (s, c) { return self.thumbFor(s, c); },
+			tileDisabledReason: function (s, c) { return self.tileDisabledReason(s, c); },
 			onSelect: function (heading, choice) { self.onSelect(heading, choice); },
 			categoryOf: function (label) { return self.categoryOf(label); },
 			groupOf: function (label) { return HD_DD_StepConfig.frameGroup(label); },
@@ -400,6 +454,9 @@
 		if (heading === 'Door Design' && savedCat != null) {
 			this.wiz.state().design._styleCategory = savedCat;
 		}
+		// Changing the finish can leave the chosen handle without that colour — drop it so
+		// the preview doesn't show it reverted to its default finish.
+		if (heading === 'Hardware Type') { this.resetHandleIfIncompatible(); }
 		this.render();
 	};
 

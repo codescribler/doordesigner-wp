@@ -63,11 +63,14 @@
 	// model.furnitureColours lists the tokens each base provides. Both are built read-only
 	// by tools/probe-hardware-colours.js, so fixed furniture (pull handles, product-colour
 	// knockers) simply has no token to match and is never touched.
-	function recolourFurniture(url, model, hwToken) {
-		if (!hwToken || !url || !model || !model.furnitureColours || !model.hardwareColours) { return url; }
-		var mm = String(url).match(/^(.*\/)([^/]+)(\.\w+)$/);
-		if (!mm) { return url; }
-		var dir = mm[1], stem = mm[2], ext = mm[3];
+	// For a recolourable furniture image, the { base, variants } it belongs to — base is
+	// the filename with its captured colour token stripped, variants the tokens that base
+	// is available in. null for fixed / product-colour furniture (no recognised token, or
+	// a base the probe never found). Shared by the recolour below AND the wizard's handle
+	// greying so both use exactly the same base detection.
+	function furnitureColourInfo(model, url) {
+		if (!url || !model || !model.furnitureColours || !model.hardwareColours) { return null; }
+		var stem = String(url).split('/').pop().replace(/\.\w+$/, '');
 		var tokens = [];
 		for (var k in model.hardwareColours) {
 			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, k)) { tokens.push(model.hardwareColours[k]); }
@@ -77,12 +80,18 @@
 			var tok = tokens[i];
 			if (stem.length > tok.length && stem.slice(-tok.length) === tok) {
 				var base = stem.slice(0, -tok.length);
-				var variants = model.furnitureColours[base];
-				if (variants && variants.indexOf(hwToken) !== -1) { return dir + base + hwToken + ext; }
-				return url; // base doesn't offer this finish — keep the captured colour
+				return model.furnitureColours[base] ? { base: base, variants: model.furnitureColours[base] } : null;
 			}
 		}
-		return url; // no recognised colour token: fixed / product-colour furniture
+		return null;
+	}
+
+	function recolourFurniture(url, model, hwToken) {
+		if (!hwToken) { return url; }
+		var info = furnitureColourInfo(model, url);
+		if (!info || info.variants.indexOf(hwToken) === -1) { return url; } // fixed, or no such finish — keep as captured
+		var mm = String(url).match(/^(.*\/)([^/]+)(\.\w+)$/);
+		return mm ? mm[1] + info.base + hwToken + mm[3] : url;
 	}
 
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';
@@ -209,5 +218,5 @@
 		return layers;
 	}
 
-	return { assemble: assemble, slotOf: slotOf, shouldFlip: shouldFlip };
+	return { assemble: assemble, slotOf: slotOf, shouldFlip: shouldFlip, furnitureColourInfo: furnitureColourInfo };
 }));

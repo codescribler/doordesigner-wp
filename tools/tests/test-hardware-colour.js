@@ -53,4 +53,23 @@ assert.equal(letterFile({ Letterplate: { label: 'Architectural Letterplate' }, '
   assert.ok(model.furnitureColours.LeverLever.indexOf(tok) !== -1, `LeverLever ${hw} -> token ${tok} is an available variant`);
 });
 
+// 7. furnitureColourInfo (shared by the recolour AND the wizard's handle greying): the
+//    finishes each handle base comes in, and null for fixed-finish handles.
+const { furnitureColourInfo } = require(path.join(__dirname, '..', '..', 'assets/js/render-model.js'));
+const H = model.types['Single Door'].handles;
+const infoFor = (label) => furnitureColourInfo(model, H[label].url);
+
+const lever = infoFor('Lever/Lever');
+assert.equal(lever.base, 'LeverLever', 'Lever/Lever base detected');
+assert.deepEqual(lever.variants, ['Chrome', 'Black', 'Gold', 'Satin', 'AntiqueBlack', 'Graphite', 'Bronze'], 'Lever/Lever comes in all seven finishes');
+
+assert.deepEqual(infoFor('Architectural Lever/Lever').variants, ['Chrome', 'Gold', 'Graphite'], 'Architectural lever: Chrome/Gold/Graphite only');
+assert.deepEqual(infoFor('Heritage Lever/Lever').variants, ['Chrome', 'Gold', 'AntiqueBlack', 'Graphite'], 'Heritage lever: 4 finishes');
+assert.deepEqual(infoFor('Finger Pull').variants, ['Chrome', 'Black', 'Gold'], 'Finger Pull: Chrome/Black/Gold');
+
+// Fixed-finish handles report null (always shown, never greyed, never recoloured).
+assert.equal(infoFor('1200mm Pull Handle'), null, 'A stainless pull handle has no colour variants');
+assert.equal(infoFor('Forged Black Monkey Tail'), null, 'A forged handle has no standard colour variants');
+assert.equal(infoFor('Premium Stainless Lever Handles'), null, 'A premium stainless lever has no colour variants');
+
 console.log('hardware-colour OK');
