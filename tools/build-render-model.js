@@ -295,6 +295,19 @@ function loadHardwareColours() {
   }
 }
 
+// Per-glass thumbnail key (generated read-only by tools/probe-glass-thumbs.js): the
+// cassette key whose glass image is clearest, so the glass picker shows a legible pattern
+// instead of the style's tiny-aperture crop. Optional — missing file just keeps the old
+// behaviour (style's own key).
+function loadGlassThumbs() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'glass-thumbs.json'), 'utf8'));
+  } catch (e) {
+    console.warn('glass-thumbs.json not found — glass picker uses the style aperture key. Run tools/probe-glass-thumbs.js.');
+    return {};
+  }
+}
+
 function build(raw) {
   const hc = loadHardwareColours();
   const model = {
@@ -302,6 +315,7 @@ function build(raw) {
     _builtFrom: raw._capturedAt,
     hardwareColours: hc.hardwareColours,
     furnitureColours: hc.furnitureColours,
+    glassThumbs: loadGlassThumbs(),
     types: {},
   };
   ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });

@@ -620,8 +620,12 @@
 		if (step.key === 'glazing') {
 			var design = this.wiz.state().design;
 			var st = T.styles[design['Door Design'] && design['Door Design'].label];
-			if (st && st.cassetteKey) {
-				return img(base + '/Assets/CompositeDoors/Images/DoorGlazing/' + choice.label + '/Thumbnails/' + st.cassetteKey + '.png');
+			// Prefer the clearest glass image (probed per glass) so the picker shows the
+			// pattern; fall back to the chosen style's own aperture crop.
+			var gt = this.renderModel && this.renderModel.glassThumbs;
+			var key = (gt && gt[choice.label]) || (st && st.cassetteKey);
+			if (key) {
+				return img(base + '/Assets/CompositeDoors/Images/DoorGlazing/' + choice.label + '/Thumbnails/' + key + '.png');
 			}
 			return null;
 		}
