@@ -178,4 +178,44 @@ class HD_DD_Repository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
 		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 	}
+
+	/**
+	 * Permanently delete enquiries by id, plus their stored preview images.
+	 *
+	 * @param int[] $ids
+	 * @return int Rows deleted.
+	 */
+	public function delete( array $ids ) {
+		global $wpdb;
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) );
+		if ( ! $ids ) {
+			return 0;
+		}
+		$table        = self::table();
+		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+
+		// Grab the references first so the matching image files can be removed after the rows go.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders are %d; table name is internal.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT reference FROM {$table} WHERE id IN ($placeholders)", $ids ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders are %d; table name is internal.
+		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE id IN ($placeholders)", $ids ) );
+
+		foreach ( (array) $rows as $r ) {
+			self::delete_image_file( $r->reference );
+		}
+		return (int) $deleted;
+	}
+
+	/** Remove the stored preview PNG for a reference (best-effort; matches store_design_image). */
+	private static function delete_image_file( $reference ) {
+		$uploads = wp_upload_dir();
+		if ( ! empty( $uploads['error'] ) ) {
+			return;
+		}
+		$file = trailingslashit( $uploads['basedir'] ) . 'hd-door-designer/enquiries/' . sanitize_file_name( $reference ) . '.png';
+		if ( is_file( $file ) ) {
+			wp_delete_file( $file );
+		}
+	}
 }

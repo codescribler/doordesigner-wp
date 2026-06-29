@@ -25,6 +25,22 @@ class HD_DD_Admin {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_post_hd_dd_delete_enquiries', array( $this, 'handle_delete' ) );
+	}
+
+	/**
+	 * Delete the selected enquiries (admin-post handler for the enquiries list form).
+	 */
+	public function handle_delete() {
+		if ( ! current_user_can( self::CAP ) || ! check_admin_referer( 'hd_dd_delete_enquiries' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'hd-door-designer' ) );
+		}
+		$ids   = isset( $_POST['enquiry_ids'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['enquiry_ids'] ) ) : array();
+		$count = $this->repository->delete( $ids );
+
+		$back = wp_get_referer() ? wp_get_referer() : admin_url( 'admin.php?page=' . self::MENU_SLUG );
+		wp_safe_redirect( add_query_arg( 'hd_dd_deleted', (int) $count, remove_query_arg( 'hd_dd_deleted', $back ) ) );
+		exit;
 	}
 
 	public function menu() {
@@ -149,12 +165,27 @@ class HD_DD_Admin {
 				<span class="count">(<?php echo esc_html( $total ); ?>)</span>
 			</h1>
 
+			<?php if ( isset( $_GET['hd_dd_deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only success flag. ?>
+				<div class="notice notice-success is-dismissible"><p>
+					<?php
+					$deleted_n = (int) $_GET['hd_dd_deleted']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					/* translators: %d: number of enquiries deleted */
+					printf( esc_html( _n( '%d enquiry deleted.', '%d enquiries deleted.', $deleted_n, 'hd-door-designer' ) ), absint( $deleted_n ) );
+					?>
+				</p></div>
+			<?php endif; ?>
+
 			<?php if ( empty( $rows ) ) : ?>
 				<p><?php esc_html_e( 'No enquiries yet.', 'hd-door-designer' ); ?></p>
 			<?php else : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return hdDdConfirmDelete( this );">
+				<input type="hidden" name="action" value="hd_dd_delete_enquiries" />
+				<?php wp_nonce_field( 'hd_dd_delete_enquiries' ); ?>
+				<p style="margin:8px 0;"><button type="submit" class="button hd-dd-delete-btn" style="color:#b32d2e;border-color:#b32d2e;"><?php esc_html_e( 'Delete selected', 'hd-door-designer' ); ?></button></p>
 				<table class="wp-list-table widefat fixed striped">
 					<thead>
 						<tr>
+							<td class="manage-column column-cb check-column" style="width:2.2em;"><input type="checkbox" onclick="hdDdToggleAll( this );" aria-label="<?php esc_attr_e( 'Select all', 'hd-door-designer' ); ?>" /></td>
 							<th><?php esc_html_e( 'Reference', 'hd-door-designer' ); ?></th>
 							<th><?php esc_html_e( 'Received', 'hd-door-designer' ); ?></th>
 							<th><?php esc_html_e( 'Customer', 'hd-door-designer' ); ?></th>
@@ -171,6 +202,7 @@ class HD_DD_Admin {
 							$summary = $this->design_summary( $design );
 							?>
 							<tr>
+								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
 								<td><strong><?php echo esc_html( $row->reference ); ?></strong></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
@@ -196,6 +228,12 @@ class HD_DD_Admin {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				<p style="margin:8px 0;"><button type="submit" class="button hd-dd-delete-btn" style="color:#b32d2e;border-color:#b32d2e;"><?php esc_html_e( 'Delete selected', 'hd-door-designer' ); ?></button></p>
+				</form>
+				<script>
+				function hdDdToggleAll( src ) { var f = src.closest( 'form' ); if ( f ) { f.querySelectorAll( 'input[name="enquiry_ids[]"]' ).forEach( function ( c ) { c.checked = src.checked; } ); } }
+				function hdDdConfirmDelete( form ) { var n = form.querySelectorAll( 'input[name="enquiry_ids[]"]:checked' ).length; if ( ! n ) { window.alert( 'Please select at least one enquiry to delete.' ); return false; } return window.confirm( 'Permanently delete ' + n + ' selected ' + ( n === 1 ? 'enquiry' : 'enquiries' ) + '? This cannot be undone.' ); }
+				</script>
 			<?php endif; ?>
 		</div>
 		<?php
