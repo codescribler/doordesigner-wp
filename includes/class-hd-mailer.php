@@ -53,6 +53,64 @@ class HD_DD_Mailer {
 		return wp_mail( $args['to'], $args['subject'], $args['body'], $args['headers'], isset( $args['attachments'] ) ? $args['attachments'] : array() );
 	}
 
+	/**
+	 * Friendly acknowledgment to the CUSTOMER (best-effort): thanks, a summary of their
+	 * door, and the link to revisit/tweak it. Sent from "Hertfordshire Doors"; replies go
+	 * to the business. Never throws — a failure here must not affect the saved enquiry.
+	 *
+	 * @param array  $payload    The enquiry payload (reference, customer, design).
+	 * @param string $reload_url The "revisit your design" link (may be empty).
+	 * @return bool wp_mail result.
+	 */
+	public static function send_customer_ack( array $payload, $reload_url ) {
+		$to = isset( $payload['customer']['email'] ) ? sanitize_email( $payload['customer']['email'] ) : '';
+		if ( ! is_email( $to ) ) {
+			return false;
+		}
+		$name      = isset( $payload['customer']['name'] ) && '' !== $payload['customer']['name'] ? $payload['customer']['name'] : __( 'there', 'hd-door-designer' );
+		$reference = isset( $payload['reference'] ) ? $payload['reference'] : '';
+
+		// Send from the site's own domain so SPF/DKIM line up; replies reach the business.
+		$host     = preg_replace( '/^www\./', '', (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		$from     = $host ? 'Hertfordshire Doors <noreply@' . $host . '>' : 'Hertfordshire Doors';
+		$settings = HD_DD_Plugin::settings();
+
+		/* translators: %s: enquiry reference */
+		$subject = sprintf( __( 'Your Hertfordshire Doors design (%s)', 'hd-door-designer' ), $reference );
+
+		$lines   = array();
+		/* translators: %s: customer first name */
+		$lines[] = sprintf( __( 'Hi %s,', 'hd-door-designer' ), $name );
+		$lines[] = '';
+		$lines[] = __( "Thanks for designing your door with Hertfordshire Doors. We've received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.", 'hd-door-designer' );
+		$lines[] = '';
+		$lines[] = __( '— YOUR DESIGN —', 'hd-door-designer' );
+		if ( ! empty( $payload['design'] ) && is_array( $payload['design'] ) ) {
+			foreach ( $payload['design'] as $heading => $choice ) {
+				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
+				if ( '' !== $label ) {
+					$lines[] = sprintf( '%-26s %s', $heading . ':', $label );
+				}
+			}
+		}
+		if ( $reload_url ) {
+			$lines[] = '';
+			$lines[] = __( 'Want to tweak it, or design another door? Pick up right where you left off:', 'hd-door-designer' );
+			$lines[] = $reload_url;
+		}
+		$lines[] = '';
+		$lines[] = __( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
+		$lines[] = '';
+		$lines[] = __( 'Hertfordshire Doors', 'hd-door-designer' );
+
+		$headers = array( 'Content-Type: text/plain; charset=UTF-8', 'From: ' . $from );
+		if ( ! empty( $settings['recipient_email'] ) ) {
+			$headers[] = 'Reply-To: ' . sanitize_email( $settings['recipient_email'] );
+		}
+
+		return wp_mail( $to, $subject, implode( "\n", $lines ), $headers );
+	}
+
 	/** Plain-text body: readable summary, then a copyable JSON block. */
 	private static function build_body( array $payload ) {
 		$c     = isset( $payload['customer'] ) ? $payload['customer'] : array();

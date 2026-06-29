@@ -668,6 +668,50 @@
 		this.body.appendChild(this._formEl);
 	};
 
+	// The post-submission screen — shown while the customer is most engaged. Confirms,
+	// points to the revisit link, frames price, and invites another design.
+	App.prototype.renderSuccess = function (result) {
+		var self = this;
+		this.setPhase('form'); // single-column layout, sticky preview stays
+		this.body.innerHTML = '';
+		var wrap = el('div', 'hd-dd__thanks');
+		wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Thank you — your design is on its way to us.'));
+		wrap.appendChild(el('p', 'hd-dd__thanks-text',
+			'We’ll be in touch shortly with your free, no-obligation quote — usually within one working day. We’ve also emailed you a copy with a link to revisit or tweak this design.'));
+		wrap.appendChild(el('p', 'hd-dd__thanks-price',
+			'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.'));
+
+		var again = el('button', 'hd-dd__thanks-again', 'Design another door');
+		again.type = 'button';
+		again.addEventListener('click', function () { self.designAnother(); });
+		wrap.appendChild(again);
+		wrap.appendChild(el('p', 'hd-dd__thanks-note', 'Quoting for more than one door? Design the next one now — we already have your details.'));
+
+		// A reliable, bookmarkable revisit link (works even if the email doesn't arrive).
+		if (result && result.token) {
+			var link = el('a', 'hd-dd__thanks-link', 'Revisit this design');
+			link.href = window.location.origin + window.location.pathname + '?design=' + encodeURIComponent(result.token);
+			wrap.appendChild(link);
+		}
+
+		this.body.appendChild(wrap);
+		this.backBtn.hidden = true;
+		this.continueBtn.hidden = true;
+	};
+
+	// "Design another door" — fresh wizard, but keep the entered contact details (the form
+	// pre-fills from them) so a second/third quote is quick.
+	App.prototype.designAnother = function () {
+		this.wiz = HD_DD_Wizard.create(this.customerView, HD_DD_StepConfig);
+		this._lastKey = null;
+		this._atForm = false;
+		this._frameGroup = null;
+		this._reloadNote = null;
+		this._formEl = null; // rebuild so the form pre-fills from _lastContact
+		this.render();
+		try { this.root.scrollIntoView({ block: 'start' }); } catch (e) { /* older browsers */ }
+	};
+
 	App.prototype.buildForm = function () {
 		var self = this;
 		var form = document.createElement('form');
@@ -689,6 +733,8 @@
 			input.name = fld.name;
 			input.required = true;
 			input.setAttribute('autocomplete', fld.autocomplete);
+			// Pre-fill from the previous submission so "Design another door" is quick.
+			if (self._lastContact && self._lastContact[fld.name] != null) { input.value = self._lastContact[fld.name]; }
 			row.appendChild(input);
 			var err = el('span', 'hd-dd__form-error');
 			err.setAttribute('data-error-for', fld.name);
@@ -741,7 +787,10 @@
 			postcode: f['postcode'].value,
 			consent: f['consent'].checked,
 			hd_hp: f['hd_hp'].value,
-			design: cleanDesign(this.wiz.state().design)
+			design: cleanDesign(this.wiz.state().design),
+			// The designer's own page (no query) — the server validates it's same-origin and
+			// builds the "revisit your design" email link from it.
+			pageUrl: window.location.origin + window.location.pathname
 		};
 
 		// Capture what the door actually LOOKS like so the request for quote carries the image,
@@ -762,8 +811,9 @@
 			submitBtn.disabled = false;
 			if (res.ok && res.body && res.body.ok) {
 				self.track('door_quote_submitted'); // the conversion event — the whole funnel's goal
-				form.innerHTML = '';
-				form.appendChild(el('div', 'hd-dd__success', res.body.message || 'Thank you — your design has been sent.'));
+				// Keep their details so "Design another door" doesn't make them re-type.
+				self._lastContact = { name: data.name, telephone: data.telephone, email: data.email, postcode: data.postcode };
+				self.renderSuccess(res.body);
 				return;
 			}
 			Array.prototype.forEach.call(form.querySelectorAll('.hd-dd__form-error'), function (n) { n.textContent = ''; });

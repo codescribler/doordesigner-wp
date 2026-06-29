@@ -518,6 +518,63 @@
   color: var(--ink);
 }
 
+/* Engaged post-submission screen: confirm, frame price, invite another design. */
+.hd-dd__thanks { padding: 18px 16px; text-align: center; }
+.hd-dd__thanks-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.01em;
+  margin-bottom: 10px;
+}
+.hd-dd__thanks-text {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 auto 14px;
+  max-width: 440px;
+}
+.hd-dd__thanks-price {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 auto 18px;
+  max-width: 440px;
+  padding: 10px 14px;
+  background: var(--stage);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.hd-dd__thanks-again {
+  display: inline-block;
+  padding: 13px 24px;
+  background: var(--ink);
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.hd-dd__thanks-again:hover { opacity: .85; }
+.hd-dd__thanks-note {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 10px auto 0;
+  max-width: 440px;
+}
+.hd-dd__thanks-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--brand);
+  font-size: 13px;
+  text-decoration: underline;
+}
+.hd-dd__thanks-link:hover { opacity: .8; }
+
 
 /* ==========================================================================
    11. NOTICE / LOADING STATES

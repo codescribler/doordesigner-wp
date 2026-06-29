@@ -156,6 +156,11 @@ class HD_DD_Enquiry {
 		$recipient = HD_DD_Plugin::settings()['recipient_email'];
 		HD_DD_Mailer::send( $payload, $recipient, $image ? array( $image['path'] ) : array() );
 
+		// Best-effort acknowledgment to the customer with a link to revisit their design.
+		// A mail failure here must never affect the saved enquiry, so it's after the persist.
+		$reload_url = $this->build_reload_url( isset( $params['pageUrl'] ) ? (string) $params['pageUrl'] : '', $saved['token'] );
+		HD_DD_Mailer::send_customer_ack( $payload, $reload_url );
+
 		/** Fires after an enquiry is stored + emailed — hook point for CRM/sheet integrations. */
 		do_action( 'hd_dd_enquiry_submitted', $payload, $saved['id'] );
 
@@ -251,6 +256,27 @@ class HD_DD_Enquiry {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Build the "revisit your design" link (designer page + ?design=token). Prefers the
+	 * page the customer was actually on (client-supplied) but ONLY if it's on this site —
+	 * so a forged pageUrl can never put an off-site link in the email. Falls back to the
+	 * configured designer page, then the home URL.
+	 */
+	private function build_reload_url( $page_url, $token ) {
+		$home_host = wp_parse_url( home_url(), PHP_URL_HOST );
+		$base      = '';
+
+		$candidate = esc_url_raw( $page_url );
+		if ( $candidate && wp_parse_url( $candidate, PHP_URL_HOST ) === $home_host ) {
+			$base = $candidate;
+		} else {
+			$page_id = (int) HD_DD_Plugin::settings()['page_id'];
+			$base    = $page_id ? get_permalink( $page_id ) : home_url( '/' );
+		}
+
+		return $base ? add_query_arg( 'design', rawurlencode( $token ), $base ) : '';
 	}
 
 	/** Assemble the canonical enquiry payload (the shape the quote-creator consumes). */
