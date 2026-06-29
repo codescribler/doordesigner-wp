@@ -25,10 +25,20 @@
 	var CFG = window.HD_DD_CONFIG || {};
 	var I18N = CFG.i18n || {};
 
-	// Hardware-finish swatch chips (no per-finish thumbnail asset exists).
+	// Hardware-finish swatch chips — a representative colour per Endurance finish (the
+	// asset host has no per-finish swatch image). A subtle gradient gives a metallic read.
 	var HARDWARE_HEX = {
-		Chrome: '#cfd2d6', Black: '#222', Gold: '#caa44a',
-		'Matt Black': '#2b2b2b', 'Satin Steel': '#b9bcc0', 'Brushed Stainless': '#c4c7cb'
+		'Chrome':          'linear-gradient(135deg,#e9edf1,#aab0b8)',
+		'Black':           '#1f1f1f',
+		'Gold':            'linear-gradient(135deg,#e0c06a,#b8902f)',
+		'Stainless Steel': 'linear-gradient(135deg,#cdd1d6,#a3a8ae)',
+		'Antique Black':   '#2b2722',
+		'Graphite':        '#4c5054',
+		'Bronze':          'linear-gradient(135deg,#8a6a48,#5d422a)',
+		'Forged Black':    '#1b1b1b',
+		'Pewter':          'linear-gradient(135deg,#9a9ca0,#74777b)',
+		'Matt Black':      '#2b2b2b',
+		'Satin Brass':     'linear-gradient(135deg,#c6a86a,#9c7f45)'
 	};
 
 	// Customer-facing display names for internal/trade labels. The stored design keeps
