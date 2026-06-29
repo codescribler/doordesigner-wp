@@ -78,37 +78,77 @@ class HD_DD_Mailer {
 		/* translators: %s: enquiry reference */
 		$subject = sprintf( __( 'Your Hertfordshire Doors design (%s)', 'hd-door-designer' ), $reference );
 
-		$lines   = array();
-		/* translators: %s: customer first name */
-		$lines[] = sprintf( __( 'Hi %s,', 'hd-door-designer' ), $name );
-		$lines[] = '';
-		$lines[] = __( "Thanks for designing your door with Hertfordshire Doors. We've received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.", 'hd-door-designer' );
-		$lines[] = '';
-		$lines[] = __( '— YOUR DESIGN —', 'hd-door-designer' );
-		if ( ! empty( $payload['design'] ) && is_array( $payload['design'] ) ) {
-			foreach ( $payload['design'] as $heading => $choice ) {
-				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
-				if ( '' !== $label ) {
-					$lines[] = sprintf( '%-26s %s', $heading . ':', $label );
-				}
-			}
-		}
-		if ( $reload_url ) {
-			$lines[] = '';
-			$lines[] = __( 'Want to tweak it, or design another door? Pick up right where you left off:', 'hd-door-designer' );
-			$lines[] = $reload_url;
-		}
-		$lines[] = '';
-		$lines[] = __( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
-		$lines[] = '';
-		$lines[] = __( 'Hertfordshire Doors', 'hd-door-designer' );
+		$body = self::customer_ack_html( $payload, $reload_url, $name, $reference );
 
-		$headers = array( 'Content-Type: text/plain; charset=UTF-8', 'From: ' . $from );
+		$headers = array( 'Content-Type: text/html; charset=UTF-8', 'From: ' . $from );
 		if ( ! empty( $settings['recipient_email'] ) ) {
 			$headers[] = 'Reply-To: ' . sanitize_email( $settings['recipient_email'] );
 		}
 
-		return wp_mail( $to, $subject, implode( "\n", $lines ), $headers );
+		return wp_mail( $to, $subject, $body, $headers );
+	}
+
+	/**
+	 * The customer acknowledgment as an HTML email — a picture of their designed door on the
+	 * left with the spec to the right (table-based for email-client compatibility, inline
+	 * styles only). Degrades to spec-only when no preview image was captured.
+	 */
+	private static function customer_ack_html( array $payload, $reload_url, $name, $reference ) {
+		$image_url = isset( $payload['image'] ) ? esc_url( $payload['image'] ) : '';
+
+		// Spec rows (heading : value).
+		$rows = '';
+		if ( ! empty( $payload['design'] ) && is_array( $payload['design'] ) ) {
+			foreach ( $payload['design'] as $heading => $choice ) {
+				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
+				if ( '' === $label ) {
+					continue;
+				}
+				$rows .= '<tr>'
+					. '<td style="padding:2px 12px 2px 0;color:#8a8e96;font-size:13px;vertical-align:top;">' . esc_html( $heading ) . '</td>'
+					. '<td style="padding:2px 0;color:#161616;font-size:13px;font-weight:600;vertical-align:top;">' . esc_html( $label ) . '</td>'
+					. '</tr>';
+			}
+		}
+
+		$image_cell = $image_url
+			? '<td valign="top" width="160" style="width:160px;padding:0 18px 0 0;">'
+				. '<img src="' . $image_url . '" alt="' . esc_attr__( 'Your door design', 'hd-door-designer' ) . '" width="160" style="display:block;width:160px;height:auto;border:1px solid #e6e6e6;border-radius:6px;background:#f3f3f1;" />'
+				. '</td>'
+			: '';
+
+		$revisit = $reload_url
+			? '<tr><td style="padding:20px 28px 0;">'
+				. '<a href="' . esc_url( $reload_url ) . '" style="display:inline-block;background:#161616;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:6px;">'
+				. esc_html__( 'Revisit or tweak this design', 'hd-door-designer' ) . '</a>'
+				. '</td></tr>'
+			: '';
+
+		$intro = esc_html__( 'Thanks for designing your door with Hertfordshire Doors. We have received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.', 'hd-door-designer' );
+		$price = esc_html__( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
+
+		return '<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;">'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">'
+			. '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e6e6e6;border-radius:8px;font-family:Arial,Helvetica,sans-serif;">'
+			. '<tr><td style="padding:28px 28px 6px;">'
+			. '<h1 style="margin:0 0 10px;font-size:20px;color:#161616;">' . sprintf( esc_html__( 'Thank you, %s', 'hd-door-designer' ), esc_html( $name ) ) . '</h1>'
+			. '<p style="margin:0;font-size:14px;line-height:1.5;color:#5a5f68;">' . $intro . '</p>'
+			. '</td></tr>'
+			. '<tr><td style="padding:18px 28px 0;">'
+			. '<table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>'
+			. $image_cell
+			. '<td valign="top">'
+			. '<div style="font-size:13px;font-weight:700;color:#161616;margin-bottom:6px;">' . esc_html__( 'Your design', 'hd-door-designer' ) . ' <span style="color:#8a8e96;font-weight:400;">' . esc_html( $reference ) . '</span></div>'
+			. '<table role="presentation" cellpadding="0" cellspacing="0">' . $rows . '</table>'
+			. '</td>'
+			. '</tr></table>'
+			. '</td></tr>'
+			. $revisit
+			. '<tr><td style="padding:20px 28px 0;">'
+			. '<p style="margin:0;padding:12px 14px;background:#f3f3f1;border:1px solid #e6e6e6;border-radius:6px;font-size:13px;line-height:1.5;color:#161616;">' . $price . '</p>'
+			. '</td></tr>'
+			. '<tr><td style="padding:18px 28px 28px;"><p style="margin:0;font-size:13px;color:#8a8e96;">Hertfordshire Doors</p></td></tr>'
+			. '</table></td></tr></table></body></html>';
 	}
 
 	/** Plain-text body: readable summary, then a copyable JSON block. */
