@@ -111,11 +111,18 @@ class HD_DD_Enquiry {
 			return new WP_Error( 'hd_dd_save_failed', __( 'Sorry, we could not save your enquiry. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
 		}
 
+		// Store what the door actually looks like (the customer-captured preview) alongside the
+		// spec, so the request for quote carries the image too.
+		$image = $this->store_design_image( $saved['reference'], isset( $params['image'] ) ? (string) $params['image'] : '' );
+
 		$payload = $this->build_payload( $saved['reference'], compact( 'name', 'email', 'telephone', 'postcode' ), $design );
+		if ( $image ) {
+			$payload['image'] = $image['url'];
+		}
 		$this->repository->update_payload( $saved['id'], $payload );
 
 		$recipient = HD_DD_Plugin::settings()['recipient_email'];
-		HD_DD_Mailer::send( $payload, $recipient );
+		HD_DD_Mailer::send( $payload, $recipient, $image ? array( $image['path'] ) : array() );
 
 		/** Fires after an enquiry is stored + emailed — hook point for CRM/sheet integrations. */
 		do_action( 'hd_dd_enquiry_submitted', $payload, $saved['id'] );
@@ -233,6 +240,54 @@ class HD_DD_Enquiry {
 			'derived'     => array(
 				'suggestedLock' => HD_DD_Lock_Deriver::suggest( $handle_label ),
 			),
+		);
+	}
+
+	/**
+	 * Decode the PNG data-URL the configurator captured of the composited door and save it to
+	 * uploads, so the enquiry record + email carry what the door actually looks like.
+	 *
+	 * @param string $reference Server-generated, filesystem-safe (HD-YYYY-NNNNNN).
+	 * @param string $data_url  data:image/png;base64,... from the front end.
+	 * @return array{path:string,url:string}|null
+	 */
+	private function store_design_image( $reference, $data_url ) {
+		if ( '' === $data_url || ! preg_match( '#^data:image/png;base64,#', $data_url ) ) {
+			return null;
+		}
+		$b64 = substr( $data_url, strpos( $data_url, ',' ) + 1 );
+		if ( strlen( $b64 ) > 3500000 ) { // ~2.6MB binary cap — guards storage + mail size.
+			return null;
+		}
+		$binary = base64_decode( $b64, true );
+		if ( false === $binary || strlen( $binary ) < 8 || "\x89PNG\r\n\x1a\n" !== substr( $binary, 0, 8 ) ) {
+			return null; // not a real PNG
+		}
+
+		$uploads = wp_upload_dir();
+		if ( ! empty( $uploads['error'] ) ) {
+			return null;
+		}
+		$dir = trailingslashit( $uploads['basedir'] ) . 'hd-door-designer/enquiries';
+		if ( ! wp_mkdir_p( $dir ) ) {
+			return null;
+		}
+		$name = sanitize_file_name( $reference ) . '.png';
+		$file = trailingslashit( $dir ) . $name;
+
+		// Atomic write (temp + rename), matching the image proxy's storage pattern.
+		$tmp = $file . '.tmp.' . wp_generate_password( 8, false );
+		if ( false === file_put_contents( $tmp, $binary ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			return null;
+		}
+		if ( ! @rename( $tmp, $file ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			return null;
+		}
+
+		return array(
+			'path' => $file,
+			'url'  => trailingslashit( $uploads['baseurl'] ) . 'hd-door-designer/enquiries/' . $name,
 		);
 	}
 

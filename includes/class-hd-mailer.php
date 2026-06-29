@@ -12,11 +12,12 @@ defined( 'ABSPATH' ) || exit;
 class HD_DD_Mailer {
 
 	/**
-	 * @param array  $payload   The full structured payload (reference, customer, design, derived).
-	 * @param string $recipient Recipient email.
+	 * @param array  $payload     The full structured payload (reference, customer, design, derived).
+	 * @param string $recipient   Recipient email.
+	 * @param array  $attachments Absolute file paths to attach (e.g. the door preview PNG).
 	 * @return bool wp_mail result.
 	 */
-	public static function send( array $payload, $recipient ) {
+	public static function send( array $payload, $recipient, array $attachments = array() ) {
 		$reference = isset( $payload['reference'] ) ? $payload['reference'] : '';
 		$subject   = sprintf(
 			/* translators: 1: reference, 2: customer name */
@@ -40,15 +41,16 @@ class HD_DD_Mailer {
 		$args = apply_filters(
 			'hd_dd_enquiry_mail',
 			array(
-				'to'      => $recipient,
-				'subject' => $subject,
-				'body'    => $body,
-				'headers' => $headers,
+				'to'          => $recipient,
+				'subject'     => $subject,
+				'body'        => $body,
+				'headers'     => $headers,
+				'attachments' => $attachments,
 			),
 			$payload
 		);
 
-		return wp_mail( $args['to'], $args['subject'], $args['body'], $args['headers'] );
+		return wp_mail( $args['to'], $args['subject'], $args['body'], $args['headers'], isset( $args['attachments'] ) ? $args['attachments'] : array() );
 	}
 
 	/** Plain-text body: readable summary, then a copyable JSON block. */
@@ -74,6 +76,13 @@ class HD_DD_Mailer {
 				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
 				$lines[] = sprintf( '%-26s %s', $heading . ':', $label );
 			}
+		}
+
+		if ( ! empty( $payload['image'] ) ) {
+			$lines[] = '';
+			$lines[] = __( '— DOOR PREVIEW —', 'hd-door-designer' );
+			$lines[] = __( "What the customer designed is attached as a PNG.", 'hd-door-designer' );
+			$lines[] = __( 'Full image: ', 'hd-door-designer' ) . $payload['image'];
 		}
 
 		if ( ! empty( $payload['derived']['suggestedLock'] ) ) {

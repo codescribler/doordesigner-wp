@@ -178,7 +178,14 @@ class HD_DD_Admin {
 									<a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a><br>
 									<a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a>
 								</td>
-								<td><?php echo esc_html( $summary ); ?></td>
+								<td>
+									<?php if ( is_array( $payload ) && ! empty( $payload['image'] ) ) : ?>
+										<a href="<?php echo esc_url( $payload['image'] ); ?>" target="_blank" rel="noopener">
+											<img src="<?php echo esc_url( $payload['image'] ); ?>" alt="" loading="lazy" style="width:56px;height:auto;border:1px solid #ddd;border-radius:3px;display:block;margin-bottom:4px;" />
+										</a>
+									<?php endif; ?>
+									<?php echo esc_html( $summary ); ?>
+								</td>
 								<td>
 									<details>
 										<summary><?php esc_html_e( 'Copy JSON', 'hd-door-designer' ); ?></summary>

@@ -297,6 +297,27 @@
 		try { this.compositor.render(type, design); } catch (e) { /* tolerate a missing asset */ }
 	};
 
+	// A PNG snapshot of the composited door for the enquiry — downscaled to a sensible width
+	// and flattened onto the stage colour so it reads in any email client. Returns null if the
+	// canvas is empty or (on dev hotlinking) cross-origin-tainted, in which case we submit the
+	// spec without an image rather than block the customer.
+	App.prototype.snapshotDoor = function () {
+		var cv = this.canvas;
+		if (!cv || !cv.width || !cv.height) { return null; }
+		try {
+			var maxW = 480;
+			var scale = Math.min(1, maxW / cv.width);
+			var out = document.createElement('canvas');
+			out.width = Math.round(cv.width * scale);
+			out.height = Math.round(cv.height * scale);
+			var ctx = out.getContext('2d');
+			ctx.fillStyle = '#f3f3f1';
+			ctx.fillRect(0, 0, out.width, out.height);
+			ctx.drawImage(cv, 0, 0, out.width, out.height);
+			return out.toDataURL('image/png');
+		} catch (e) { return null; }
+	};
+
 	// Funnel tracking (Microsoft Clarity, if installed) — fire a custom event per view so
 	// you can see exactly which step loses people. Best-effort: a no-op if Clarity is absent.
 	App.prototype.track = function (name) {
@@ -530,6 +551,12 @@
 			hd_hp: f['hd_hp'].value,
 			design: cleanDesign(this.wiz.state().design)
 		};
+
+		// Capture what the door actually LOOKS like so the request for quote carries the image,
+		// not just the spec. Production serves the layers same-origin (the proxy) so the canvas
+		// exports cleanly; guard anyway so a stray cross-origin layer can never block a submit.
+		var snapshot = this.snapshotDoor();
+		if (snapshot) { data.image = snapshot; }
 
 		// QA harness has no WordPress REST endpoint — acknowledge without posting.
 		if (!CFG.restUrl) {
