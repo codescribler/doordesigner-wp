@@ -263,12 +263,10 @@
 			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
 			this.continueBtn.disabled = !(step.optional || !!design[step.heading]);
 			// Optional extras (letterplate, knocker, inside colour) are pre-filled with a
-			// sensible default, so they read as skippable: while the selection is still that
-			// untouched default the primary button says "Skip"; it becomes "Continue" once
-			// the visitor actively chooses a different option.
-			var sel = design[step.heading];
-			var skippable = step.optional && (!sel || (step.defaultLabel && sel.label === step.defaultLabel));
-			this.continueBtn.textContent = skippable ? (I18N.skip || 'Skip') : (I18N.next || 'Continue');
+			// sensible default. The primary action always reads "Continue" — flipping it to
+			// "Skip" on optional steps confused people (it wasn't clear why it changed); the
+			// optional nature is signalled by the step's hint ("…Optional.") instead.
+			this.continueBtn.textContent = (I18N.next || 'Continue');
 		}
 
 		this.renderProgress(st.progress);
@@ -423,6 +421,10 @@
 			this.wiz.next();
 		}
 		this.render();
+		// Land each new step at the top. After picking an option low in a long list, the
+		// next step's title + question would otherwise stay scrolled off-screen above the
+		// fold (especially on mobile, where the door preview fills the top of the viewport).
+		try { this.root.scrollIntoView({ block: 'start' }); } catch (e) { /* older browsers */ }
 	};
 
 	// ---- Thumbnails ---------------------------------------------------------

@@ -523,8 +523,18 @@
   .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
   .hd-dd__carousel  { padding-left: 0; padding-right: 0; }
 
-  /* CTA fills its column instead of the inset mobile margin. */
-  .hd-dd__cta { grid-area: cta; width: 100%; margin: 18px 0 0; }
+  /* CTA fills its column and sticks to the foot of the viewport, so with a long option
+     list the customer can always see how to proceed without scrolling to the bottom. */
+  .hd-dd__cta {
+    grid-area: cta;
+    width: 100%;
+    margin: 18px 0 0;
+    position: sticky;
+    bottom: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+  }
+  /* Room for the last option to clear the floating button. */
+  .hd-dd__body { padding-bottom: 64px; }
 
   /* Review + form align to the controls column. */
   .hd-dd__review dl { margin-left: 0; margin-right: 0; }
@@ -596,6 +606,9 @@
     width: 100%;
     margin: 0;
     border-radius: 0;
+    /* Extra bottom padding clears the phone's home indicator / browser bottom bar so the
+       button can't be partly cut off at the foot of the screen. */
+    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -1px 0 var(--line), 0 -10px 18px rgba(0, 0, 0, .08);
   }
   .hd-dd__cta::before {
@@ -609,8 +622,9 @@
     pointer-events: none;
   }
 
-  /* Clearance so the last option isn't tucked under the pinned action bar. */
-  .hd-dd__body { padding-bottom: 14px; }
+  /* Clearance so the last option can scroll clear of the pinned action bar (which
+     overlays the foot of the scroll area). */
+  .hd-dd__body { padding-bottom: 64px; }
 
   /* ---- Wizard STEP: preview-left two-column ------------------------------- */
   .hd-dd__app--step {

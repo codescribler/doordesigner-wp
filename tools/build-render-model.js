@@ -135,12 +135,20 @@ function buildType(node, typeName) {
     const cassettes = keep(c.delta, 'DoorCassettes');
     const pb = blank ? parseBlank(blank.url) : null;
     const pc = cassettes[0] ? parseCassette(cassettes[0].url) : null;
+    const styleMould = pb ? pb.mould : baselineMould;
     const styleGlazed = ((glazingByStyle[c.label]) || []).length > 1;
-    const useCassettes = cassettes.length ? cassettes : (styleGlazed ? baseCassettes : []);
+    // Inherit the baseline cassettes only when a glazed style captured NONE of its own
+    // AND it shares the baseline MOULD. The captured cassette positions belong to the
+    // baseline mould (Abbott / Mould 10); stamping them on a DIFFERENT mould paints a
+    // second, misaligned panel layout over the door — the "overlaid styles" bug. A
+    // different-mould style with no captured cassettes is a solid door whose panels are
+    // already in its blank pressing (like Brecon), so it needs no cassettes at all.
+    const inheritBaseline = !cassettes.length && styleGlazed && styleMould === baselineMould;
+    const useCassettes = cassettes.length ? cassettes : (inheritBaseline ? baseCassettes : []);
     const cassetteGeom = useCassettes.map(geom);
     styles[c.label] = {
-      mould: pb ? pb.mould : baselineMould,
-      cassetteKey: pc ? pc.key : (styleGlazed ? baselineCassetteKey : null),
+      mould: styleMould,
+      cassetteKey: pc ? pc.key : (inheritBaseline ? baselineCassetteKey : null),
       blankGeom: blank ? geom(blank) : (baseBlankLayer ? geom(baseBlankLayer) : null),
       cassetteGeom: cassetteGeom,
       glazingGeom: innerCassettes(cassetteGeom) // where the glass panels go for this style
