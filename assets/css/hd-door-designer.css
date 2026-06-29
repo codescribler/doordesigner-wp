@@ -45,9 +45,14 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* Force border-box across the whole scoped widget. The host theme (Thrive) resets
+   box-sizing to content-box on our nodes via a higher-specificity rule — which made the
+   app's horizontal padding ADD to its width:100% and overflow the viewport on phones.
+   !important + the .hd-dd scope keeps our layout self-consistent without leaking out. */
+.hd-dd,
 .hd-dd *,
 .hd-dd *::before,
-.hd-dd *::after { box-sizing: inherit; }
+.hd-dd *::after { box-sizing: border-box !important; }
 
 .hd-dd [hidden] { display: none !important; }
 
@@ -340,6 +345,16 @@
   line-height: 1.4;
 }
 
+/* Preview-accuracy disclaimer — sets expectations that the rendered door is an
+   impression, not an exact representation. */
+.hd-dd__disclaimer {
+  margin: 8px 16px 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
 /* Inline edit button next to each review row */
 .hd-dd__edit {
   background: none;
@@ -616,29 +631,17 @@
     max-height: calc(40vh - 16px);
   }
 
-  /* Pin the primary action to the bottom so the next step is always on screen. A soft
-     fade above the bar bleeds the options underneath, hinting there's more to scroll. */
+  /* Pin the primary action near the bottom so the next step is always on screen — as a
+     floating, rounded, inset button (not a full-bleed bar, which didn't read as a button),
+     sitting clear of the phone's home indicator / browser bottom bar. */
   .hd-dd__cta {
     position: sticky;
-    bottom: 0;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     z-index: 6;
-    width: 100%;
-    margin: 0;
-    border-radius: 0;
-    /* Extra bottom padding clears the phone's home indicator / browser bottom bar so the
-       button can't be partly cut off at the foot of the screen. */
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -1px 0 var(--line), 0 -10px 18px rgba(0, 0, 0, .08);
-  }
-  .hd-dd__cta::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -20px;
-    height: 20px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--paper));
-    pointer-events: none;
+    width: auto;
+    margin: 10px 12px 0;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
   }
 
   /* Clearance so the last option can scroll clear of the pinned action bar (which
@@ -659,7 +662,8 @@
   }
   .hd-dd__app--step .hd-dd__wizhead { grid-area: head; }
   .hd-dd__app--step .hd-dd__body    { grid-area: body; }
-  .hd-dd__app--step .hd-dd__cta     { grid-area: cta; }
+  /* The grid already insets 12px, so drop the button's side margins (avoids 24px inset). */
+  .hd-dd__app--step .hd-dd__cta     { grid-area: cta; margin-left: 0; margin-right: 0; }
 
   /* The preview is now bounded by its column width, so drop the 40vh cap and let the
      door fill the left column. Still sticky beneath the pinned header. */
