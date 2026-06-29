@@ -60,6 +60,8 @@
     function next() { if (!typeLabel()) { return; } var ss = steps(); if (stepIndex < ss.length - 1) { stepIndex++; } else { atReview = true; } }
     function back() { if (!typeLabel()) { return; } if (atReview) { atReview = false; return; } if (stepIndex > 0) { stepIndex--; } }
     function jumpTo(key) { var i = indexOfKey(key); if (i >= 0) { stepIndex = i; atReview = false; } }
+    // Land straight on the review summary (used when a saved design is reloaded complete).
+    function goToReview() { if (typeLabel()) { atReview = true; } }
 
     function state() {
       var ss = steps();
@@ -68,7 +70,7 @@
         progress: { current: Math.min(idx + 1, ss.length), total: ss.length } };
     }
 
-    return { selectType: selectType, select: select, next: next, back: back, jumpTo: jumpTo, state: state };
+    return { selectType: selectType, select: select, next: next, back: back, jumpTo: jumpTo, goToReview: goToReview, state: state };
   }
 
   return { create: create };

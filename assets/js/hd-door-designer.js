@@ -149,6 +149,102 @@
 		return d['Door Type'] ? d['Door Type'].label : '';
 	};
 
+	// ---- Reload a saved design (the "revisit your design" email link) -------
+	// Fetches the stored design for a token and re-applies it choice-by-choice, validating
+	// each against the CURRENT catalogue. Anything retired since it was saved is skipped and
+	// listed in a plain-English banner; the customer lands on the review (if complete) or on
+	// the first thing that needs their attention.
+	App.prototype.loadSavedDesign = function (token) {
+		var self = this;
+		this.root.textContent = (I18N.loadingDesign) || 'Loading your saved design…';
+		api('design/' + encodeURIComponent(token), { method: 'GET' }).then(function (res) {
+			if (res.ok && res.body && res.body.design) {
+				self.applySavedDesign(res.body.design);
+			} else {
+				self._reloadNote = { notFound: true };
+				self.render();
+			}
+		}).catch(function () {
+			self._reloadNote = { notFound: true };
+			self.render();
+		});
+	};
+
+	App.prototype.applySavedDesign = function (design) {
+		var typeLabel = design['Door Type'] && design['Door Type'].label;
+		if (!typeLabel || !this.customerView.byType || !this.customerView.byType[typeLabel]) {
+			this._reloadNote = { notFound: true }; // the saved door type itself is gone
+			this.render();
+			return;
+		}
+		this.wiz.selectType(typeLabel);
+
+		// Apply one saved choice per pass, re-reading the applicable steps each time so steps
+		// that only appear after an earlier choice (glazing depends on style, etc.) are caught.
+		var dropped = [];
+		var attempted = { 'Door Type': true };
+		var guard = 0;
+		while (guard++ < 60) {
+			var steps = this.wiz.state().steps;
+			var acted = false;
+			for (var i = 0; i < steps.length; i++) {
+				var step = steps[i];
+				if (attempted[step.heading]) { continue; }
+				attempted[step.heading] = true;
+				var saved = design[step.heading];
+				if (saved && saved.label) {
+					var match = null;
+					for (var c = 0; c < step.choices.length; c++) {
+						if (step.choices[c].label === saved.label) { match = step.choices[c]; break; }
+					}
+					if (match) { this.wiz.select(step.heading, match); }
+					else { dropped.push({ name: step.name || step.label, label: saved.label }); }
+				}
+				acted = true;
+				break; // re-read steps() — a selection may have revealed/removed later steps
+			}
+			if (!acted) { break; }
+		}
+
+		this.resetHandleIfIncompatible(); // a reloaded handle may not come in the reloaded finish
+
+		// Land on the first required step still missing a choice (so they can complete it),
+		// else straight on the review. The banner explains anything that was dropped.
+		var st = this.wiz.state();
+		var firstGap = null;
+		for (var j = 0; j < st.steps.length; j++) {
+			var s = st.steps[j];
+			if (!s.optional && !st.design[s.heading]) { firstGap = s.key; break; }
+		}
+		this._reloadNote = dropped.length ? { dropped: dropped } : null;
+		if (firstGap) { this.wiz.jumpTo(firstGap); } else { this.wiz.goToReview(); }
+		this.render();
+	};
+
+	// The "things changed since you saved this" banner, prepended to the body.
+	App.prototype.renderReloadNote = function () {
+		if (!this._reloadNote || !this.body) { return; }
+		var self = this;
+		var note = el('div', 'hd-dd__reload-note');
+		var close = el('button', 'hd-dd__reload-close', '×'); close.type = 'button';
+		close.setAttribute('aria-label', 'Dismiss');
+		close.addEventListener('click', function () { self._reloadNote = null; self.render(); });
+		note.appendChild(close);
+		if (this._reloadNote.notFound) {
+			note.appendChild(el('p', 'hd-dd__reload-title', "We couldn't find that saved design — let's start fresh."));
+		} else {
+			var dropped = this._reloadNote.dropped || [];
+			note.appendChild(el('p', 'hd-dd__reload-title', 'A few things have changed since you saved this design:'));
+			var ul = el('ul', 'hd-dd__reload-list');
+			dropped.forEach(function (d) {
+				ul.appendChild(el('li', null, 'Your ' + d.name + ' (“' + d.label + '”) is no longer available — please choose again.'));
+			});
+			note.appendChild(ul);
+			note.appendChild(el('p', 'hd-dd__reload-foot', 'Everything else has loaded — just re-pick the items above to finish your design.'));
+		}
+		this.body.insertBefore(note, this.body.firstChild);
+	};
+
 	// Build the persistent shell once (progress + back, stage/canvas, body, sticky
 	// Continue, hidden enquiry form). Subsequent renders only mutate the body and
 	// the control states — no listeners are re-attached, so nothing leaks.
@@ -236,6 +332,7 @@
 			if (this.heroImg && CFG.heroImage) { this.heroImg.hidden = false; }
 			this.canvas.hidden = true;
 			this.renderTypeChooser();
+			this.renderReloadNote(); // e.g. "we couldn't find that saved design — let's start fresh"
 			this.progressEl.innerHTML = '';
 			this.backBtn.hidden = true; // first page — nothing to go back to
 			this.continueBtn.hidden = true;
@@ -275,6 +372,8 @@
 			// optional nature is signalled by the step's hint ("…Optional.") instead.
 			this.continueBtn.textContent = (I18N.next || 'Continue');
 		}
+
+		if (!this._atForm) { this.renderReloadNote(); } // reload banner sits above the step / review
 
 		this.renderProgress(st.progress);
 		this.backBtn.hidden = false;
@@ -698,7 +797,11 @@
 				root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
 				return;
 			}
-			new App(root, cv, rm, res[2]).render();
+			var app = new App(root, cv, rm, res[2]);
+			// ?design=<token> reloads a previously saved design (the "revisit" email link).
+			var saved = null;
+			try { saved = new URLSearchParams(window.location.search).get('design'); } catch (e) { saved = null; }
+			if (saved) { app.loadSavedDesign(saved); } else { app.render(); }
 		}).catch(function () {
 			root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
 		});

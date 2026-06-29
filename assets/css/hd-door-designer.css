@@ -355,6 +355,36 @@
   font-style: italic;
 }
 
+/* "Things changed since you saved this design" banner when a reload link is opened. */
+.hd-dd__reload-note {
+  position: relative;
+  margin: 12px 16px 4px;
+  padding: 12px 36px 12px 14px;
+  border: 1px solid #e7d8a8;
+  background: #fdf6e3;
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5b4b16;
+}
+.hd-dd__reload-title { margin: 0 0 4px; font-weight: 600; }
+.hd-dd__reload-list { margin: 4px 0; padding-left: 18px; }
+.hd-dd__reload-list li { margin: 2px 0; }
+.hd-dd__reload-foot { margin: 4px 0 0; }
+.hd-dd__reload-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: #5b4b16;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.hd-dd__reload-close:hover { opacity: .7; }
+
 /* Inline edit button next to each review row */
 .hd-dd__edit {
   background: none;
