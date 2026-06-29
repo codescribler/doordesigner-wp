@@ -14,6 +14,8 @@
       visibleWhen: function (n) { return !!n.hasFrameShape; } },
     { key: 'style', label: 'Pick your style', name: 'Style', heading: 'Door Design', tileType: 'door', categoryFirst: true,
       hint: 'The panel shape and glass layout of the door itself.' },
+    { key: 'hinge', label: 'Hinge side', name: 'Hinge', heading: '__hinge__', tileType: 'choice',
+      hint: 'Which side the hinges are on, viewed from outside — the handle sits on the opposite side.' },
     { key: 'extColour', label: 'Choose your colour', name: 'Colour', heading: 'Door Colour (External)', tileType: 'swatch',
       hint: 'The colour of the outside of your door.' },
     { key: 'intColour', label: 'Inside colour', name: 'Inside colour', heading: 'Door Colour (Internal)', tileType: 'swatch',
@@ -38,9 +40,7 @@
       visibleWhen: function (n, d) { return letterplatePosAvailable(n, d); } },
     { key: 'knocker', label: 'Add a knocker?', name: 'Knocker', heading: 'Knocker', tileType: 'choice', source: 'knocker', optional: true, defaultLabel: 'No Knocker',
       hint: 'A door knocker. Optional.',
-      visibleWhen: function (n) { return !!n.hasKnocker; } },
-    { key: 'hinge', label: 'Hinge side', name: 'Hinge', heading: '__hinge__', tileType: 'choice',
-      hint: 'Which side the hinges are on, viewed from outside — the handle sits on the opposite side.' }
+      visibleWhen: function (n) { return !!n.hasKnocker; } }
   ];
 
   function sidelit(n, d) {
@@ -61,6 +61,14 @@
     var lp = d['Letterplate'] && d['Letterplate'].label;
     if (!style || !lp || /^no /i.test(lp)) { return false; }
     return !!(n.letterplatePosStyles && n.letterplatePosStyles[style]);
+  }
+
+  // The default letterplate position for the current style. Glazed styles whose Middle plate
+  // would cover the glass are seeded 'bottom' by the App (from the render model) so the plate
+  // defaults to the clear bottom rail; everything else defaults to Middle.
+  function letterplatePosDefault(n, d) {
+    var style = d['Door Design'] && d['Door Design'].label;
+    return (style && n.letterplatePosStyles && n.letterplatePosStyles[style] === 'bottom') ? 'Bottom' : 'Middle';
   }
 
   // High-level grouping for the Frame Design step's progressive disclosure: a layperson
@@ -99,8 +107,9 @@
       if (step.visibleWhen && !step.visibleWhen(n, d)) { return; }
       var r = resolve(step, n, d);
       if (!r.choices || !r.choices.length) { return; }
+      var defaultLabel = step.key === 'letterplatePosition' ? letterplatePosDefault(n, d) : step.defaultLabel;
       out.push({ key: step.key, label: step.label, hint: step.hint || '', name: step.name || step.label, heading: r.heading, tileType: step.tileType,
-        optional: !!step.optional, defaultLabel: step.defaultLabel, categoryFirst: !!step.categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
+        optional: !!step.optional, defaultLabel: defaultLabel, categoryFirst: !!step.categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
     });
     return out;
   }

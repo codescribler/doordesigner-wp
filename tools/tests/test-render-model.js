@@ -129,4 +129,29 @@ assert.equal(lpPos('Abbott', 'Bottom'), 290, 'Abbott Bottom drops the plate to t
 assert.equal(lpPos('Abbott', 'Middle'), 152, 'Abbott Middle is the central rail (cy 152)');
 assert.equal(lpPos('Brecon', 'Bottom'), 288, 'A no-choice mould ignores the position (stays at its fixed cy 288)');
 
+// 15. Double doors captured NO knocker layers (Endurance never recorded them), but the
+//     knocker product is identical across types — so a selected knocker is BORROWED from a
+//     type that has it and drawn ONCE on the double door (never mirrored onto both leaves).
+const ddKnock = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Knocker': { label: 'Chrome Doctors Knocker' } }).filter((l) => l.slot === 'Knockers');
+assert.equal(ddKnock.length, 1, 'Double door draws exactly one knocker (borrowed; not mirrored onto both leaves)');
+assert.ok(/Knockers\//.test(ddKnock[0].url), 'Borrowed double-door knocker points at a real Knockers asset');
+assert.equal(knCyFor('Double Door', 'Abbott'), 80, 'Double-door Abbott knocker sits at the mould-10 height (cy 80)');
+const ddNoKnock = assemble(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' }, 'Knocker': { label: 'No Knocker' } }).filter((l) => l.slot === 'Knockers');
+assert.equal(ddNoKnock.length, 0, 'No Knocker draws nothing on a double door');
+
+// 16. Glazed styles whose Middle letterplate would sit OVER the glass default to the Bottom
+//     rail so the plate never covers an aperture — on single AND double doors. Bruce (Mould 10)
+//     is one such style: Middle cy 152 overlaps its apertures; Bottom 290 clears them.
+const lpCyDefault = (type, style) => {
+  const ls = assemble(model, type, { 'Door Type': { label: type }, 'Door Design': { label: style }, 'Letterplate': { label: 'Letterplate' } }).filter((l) => l.slot === 'Letterplates');
+  return ls.length ? ls[0].cy : null;
+};
+assert.ok(model.types['Single Door'].styles['Bruce'].letterplateDefaultBottom, 'Bruce is flagged: its Middle plate overlaps the glass');
+assert.ok(!model.types['Single Door'].styles['Abbott'].letterplateDefaultBottom, 'Abbott does not overlap — no forced bottom');
+assert.equal(lpCyDefault('Single Door', 'Bruce'), 290, 'Bruce defaults the letterplate to the Bottom rail (clears the glass)');
+assert.equal(lpCyDefault('Double Door', 'Bruce'), 290, 'Double-door Bruce also defaults to Bottom');
+assert.equal(lpCyDefault('Single Door', 'Abbott'), 152, 'Abbott (no overlap) still defaults to the central rail (152)');
+const bruceMid = assemble(model, 'Single Door', { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Bruce' }, 'Letterplate': { label: 'Letterplate' }, 'Letterplate Position': { label: 'Middle' } }).filter((l) => l.slot === 'Letterplates');
+assert.equal(bruceMid[0].cy, 152, 'Explicit Middle overrides the smart default (back to cy 152)');
+
 console.log('render-model OK');

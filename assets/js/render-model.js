@@ -30,6 +30,20 @@
 		return null;
 	}
 
+	// Same story for knockers: double doors (and Avantal) never captured a Knockers layer,
+	// but the knocker product is identical across types — so borrow the image from a type
+	// that has it (single/stable doors capture all 30).
+	function knockerFromAnyType(model, label) {
+		var types = (model && model.types) || {};
+		for (var t in types) {
+			if (Object.prototype.hasOwnProperty.call(types, t)) {
+				var k = types[t].knockers && types[t].knockers[label];
+				if (k && k.url) { return k; }
+			}
+		}
+		return null;
+	}
+
 	// Sidelight glass is an OVERLAY on the wide frame (which already renders the solid
 	// side panels). Endurance draws it only when the sidelight is Glazed; picking
 	// Unglazed simply omits the overlay. Default to Glazed (Endurance's own default)
@@ -136,16 +150,21 @@
 		}
 		if (handle) { push(recolourFurniture(handle.url, model, hwToken), handle.geom); }
 		// knocker. Its HEIGHT is mould-dependent too (it sits in an upper panel gap), so take
-		// the cy from the chosen style — same approach as the letterplate.
-		var knock = T.knockers[get('Knocker')];
+		// the cy from the chosen style — same approach as the letterplate. Double doors never
+		// captured a knocker layer, so borrow the image; it then draws once on the left leaf
+		// (leftSlab:false skips the leaf-mirror below — a door takes ONE knocker, not one per leaf).
+		var knockLabel = get('Knocker');
+		var knock = T.knockers[knockLabel];
+		if (!knock && knockLabel && !/^no knocker$/i.test(knockLabel)) { knock = knockerFromAnyType(model, knockLabel); }
 		if (knock) {
 			var kgeom = knock.geom;
 			var knStyle = T.styles[get('Door Design')];
 			var knCy = knStyle && knStyle.knockerCy;
-			if (knCy != null) {
+			if (knCy != null || type === 'Double Door') {
 				kgeom = {};
 				for (var kk in knock.geom) { if (Object.prototype.hasOwnProperty.call(knock.geom, kk)) { kgeom[kk] = knock.geom[kk]; } }
-				kgeom.cy = knCy;
+				if (knCy != null) { kgeom.cy = knCy; }
+				if (type === 'Double Door') { kgeom.leftSlab = false; }
 			}
 			push(knock.url, kgeom);
 		}
@@ -159,9 +178,14 @@
 			var lpStyle = T.styles[get('Door Design')];
 			var lpCy = lpStyle && lpStyle.letterplateCy;
 			// On moulds that offer it, "Letterplate Position: Bottom" drops the plate to the
-			// bottom rail; the default (Middle) keeps the per-mould central position.
-			if (lpStyle && lpStyle.letterplateBottomCy != null && /bottom/i.test(get('Letterplate Position'))) {
-				lpCy = lpStyle.letterplateBottomCy;
+			// bottom rail. Glazed styles whose Middle plate would cover the glass (flagged
+			// letterplateDefaultBottom) default to Bottom too — unless the customer explicitly
+			// picks Middle. Everything else keeps the per-mould central (Middle) position.
+			if (lpStyle && lpStyle.letterplateBottomCy != null) {
+				var lpPos = get('Letterplate Position');
+				if (/bottom/i.test(lpPos) || (!/middle/i.test(lpPos) && lpStyle.letterplateDefaultBottom)) {
+					lpCy = lpStyle.letterplateBottomCy;
+				}
 			}
 			if (type === 'Double Door' || lpCy != null) {
 				lgeom = {};

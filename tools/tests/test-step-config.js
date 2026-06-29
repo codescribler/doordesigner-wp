@@ -70,4 +70,19 @@ const av = view('Avantal');
 steps = SC.applicableSteps(av, { 'Door Type': { label: 'Avantal' }, 'Door Design': { label: 'Sirius' } }).map((s) => s.key);
 assert.ok(!steps.includes('intColour') && !steps.includes('knocker'), 'Avantal hides internal colour + knocker');
 
+// Hinge is asked NEAR THE BEGINNING (partner feedback: not buried at the very end).
+const order = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).map((s) => s.key);
+const hi = order.indexOf('hinge');
+assert.ok(hi >= 0 && hi <= 3, 'Hinge step is within the first four steps, not last (got index ' + hi + ')');
+assert.ok(hi < order.indexOf('handle'), 'Hinge is asked before the handle');
+
+// Letterplate position DEFAULTS to Bottom for a glazed style whose Middle plate overlaps the
+// glass, and stays Middle otherwise. (The App seeds letterplatePosStyles from the render model:
+// 'bottom' for over-glass styles, 'middle' for the rest.)
+const sdLP = view('Single Door');
+sdLP.letterplatePosStyles = { Bruce: 'bottom', Abbott: 'middle' };
+const posStepFor = (style) => SC.applicableSteps(sdLP, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: style }, 'Letterplate': { label: 'Letterplate' } }).filter((s) => s.key === 'letterplatePosition')[0];
+assert.equal(posStepFor('Bruce').defaultLabel, 'Bottom', 'Over-glass style defaults the letterplate to Bottom');
+assert.equal(posStepFor('Abbott').defaultLabel, 'Middle', 'Non-overlapping style keeps the Middle default');
+
 console.log('step-config OK');

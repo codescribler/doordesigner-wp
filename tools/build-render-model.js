@@ -93,6 +93,10 @@ const KNOCKER_CY_BY_MOULD = {
     'Door Mould 1': 81, 'Door Mould 2': 81, 'Door Mould 3': 81, 'Door Mould 4': 81, 'Door Mould 5': 81, 'Door Mould 6': 81
   }
 };
+// Double doors never captured a knocker layer (Endurance only records them for single/stable
+// doors), so the assembler borrows the knocker image from a type that has it. The knocker's
+// HEIGHT is still mould-driven, and double doors share single-door moulds — so reuse the table.
+KNOCKER_CY_BY_MOULD['Double Door'] = KNOCKER_CY_BY_MOULD['Single Door'];
 
 // The stable-door HANDLE was captured ~50px too low (cy 196 vs Endurance's constant 144 —
 // the lever sits just above the centre split). Single/Double/Avantal handles already match.
@@ -214,6 +218,17 @@ function buildType(node, typeName) {
   // Stamp the BOTTOM letterplate position on styles whose mould offers the Middle/Bottom choice.
   const lpBottom = LETTERPLATE_BOTTOM_BY_MOULD[typeName] || {};
   Object.keys(styles).forEach((s) => { const md = styles[s].mould; if (lpBottom[md] != null) { styles[s].letterplateBottomCy = lpBottom[md]; } });
+  // Flag glazed styles whose MIDDLE letterplate would land over the glass apertures — those
+  // must DEFAULT to the Bottom rail so the plate never covers an aperture. (The Middle/Bottom
+  // choice still lets a customer override it.) A plate is ~14.4 tall; it overlaps an aperture
+  // when their vertical spans intersect. Only flag when a clear Bottom position exists.
+  Object.keys(styles).forEach((s) => {
+    const st = styles[s];
+    if (st.letterplateBottomCy == null || st.letterplateCy == null || !(st.glazingGeom || []).length) { return; }
+    const span = (cy) => [cy - 7.2, cy + 7.2];
+    const hits = (cy) => st.glazingGeom.some((g) => { const a = span(cy); return a[0] < g.cy + g.h / 2 && a[1] > g.cy - g.h / 2; });
+    if (hits(st.letterplateCy) && !hits(st.letterplateBottomCy)) { st.letterplateDefaultBottom = true; }
+  });
 
   // Correct the captured handle height where it disagrees with Endurance's renderer (Stable).
   let baseHandleGeom = baseHandle ? geom(baseHandle) : null;

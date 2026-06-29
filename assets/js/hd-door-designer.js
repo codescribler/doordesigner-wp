@@ -137,7 +137,11 @@
 			Object.keys(customerView.byType).forEach(function (t) {
 				var rmStyles = (renderModel.types[t] || {}).styles || {};
 				var posStyles = {};
-				Object.keys(rmStyles).forEach(function (s) { if (rmStyles[s].letterplateBottomCy != null) { posStyles[s] = true; } });
+				Object.keys(rmStyles).forEach(function (s) {
+					// 'bottom' = a glazed style whose Middle plate covers the glass (default it to the
+					// bottom rail); 'middle' = the plate's natural central spot is already clear.
+					if (rmStyles[s].letterplateBottomCy != null) { posStyles[s] = rmStyles[s].letterplateDefaultBottom ? 'bottom' : 'middle'; }
+				});
 				customerView.byType[t].letterplatePosStyles = posStyles;
 			});
 		}
