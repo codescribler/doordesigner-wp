@@ -153,6 +153,15 @@
   letter-spacing: -.01em;
 }
 
+/* Plain-English explainer under the title — demystifies door jargon. */
+.hd-dd__stephint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 16px 4px;
+}
+
 /* "‹ Change" link back to the group picker (Frame Design progressive disclosure). */
 .hd-dd__change {
   display: block;
@@ -510,7 +519,8 @@
   .hd-dd__canvas { max-width: 460px; }
 
   /* Left-align the step title + options now they sit in their own column. */
-  .hd-dd__steptitle { text-align: left; margin: 8px 0 6px; font-size: 20px; }
+  .hd-dd__steptitle { text-align: left; margin: 8px 0 2px; font-size: 20px; }
+  .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
   .hd-dd__carousel  { padding-left: 0; padding-right: 0; }
 
   /* CTA fills its column instead of the inset mobile margin. */
@@ -528,27 +538,45 @@
 
 
 /* ==========================================================================
-   14. RESPONSIVE — phone refinements (< 820px)
+   14. RESPONSIVE — phone layout (< 820px)
    --------------------------------------------------------------------------
-   On phones the stacked layout buried the question, options and action beneath a
-   full-height door preview — a customer landed on just "the door + Back" with no
-   idea what to do or that options lay below. Keep the door visible but compact
-   (sticky + height-capped), surface the options, and pin the Continue action to the
-   bottom so the next step is always on screen. Desktop (>=820px, section 13) is
-   untouched — these rules only match below the two-pane breakpoint.
+   The earlier stacked layout buried the question and options beneath a full-height
+   door, and pinning the preview to the very top hid the Back button + progress
+   behind it. Fixes here:
+     • The header (Back + progress) is pinned at the top in EVERY phase, so the
+       customer can always step back and see how far through they are.
+     • A wizard STEP becomes two columns — a compact sticky door preview on the
+       left, the title + options scrolling on the right — so the door is always in
+       view AND the choices sit beside it (mirrors the desktop two-pane, scaled down).
+     • The type chooser, review and enquiry form stay single-column / full-width
+       (the form needs the room); review/form keep a compact sticky preview so the
+       door is visible right up to submission.
+     • The Continue action is pinned to the bottom.
+   --hd-head-h is published by the app from the header's measured height, so the
+   sticky preview always sits exactly beneath the pinned header.
+   Desktop (>=820px, section 13) is untouched — these rules only match below the
+   two-pane breakpoint.
    ========================================================================== */
 
 @media (max-width: 819px) {
-  /* Compact, sticky preview — stays in view while the customer scrolls the options,
-     but never eats more than ~40% of the screen, so the question + choices show
-     together. (The door is height-scaled, not stretched.) */
-  .hd-dd__stage {
+  /* Header pinned at the very top in every phase. */
+  .hd-dd__wizhead {
     position: sticky;
     top: 0;
+    z-index: 7;
+    background: var(--paper);
+    box-shadow: 0 1px 0 var(--line);
+  }
+
+  /* Compact sticky preview for the single-column phases (review + form) — pinned just
+     below the header, never more than ~40% tall so the content below stays reachable.
+     Excluded on the type chooser (a tall hero needn't pin) and overridden for steps. */
+  .hd-dd__app:not(.hd-dd__app--type) .hd-dd__stage {
+    position: sticky;
+    top: var(--hd-head-h, 44px);
     z-index: 5;
     max-height: 40vh;
     padding: 8px;
-    /* Lift the pinned preview above the options that scroll under it. */
     box-shadow: 0 6px 12px rgba(0, 0, 0, .06);
   }
   .hd-dd__canvas,
@@ -559,9 +587,8 @@
     max-height: calc(40vh - 16px);
   }
 
-  /* Pin the primary action to the bottom of the screen so the customer always knows
-     how to move on. A soft fade above the bar bleeds the options underneath it,
-     hinting there's more to scroll. */
+  /* Pin the primary action to the bottom so the next step is always on screen. A soft
+     fade above the bar bleeds the options underneath, hinting there's more to scroll. */
   .hd-dd__cta {
     position: sticky;
     bottom: 0;
@@ -584,4 +611,44 @@
 
   /* Clearance so the last option isn't tucked under the pinned action bar. */
   .hd-dd__body { padding-bottom: 14px; }
+
+  /* ---- Wizard STEP: preview-left two-column ------------------------------- */
+  .hd-dd__app--step {
+    display: grid;
+    grid-template-columns: minmax(112px, 40%) minmax(0, 1fr);
+    grid-template-areas:
+      "head  head"
+      "stage body"
+      "cta   cta";
+    column-gap: 12px;
+    align-items: start;
+    padding: 0 12px;
+  }
+  .hd-dd__app--step .hd-dd__wizhead { grid-area: head; }
+  .hd-dd__app--step .hd-dd__body    { grid-area: body; }
+  .hd-dd__app--step .hd-dd__cta     { grid-area: cta; }
+
+  /* The preview is now bounded by its column width, so drop the 40vh cap and let the
+     door fill the left column. Still sticky beneath the pinned header. */
+  .hd-dd__app--step .hd-dd__stage {
+    grid-area: stage;
+    max-height: none;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: none;
+  }
+  .hd-dd__app--step .hd-dd__canvas,
+  .hd-dd__app--step .hd-dd__hero {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: none;
+  }
+
+  /* Title + options left-aligned in their own column; tighter tiles so two fit across
+     the narrower right column on a phone. */
+  .hd-dd__app--step .hd-dd__steptitle { text-align: left; margin: 6px 0 2px; font-size: 17px; }
+  .hd-dd__app--step .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
+  .hd-dd__app--step .hd-dd__carousel  { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); padding: 4px 0 4px; }
+  .hd-dd__app--step .hd-dd__change    { margin-left: 0; margin-right: 0; }
 }

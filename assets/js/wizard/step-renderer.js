@@ -31,6 +31,9 @@
 	function renderStep(container, step, ctx) {
 		container.innerHTML = '';
 		container.appendChild(el('div', 'hd-dd__steptitle', step.label));
+		// Plain-English explanation under the title — door terminology ("hardware finish",
+		// "letterplate") isn't obvious to a first-time buyer.
+		if (step.hint) { container.appendChild(el('div', 'hd-dd__stephint', step.hint)); }
 
 		// Frame Design: progressive disclosure — pick a high-level group (Just the door /
 		// With side panels / With a window above), then only its variants are shown.

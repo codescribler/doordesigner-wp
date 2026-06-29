@@ -158,6 +158,8 @@
 		head.appendChild(this.backBtn);
 		head.appendChild(this.progressEl);
 		layout.appendChild(head);
+		this.head = head;
+		this.layoutEl = layout;
 
 		var stage = el('div', 'hd-dd__stage');
 		// Hero image — shown before a door type is chosen (when the canvas is empty), so
@@ -185,6 +187,31 @@
 
 		this.root.appendChild(layout);
 		this._built = true;
+
+		// The mobile layout pins the header and sticks the preview directly beneath it.
+		// Measure the header so the sticky `top` tracks its real height (it's a single
+		// short row, but this stays correct if the progress bar ever wraps or the theme
+		// changes the font). Re-measure on resize.
+		this.syncHeadHeight();
+		if (!this._headResizeBound) {
+			this._headResizeBound = true;
+			var self2 = this;
+			window.addEventListener('resize', function () { self2.syncHeadHeight(); });
+		}
+	};
+
+	// Publish the header height as a custom property the CSS uses for the sticky offset.
+	App.prototype.syncHeadHeight = function () {
+		if (!this.head || !this.layoutEl) { return; }
+		var h = this.head.offsetHeight;
+		if (h) { this.layoutEl.style.setProperty('--hd-head-h', h + 'px'); }
+	};
+
+	// Tag the shell with the current phase so the stylesheet can lay each one out
+	// appropriately (e.g. on phones a wizard step is two-column preview-left, while the
+	// form/review stay full-width). Keeps the scoping/token classes intact.
+	App.prototype.setPhase = function (phase) {
+		if (this.layoutEl) { this.layoutEl.className = 'hd-dd hd-dd__app hd-dd__app--' + phase; }
 	};
 
 	// ---- Render loop --------------------------------------------------------
@@ -198,6 +225,7 @@
 		// so we render it ourselves and let selectType() drop us at the first real step.
 		if (!design['Door Type']) {
 			this._lastKey = null; this._atForm = false; this._frameGroup = null;
+			this.setPhase('type');
 			if (this.heroImg && CFG.heroImage) { this.heroImg.hidden = false; }
 			this.canvas.hidden = true;
 			this.renderTypeChooser();
@@ -224,10 +252,12 @@
 		if (st.atReview) {
 			// The enquiry form renders in the body (not a separate block) so the door
 			// preview stays visible right up to the moment of submission.
+			this.setPhase(this._atForm ? 'form' : 'review');
 			if (this._atForm) { this.renderForm(); } else { HD_DD_Review.render(this.body, this.reviewCtx(st)); }
 			this.continueBtn.hidden = true;
 		} else {
 			this._atForm = false;
+			this.setPhase('step');
 			HD_DD_StepRenderer.renderStep(this.body, step, this.stepCtx(st, step));
 			this.continueBtn.hidden = false;
 			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
@@ -251,6 +281,10 @@
 		this.trackView(st.atReview ? (this._atForm ? 'form' : 'review') : key);
 
 		this._lastKey = key;
+
+		// Measure the header LAST — the Back button is now visible, so the height reflects
+		// the real (back + progress) row the sticky preview must clear beneath it.
+		this.syncHeadHeight();
 	};
 
 	// Fire a Clarity event the first time each view is shown in a run, de-duped so
