@@ -36,6 +36,38 @@ class HD_DD_Enquiry {
 				'permission_callback' => array( $this, 'check_nonce' ),
 			)
 		);
+
+		// Reload a saved design by its unguessable token (for the "revisit your design"
+		// email link). Public read — it returns ONLY the design choices, never the
+		// customer's personal details.
+		register_rest_route(
+			HD_DD_REST_NS,
+			'/design/(?P<token>[A-Za-z0-9]{10,64})',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'rest_get_design' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'token' => array( 'sanitize_callback' => 'sanitize_text_field' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Return the saved design choices for a reload token. Design only — no name, email,
+	 * phone or postcode — so a forwarded link can never leak personal data.
+	 */
+	public function rest_get_design( WP_REST_Request $request ) {
+		$row = $this->repository->get_by_token( (string) $request['token'] );
+		if ( ! $row ) {
+			return new WP_Error( 'hd_dd_design_not_found', __( 'That saved design could not be found.', 'hd-door-designer' ), array( 'status' => 404 ) );
+		}
+		$design = json_decode( (string) $row->design, true );
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $design ) ) {
+			return new WP_Error( 'hd_dd_design_unreadable', __( 'That saved design could not be read.', 'hd-door-designer' ), array( 'status' => 404 ) );
+		}
+		return new WP_REST_Response( array( 'design' => $design ), 200 );
 	}
 
 	/** Nonce gate. The front-end is given a 'wp_rest' nonce at enqueue time. */
@@ -131,6 +163,7 @@ class HD_DD_Enquiry {
 			array(
 				'ok'        => true,
 				'reference' => $saved['reference'],
+				'token'     => $saved['token'], // lets the thank-you screen offer an instant "revisit your design" link.
 				'message'   => __( 'Thank you — your design has been sent. We will be in touch shortly.', 'hd-door-designer' ),
 			),
 			201

@@ -52,6 +52,10 @@ final class HD_DD_Plugin {
 	private function __construct() {
 		load_plugin_textdomain( 'hd-door-designer', false, dirname( HD_DD_BASENAME ) . '/languages' );
 
+		// Apply pending DB migrations after a plugin update (activation hook only fires on
+		// activate). Cheap no-op once the stored schema version matches.
+		HD_DD_Repository::maybe_upgrade();
+
 		$this->repository  = new HD_DD_Repository();
 		$this->catalogue   = new HD_DD_Catalogue();
 		$this->image_proxy = new HD_DD_Image_Proxy( $this->catalogue );

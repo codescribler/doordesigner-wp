@@ -11,12 +11,24 @@ defined( 'ABSPATH' ) || exit;
 
 class HD_DD_Repository {
 
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 
 	/** @return string Fully-prefixed table name. */
 	public static function table() {
 		global $wpdb;
 		return $wpdb->prefix . 'hd_enquiries';
+	}
+
+	/**
+	 * Run pending migrations on plugin UPDATE (the activation hook only fires on activate,
+	 * not on update). dbDelta is idempotent, so we only call it when the stored schema
+	 * version differs — cheap on every other load.
+	 */
+	public static function maybe_upgrade() {
+		if ( get_option( 'hd_dd_db_version' ) !== self::DB_VERSION ) {
+			self::create_table();
+			update_option( 'hd_dd_db_version', self::DB_VERSION, false );
+		}
 	}
 
 	/**
@@ -31,9 +43,13 @@ class HD_DD_Repository {
 		$table           = self::table();
 		$charset_collate = $wpdb->get_charset_collate();
 
+		// token: a random, unguessable retrieval key for the "revisit your design" link.
+		// NULL-able so existing rows (pre-migration) stay valid under the UNIQUE index
+		// (which permits multiple NULLs, but not multiple empty strings).
 		$sql = "CREATE TABLE {$table} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			reference VARCHAR(32) NOT NULL,
+			token VARCHAR(32) NULL DEFAULT NULL,
 			created_at DATETIME NOT NULL,
 			status VARCHAR(20) NOT NULL DEFAULT 'new',
 			customer_name VARCHAR(190) NOT NULL DEFAULT '',
@@ -45,6 +61,7 @@ class HD_DD_Repository {
 			source_ip VARCHAR(45) NOT NULL DEFAULT '',
 			PRIMARY KEY  (id),
 			UNIQUE KEY reference (reference),
+			UNIQUE KEY token (token),
 			KEY created_at (created_at),
 			KEY status (status)
 		) {$charset_collate};";
@@ -62,12 +79,14 @@ class HD_DD_Repository {
 		global $wpdb;
 
 		$reference = $this->generate_reference();
+		$token     = $this->generate_token();
 		$now       = current_time( 'mysql' );
 
 		$ok = $wpdb->insert(
 			self::table(),
 			array(
 				'reference'         => $reference,
+				'token'             => $token,
 				'created_at'        => $now,
 				'status'            => 'new',
 				'customer_name'     => $data['name'],
@@ -78,7 +97,7 @@ class HD_DD_Repository {
 				'payload'           => wp_json_encode( $data['payload'] ),
 				'source_ip'         => $data['source_ip'],
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 
 		if ( false === $ok ) {
@@ -88,7 +107,25 @@ class HD_DD_Repository {
 		return array(
 			'id'        => (int) $wpdb->insert_id,
 			'reference' => $reference,
+			'token'     => $token,
 		);
+	}
+
+	/** A random, unguessable retrieval key (URL-safe alphanumerics) for the reload link. */
+	private function generate_token() {
+		return wp_generate_password( 32, false );
+	}
+
+	/** Fetch a row by its reload token, or null. */
+	public function get_by_token( $token ) {
+		global $wpdb;
+		$token = (string) $token;
+		if ( '' === $token ) {
+			return null;
+		}
+		$table = self::table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE token = %s", $token ) );
 	}
 
 	/**
