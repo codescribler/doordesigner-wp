@@ -337,9 +337,9 @@
   font-weight: 600;
 }
 
-/* Reassurance line above the review CTA. */
+/* Reassurance line above the review CTA — sits clear of the options table above it. */
 .hd-dd__review-note {
-  margin: 14px 16px 0;
+  margin: 24px 16px 0;
   color: var(--muted);
   font-size: 12.5px;
   line-height: 1.4;
