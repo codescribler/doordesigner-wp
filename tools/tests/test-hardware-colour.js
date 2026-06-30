@@ -123,4 +123,11 @@ assert.equal(finishesFor('Letterplate', 'letterplates').indexOf('Stainless Steel
 assert.equal(finishesFor('Lever/Lever', 'handles').indexOf('Forged Black'), -1, 'chrome lever not offered at Forged Black');
 assert.deepEqual(finishesFor('Touch Key Handle Chrome', 'handles'), ['Chrome'], 'Touch Key Handle Chrome offered only at Chrome (heuristic kept it everywhere)');
 
+// 10. Finish-specific letterplate products (completeness) — added to the model + offered ONLY at
+//     their finish; they're fixed product-colour (never recoloured).
+assert.ok(LP['Stainless Steel Letterplate'] && LP['Premium Matt Black Letterplate'], 'finish-specific letterplates are in the render model');
+assert.deepEqual(finishesFor('Stainless Steel Letterplate', 'letterplates'), ['Stainless Steel'], 'Stainless Steel Letterplate offered only at Stainless Steel');
+assert.deepEqual(finishesFor('Premium Matt Black Letterplate', 'letterplates'), ['Matt Black'], 'Premium Matt Black Letterplate offered only at Matt Black');
+assert.equal(infoFor && availFinishes(LP['Stainless Steel Letterplate'].url), null, 'Stainless Steel Letterplate is a fixed product (no recolour finishes)');
+
 console.log('hardware-colour OK');

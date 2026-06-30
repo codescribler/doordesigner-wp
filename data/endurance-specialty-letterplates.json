@@ -1,0 +1,224 @@
+{
+  "_schema": "patch-v1",
+  "Single Door": {
+    "doorType": "Single Door",
+    "specialtyLetterplates": {
+      "Stainless Steel": {
+        "heading": "Letterplate",
+        "category": 20,
+        "baselineId": 0,
+        "choices": [
+          {
+            "label": "No Letterplate",
+            "id": 0,
+            "delta": []
+          },
+          {
+            "label": "Premium Stainless Steel Letterplate",
+            "id": 35,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/PremiumLetterplate.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Stainless Steel Letterplate",
+            "id": 36,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateERA.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Forged Black Architectural Letterplate",
+            "id": 32,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchForge.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Pewter Architectural Letterplate",
+            "id": 33,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchPew.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          }
+        ]
+      },
+      "Matt Black": {
+        "heading": "Letterplate",
+        "category": 20,
+        "baselineId": 0,
+        "choices": [
+          {
+            "label": "No Letterplate",
+            "id": 0,
+            "delta": []
+          },
+          {
+            "label": "Premium Matt Black Letterplate",
+            "id": 37,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/BlackPCLetterplate.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Forged Black Architectural Letterplate",
+            "id": 32,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchForge.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Pewter Architectural Letterplate",
+            "id": 33,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchPew.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          }
+        ]
+      },
+      "Satin Brass": {
+        "heading": "Letterplate",
+        "category": 20,
+        "baselineId": 0,
+        "choices": [
+          {
+            "label": "No Letterplate",
+            "id": 0,
+            "delta": []
+          },
+          {
+            "label": "Premium Satin Brass Letterplate ",
+            "id": 38,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/PremiumLplateSatinBrass.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 16.5,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Forged Black Architectural Letterplate",
+            "id": 32,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchForge.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          },
+          {
+            "label": "Pewter Architectural Letterplate",
+            "id": 33,
+            "delta": [
+              {
+                "url": "Assets/CompositeDoors/Images/Letterplates/LetterplateArchPew.png?ver=9.28.26",
+                "urlRight": "",
+                "cx": 77.625,
+                "cy": 287.25,
+                "w": 49.5000038,
+                "h": 14.4000006,
+                "rotation": 0,
+                "flipH": false,
+                "leftSlab": true,
+                "excludeDouble": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
