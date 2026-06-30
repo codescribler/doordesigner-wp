@@ -504,37 +504,64 @@
 		return T ? this.furnitureAvailableColours(T.handles, label) : null;
 	};
 
-	// Why a handle/letterplate tile is greyed out (or null if selectable). A recolourable item is
-	// offered only in the finishes it actually comes in; picking it in another finish (including a
-	// specialty finish it has no variant for) would silently fall back to its default colour, and
-	// Endurance has no such product — so disable it and name the finishes it does come in.
+	// The finish LABELS a handle/letterplate is offered in, read from Endurance's exact per-finish
+	// lists (model.finishFurniture). Returns null when we have no such data (caller then falls back
+	// to the variant-token heuristic). The labels carry the odd trailing space, so match trimmed.
+	App.prototype.furnitureFinishes = function (label, kind) {
+		var ff = this.renderModel && this.renderModel.finishFurniture;
+		if (!ff) { return null; }
+		var target = String(label).trim();
+		var out = [];
+		for (var fin in ff) {
+			if (!Object.prototype.hasOwnProperty.call(ff, fin)) { continue; }
+			var list = ff[fin][kind] || [];
+			for (var i = 0; i < list.length; i++) { if (String(list[i]).trim() === target) { out.push(fin); break; } }
+		}
+		return out;
+	};
+
+	// Why a handle/letterplate tile is greyed out (or null if selectable). Endurance filters these
+	// lists by finish, so we offer exactly what it offers for the chosen finish — guaranteeing the
+	// pair is orderable. Falls back to the recolour-variant heuristic when per-finish data is absent.
 	App.prototype.tileDisabledReason = function (step, choice) {
 		if (step.key !== 'handle' && step.key !== 'letterplate') { return null; }
-		var model = this.renderModel;
 		var hw = this.wiz.state().design['Hardware Type'];
-		if (!hw || !model) { return null; }
-		var T = model.types ? model.types[this.activeType()] : null;
+		if (!hw) { return null; }
+		var kind = step.key === 'handle' ? 'handles' : 'letterplates';
+		var finishes = this.furnitureFinishes(choice.label, kind);
+		if (finishes !== null) {
+			// `[]` = an item we model that Endurance never lists (label drift) — don't block it.
+			if (!finishes.length || finishes.indexOf(hw.label) !== -1) { return null; }
+			return formatColourList(finishes) + ' only';
+		}
+		var model = this.renderModel;
+		var T = model && model.types ? model.types[this.activeType()] : null;
 		if (!T) { return null; }
 		var avail = this.furnitureAvailableColours(step.key === 'handle' ? T.handles : T.letterplates, choice.label);
-		if (!avail || avail.indexOf(hw.label) !== -1) { return null; } // fixed/product item, or it comes in this finish
+		if (!avail || avail.indexOf(hw.label) !== -1) { return null; }
 		return formatColourList(avail) + ' only';
 	};
 
 	// When the finish changes, drop a now-incompatible handle or letterplate so the preview never
-	// shows it in the wrong (default) colour — the door falls back to its default in the chosen
-	// finish and the customer re-picks (incompatible ones greyed). Mirrors the Endurance designer.
+	// shows an item the chosen finish doesn't offer — it falls back to the default and the customer
+	// re-picks (incompatible ones greyed). Mirrors how the Endurance designer resets the handle.
 	App.prototype.resetFurnitureIfIncompatible = function () {
 		var design = this.wiz.state().design;
 		var model = this.renderModel;
 		var hw = design['Hardware Type'];
 		if (!hw || !model) { return; }
 		var T = model.types ? model.types[this.activeType()] : null;
-		if (!T) { return; }
 		var self = this;
-		[['Handle', T.handles], ['Letterplate', T.letterplates]].forEach(function (pair) {
+		[['Handle', 'handles'], ['Letterplate', 'letterplates']].forEach(function (pair) {
 			var sel = design[pair[0]];
 			if (!sel) { return; }
-			var avail = self.furnitureAvailableColours(pair[1], sel.label);
+			var finishes = self.furnitureFinishes(sel.label, pair[1]);
+			if (finishes !== null) {
+				if (finishes.length && finishes.indexOf(hw.label) === -1) { delete design[pair[0]]; }
+				return;
+			}
+			if (!T) { return; }
+			var avail = self.furnitureAvailableColours(pair[0] === 'Handle' ? T.handles : T.letterplates, sel.label);
 			if (avail && avail.indexOf(hw.label) === -1) { delete design[pair[0]]; }
 		});
 	};

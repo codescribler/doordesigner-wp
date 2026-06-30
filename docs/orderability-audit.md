@@ -9,6 +9,22 @@ allows it. "Needs live check" = depends on an Endurance rule we haven't captured
 
 ---
 
+## Status: F1 + F2 + F3 RESOLVED (v0.2.42 heuristic → v0.2.43 exact per-finish lists)
+
+v0.2.43 captures Endurance's exact per-finish Handle + Letterplate lists
+(`data/endurance-finish-furniture.json` → `model.finishFurniture`) and constrains the wizard
+tiles to them — so every finish×furniture pair it offers is one Endurance actually offers. This
+both fixed the over-permits (F1/F2) AND corrected heuristic mistakes (Heritage letterplate IS
+offered at Antique Black; the generic letterplate is NOT offered at Stainless Steel — distinct
+product there; Touch Key Handle is Chrome-only). Verified live below.
+
+**Completeness gap (NOT orderability):** Endurance offers finish-specific letterplate products we
+don't model — "Stainless Steel Letterplate", "Premium Matt Black Letterplate", "Premium Satin Brass
+Letterplate". We simply don't offer them (safe: under-offer), so a customer can't pick a matching
+letterplate at those finishes. Adding them needs a render-geometry capture — separate follow-up.
+
+---
+
 ## Findings
 
 ### F1 — Letterplate × finish not constrained  *(Confirmed · Medium)*

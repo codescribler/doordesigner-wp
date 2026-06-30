@@ -365,6 +365,31 @@ function loadSideDesigns() {
   return out;
 }
 
+// Per-finish furniture availability (captured read-only by the extractor's captureFinishFurniture).
+// Endurance FILTERS the Handle + Letterplate lists by the chosen finish (Forged Black offers 18
+// handles, not 26; Stainless Steel offers its own letterplate products). The wizard constrains the
+// handle/letterplate tiles to exactly these lists so every finish×furniture pair it offers is
+// orderable. Optional — missing file falls back to the variant-token heuristic.
+function loadFinishFurniture() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'endurance-finish-furniture.json'), 'utf8'));
+    const node = raw['Single Door'] && raw['Single Door'].finishFurniture;
+    if (!node) { return null; }
+    const out = {};
+    Object.keys(node).forEach((fin) => {
+      out[fin] = {
+        handles: (node[fin].handles || []).map((s) => String(s).trim()),
+        letterplates: (node[fin].letterplates || []).map((s) => String(s).trim()),
+      };
+    });
+    console.log('per-finish furniture: ' + Object.keys(out).length + ' finishes loaded');
+    return out;
+  } catch (e) {
+    console.warn('endurance-finish-furniture.json not found — furniture constrained by the variant heuristic only.');
+    return null;
+  }
+}
+
 function build(raw) {
   const hc = loadHardwareColours();
   const model = {
@@ -375,6 +400,7 @@ function build(raw) {
     furnitureColourAliases: hc.furnitureColourAliases,
     glassThumbs: loadGlassThumbs(),
     sideDesigns: loadSideDesigns(),
+    finishFurniture: loadFinishFurniture(),
     types: {},
   };
   ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });

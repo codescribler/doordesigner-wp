@@ -104,4 +104,23 @@ assert.ok(availFinishes(HX['Finger Pull'].url).indexOf('Stainless Steel') !== -1
 assert.equal(availFinishes(HX['1200mm Pull Handle'].url), null, 'A stainless pull handle has no finish constraint');
 assert.equal(availFinishes(HX['Forged Black Monkey Tail'].url), null, 'A forged-black product handle is unconstrained here (its finish is in the product)');
 
+// 9. EXACT per-finish furniture lists (orderability F2/F3) — captured from Endurance, these now
+//    drive the greying (the heuristic above is only a fallback). Same matching as the App's
+//    furnitureFinishes: trimmed-label membership in model.finishFurniture[finish][kind].
+const ff = model.finishFurniture;
+assert.ok(ff && ff['Forged Black'] && ff['Chrome'], 'model carries the exact per-finish furniture lists');
+const finishesFor = (label, kind) => {
+  const t = String(label).trim();
+  return Object.keys(ff).filter((fin) => (ff[fin][kind] || []).some((x) => String(x).trim() === t));
+};
+// F1 exact: architectural letterplate only Chrome/Gold/Graphite.
+assert.deepEqual(finishesFor('Architectural Letterplate', 'letterplates').sort(), ['Chrome', 'Gold', 'Graphite'], 'Arch letterplate offered only in Chrome/Gold/Graphite');
+// The variant heuristic would WRONGLY grey Heritage at Antique Black; the exact list keeps it.
+assert.ok(finishesFor('Heritage Letterplate', 'letterplates').indexOf('Antique Black') !== -1, 'Heritage letterplate IS offered at Antique Black (exact list beats the heuristic)');
+// The generic letterplate is NOT offered at Stainless Steel (Endurance uses a distinct SS product).
+assert.equal(finishesFor('Letterplate', 'letterplates').indexOf('Stainless Steel'), -1, 'Generic letterplate not offered at Stainless Steel (distinct product there)');
+// F2 exact: recolourable lever dropped at Forged Black; Touch Key Chrome is Chrome-only.
+assert.equal(finishesFor('Lever/Lever', 'handles').indexOf('Forged Black'), -1, 'chrome lever not offered at Forged Black');
+assert.deepEqual(finishesFor('Touch Key Handle Chrome', 'handles'), ['Chrome'], 'Touch Key Handle Chrome offered only at Chrome (heuristic kept it everywhere)');
+
 console.log('hardware-colour OK');
