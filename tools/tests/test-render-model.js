@@ -154,4 +154,18 @@ assert.equal(lpCyDefault('Single Door', 'Abbott'), 152, 'Abbott (no overlap) sti
 const bruceMid = assemble(model, 'Single Door', { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Bruce' }, 'Letterplate': { label: 'Letterplate' }, 'Letterplate Position': { label: 'Middle' } }).filter((l) => l.slot === 'Letterplates');
 assert.equal(bruceMid[0].cy, 152, 'Explicit Middle overrides the smart default (back to cy 152)');
 
+// 17. Decorative sidelight (F4): "Matches the door" paints the door's glass DESIGN into a
+//     key-matched side layout's apertures (per panel); any obscure choice keeps the Ornate overlay.
+const slBase = { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Door Glass': { label: 'Clarence' }, 'Frame Colour': { label: 'Anthracite Grey/White' }, 'Frame Design': { label: 'Double Sidelight' }, 'Sidelight Type': { label: 'Glazed' } };
+const sideOf = (ls) => ls.filter((l) => l.slot === 'Side');
+const deco = sideOf(assemble(model, 'Single Door', Object.assign({}, slBase, { 'Sidelight Glass': { label: 'Matches the door' } })));
+assert.ok(deco.length > 0 && deco.every((l) => /DoorGlazing\/Clarence\/K1\.png/.test(l.url)), 'decorative sidelight paints the door glass (Clarence/K1), not the Ornate overlay');
+assert.ok(deco.some((l) => l.cx < 147) && deco.some((l) => l.cx > 147), 'decorative glass drawn into BOTH side panels of a Double Sidelight');
+const obscure = sideOf(assemble(model, 'Single Door', Object.assign({}, slBase, { 'Sidelight Glass': { label: 'Reeded' } })));
+assert.ok(obscure.length > 0 && obscure.every((l) => /Side\/Ornate/.test(l.url)), 'an obscure sidelight keeps the captured Ornate privacy-glass overlay');
+// A door whose glazing key has no side layout (e.g. Berwyn, Mould 12) can't match — stays obscure.
+assert.ok(!model.sideDesignByKey[model.types['Single Door'].styles['Berwyn'].cassetteKey], 'Berwyn key has no side layout (decorative not offered)');
+const noKeyMatch = sideOf(assemble(model, 'Single Door', Object.assign({}, slBase, { 'Door Design': { label: 'Berwyn' }, 'Door Glass': { label: 'Clarence' }, 'Sidelight Glass': { label: 'Matches the door' } })));
+assert.ok(noKeyMatch.every((l) => /Side\/Ornate/.test(l.url)), 'a door with no key-matched side layout falls back to the Ornate overlay even on "Matches the door"');
+
 console.log('render-model OK');

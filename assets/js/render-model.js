@@ -53,6 +53,18 @@
 		return !t || t.label !== 'Unglazed';
 	}
 
+	// The side-slab design used to render a DECORATIVE sidelight (the door's glass mirrored into the
+	// side panel), or null for an obscure sidelight. Only when the customer chose "Matches the door",
+	// the door actually has glass, and the door's glazing key has a representative side layout.
+	function decorativeSideDesign(model, style, sideGlassChoice, doorGlass) {
+		if (!model || !model.sideDesigns || !model.sideDesignByKey) { return null; }
+		if (!/match/i.test(sideGlassChoice || '')) { return null; }
+		if (!doorGlass || /unglazed/i.test(doorGlass)) { return null; }
+		var key = style && style.cassetteKey;
+		var name = key && model.sideDesignByKey[key];
+		return name ? model.sideDesigns[name] : null;
+	}
+
 	// Whole-door horizontal mirror for the chosen hinge side. The captured baseline is a
 	// RIGHT-hinged / RIGHT-leaf door, so its handle already sits on the correct (left/latch)
 	// side. We therefore mirror ONLY when the customer picks the OPPOSITE (left) hinge.
@@ -219,9 +231,24 @@
 		var sd = (T.sidelights && T.sidelights.shapes) ? T.sidelights.shapes[get('Frame Design')] : null;
 		if (sd) {
 			layers.forEach(function (l) { l.cx += sd.doorOffsetX; });
-			// Side-glass overlays only when Glazed; Unglazed shows the frame's solid panels.
+			// Side glass only when Glazed. "Matches the door" paints the door's glass DESIGN into a
+			// key-matched side layout's apertures (a decorative sidelight); any other (obscure) choice
+			// keeps the captured Ornate privacy-glass overlay. Unglazed shows the frame's solid panels.
 			if (sidelightGlazed(design)) {
-				(sd.panels || []).forEach(function (p) { push(p.url, p.geom); layers[layers.length - 1].slot = 'Side'; });
+				var decoDesign = decorativeSideDesign(model, style, get('Sidelight Glass'), get('Door Glass'));
+				if (decoDesign) {
+					var decoGlass = get('Door Glass');
+					(sd.panels || []).forEach(function (p) {
+						var isRight = p.side === 'right';
+						decoDesign.apertures.forEach(function (a) {
+							push(ASSET_PREFIX + 'DoorGlazing/' + decoGlass + '/' + a.key + '.png',
+								{ cx: p.geom.cx + (isRight ? -a.ox : a.ox), cy: p.geom.cy + a.oy, w: a.w, h: a.h, rotation: 0, flipH: false, leftSlab: true, urlRight: '' });
+							layers[layers.length - 1].slot = 'Side';
+						});
+					});
+				} else {
+					(sd.panels || []).forEach(function (p) { push(p.url, p.geom); layers[layers.length - 1].slot = 'Side'; });
+				}
 			}
 			if (frame) {
 				push(frame.url.replace(/(\/DoorFrames\/)[^/]+(\/)/, '$1' + sd.frameVariant + '$2'), sd.frameGeom);

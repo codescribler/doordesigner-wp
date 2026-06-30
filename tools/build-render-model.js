@@ -390,8 +390,26 @@ function loadFinishFurniture() {
   }
 }
 
+// A representative side-slab design per cassette key, for rendering a DECORATIVE sidelight that
+// mirrors the door's glass. When the door's glazing key is one of these, the sidelight paints the
+// door's own glass pattern into this side layout's apertures — and because the key matches the
+// door's, DoorGlazing/<glass>/<key>.png is guaranteed to exist (the door already uses it). Doors
+// whose key isn't here only get the obscure/privacy sidelight (the side panel can't replicate
+// every door aperture style). Verified against the captured side designs at build time.
+const SIDE_DESIGN_BY_KEY = {
+  K1: 'Abbott Infill Side', K2: 'Apo Infill Side R', K15: 'Rhobell Infil Side',
+  764: 'Bleaklow Infill Side', 848: 'Fuji Infill Side', Diamond: 'Kentmere Infill Side',
+};
+function buildSideDesignByKey(sideDesigns) {
+  if (!sideDesigns) { return null; }
+  const out = {};
+  Object.keys(SIDE_DESIGN_BY_KEY).forEach((k) => { if (sideDesigns[SIDE_DESIGN_BY_KEY[k]]) { out[k] = SIDE_DESIGN_BY_KEY[k]; } });
+  return out;
+}
+
 function build(raw) {
   const hc = loadHardwareColours();
+  const sideDesigns = loadSideDesigns();
   const model = {
     _assetBase: raw._assetBase,
     _builtFrom: raw._capturedAt,
@@ -399,7 +417,8 @@ function build(raw) {
     furnitureColours: hc.furnitureColours,
     furnitureColourAliases: hc.furnitureColourAliases,
     glassThumbs: loadGlassThumbs(),
-    sideDesigns: loadSideDesigns(),
+    sideDesigns: sideDesigns,
+    sideDesignByKey: buildSideDesignByKey(sideDesigns),
     finishFurniture: loadFinishFurniture(),
     types: {},
   };

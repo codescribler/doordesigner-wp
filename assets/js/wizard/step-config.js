@@ -94,7 +94,15 @@
     } else if (step.source === 'sidelightType') {
       choices = n.sidelights ? n.sidelights.sidelightType : null;
     } else if (step.source === 'sidelightGlass') {
-      choices = n.sidelights ? n.sidelights.sidelightGlass : null;
+      var slBase = (n.sidelights && n.sidelights.sidelightGlass) ? n.sidelights.sidelightGlass.slice() : [];
+      // Offer the decorative "Matches the door" option only where we can render it: a glazed door
+      // whose style has a key-matched side layout. Otherwise just the obscure/privacy glasses.
+      var dStyle = d['Door Design'] && d['Door Design'].label;
+      var dGlass = d['Door Glass'] && d['Door Glass'].label;
+      if (dGlass && !/unglazed/i.test(dGlass) && dStyle && n.decorativeSideStyles && n.decorativeSideStyles[dStyle]) {
+        slBase = [{ label: 'Matches the door', id: null }].concat(slBase);
+      }
+      choices = slBase;
     } else if (step.source === 'letterplatePosition') {
       choices = [{ label: 'Middle', id: null }, { label: 'Bottom', id: null }];
     } else { choices = n.fields[heading]; }

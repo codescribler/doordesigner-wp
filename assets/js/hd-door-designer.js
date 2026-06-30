@@ -134,15 +134,19 @@
 		// Mark, per type, the styles whose mould offers the Middle/Bottom letterplate-position
 		// choice (from the render model) so the wizard can show that step only where it applies.
 		if (renderModel && renderModel.types && customerView && customerView.byType) {
+			var sideByKey = renderModel.sideDesignByKey || {};
 			Object.keys(customerView.byType).forEach(function (t) {
 				var rmStyles = (renderModel.types[t] || {}).styles || {};
 				var posStyles = {};
+				var decoStyles = {}; // styles that can show a decorative (door-matching) sidelight
 				Object.keys(rmStyles).forEach(function (s) {
 					// 'bottom' = a glazed style whose Middle plate covers the glass (default it to the
 					// bottom rail); 'middle' = the plate's natural central spot is already clear.
 					if (rmStyles[s].letterplateBottomCy != null) { posStyles[s] = rmStyles[s].letterplateDefaultBottom ? 'bottom' : 'middle'; }
+					if (rmStyles[s].cassetteKey && sideByKey[rmStyles[s].cassetteKey]) { decoStyles[s] = true; }
 				});
 				customerView.byType[t].letterplatePosStyles = posStyles;
+				customerView.byType[t].decorativeSideStyles = decoStyles;
 			});
 		}
 		this.wiz = HD_DD_Wizard.create(customerView, HD_DD_StepConfig);

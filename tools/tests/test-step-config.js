@@ -85,4 +85,19 @@ const posStepFor = (style) => SC.applicableSteps(sdLP, { 'Door Type': { label: '
 assert.equal(posStepFor('Bruce').defaultLabel, 'Bottom', 'Over-glass style defaults the letterplate to Bottom');
 assert.equal(posStepFor('Abbott').defaultLabel, 'Middle', 'Non-overlapping style keeps the Middle default');
 
+// The decorative "Matches the door" sidelight glass (F4) is offered only for a glazed door whose
+// style has a key-matched side layout (n.decorativeSideStyles, seeded by the App from the model).
+const sdDeco = view('Single Door');
+sdDeco.decorativeSideStyles = { Abbott: true };
+const slGlassStep = (extra) => SC.applicableSteps(sdDeco, Object.assign({ 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' }, 'Frame Design': { label: 'Double Sidelight' }, 'Sidelight Type': { label: 'Glazed' } }, extra)).filter((s) => s.key === 'sidelightGlass')[0];
+const decoStep = slGlassStep({ 'Door Glass': { label: 'Clarence' } });
+assert.ok(decoStep && decoStep.choices.some((c) => /matches the door/i.test(c.label)), 'Abbott (decorative-capable) + decorative glass offers "Matches the door"');
+const unglazedStep = slGlassStep({ 'Door Glass': { label: 'Unglazed' } });
+assert.ok(!unglazedStep || !unglazedStep.choices.some((c) => /matches the door/i.test(c.label)), 'an unglazed door offers no "Matches the door"');
+// A style with no key-matched side layout never offers it, even with decorative glass.
+const sdPlain = view('Single Door');
+sdPlain.decorativeSideStyles = {}; // Berwyn etc. not decorative-capable
+const plainStep = SC.applicableSteps(sdPlain, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Berwyn' }, 'Door Glass': { label: 'Clarence' }, 'Frame Design': { label: 'Double Sidelight' }, 'Sidelight Type': { label: 'Glazed' } }).filter((s) => s.key === 'sidelightGlass')[0];
+assert.ok(!plainStep || !plainStep.choices.some((c) => /matches the door/i.test(c.label)), 'a non-decorative-capable style never offers "Matches the door"');
+
 console.log('step-config OK');
