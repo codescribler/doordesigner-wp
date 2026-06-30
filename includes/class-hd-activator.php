@@ -20,7 +20,7 @@ class HD_DD_Activator {
 			add_option(
 				'hd_dd_settings',
 				array(
-					'recipient_email' => 'daniel@dreamfree.co.uk',
+					'recipient_email' => 'daniel@dreamfree.co.uk, hello@hertfordshiredoors.co.uk',
 					'page_id'         => 0,
 					'retention_days'  => 0,
 					'github_repo'     => '',

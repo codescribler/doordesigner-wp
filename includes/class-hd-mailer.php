@@ -82,7 +82,11 @@ class HD_DD_Mailer {
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8', 'From: ' . $from );
 		if ( ! empty( $settings['recipient_email'] ) ) {
-			$headers[] = 'Reply-To: ' . sanitize_email( $settings['recipient_email'] );
+			// recipient_email may be a list — the customer's reply goes to the first address.
+			$first = sanitize_email( trim( preg_split( '/[\s,]+/', trim( $settings['recipient_email'] ) )[0] ) );
+			if ( $first ) {
+				$headers[] = 'Reply-To: ' . $first;
+			}
 		}
 
 		return wp_mail( $to, $subject, $body, $headers );

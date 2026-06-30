@@ -74,12 +74,26 @@ class HD_DD_Admin {
 		);
 	}
 
+	/**
+	 * Validate a newline/comma-separated list of recipient emails down to a clean,
+	 * de-duplicated comma-separated string. Falls back to the current value if none are valid
+	 * (so a typo can't wipe out who gets enquiries).
+	 */
+	private function sanitize_email_list( $raw, $fallback ) {
+		$emails = array();
+		foreach ( preg_split( '/[\s,]+/', (string) $raw ) as $part ) {
+			$part = trim( $part );
+			if ( '' !== $part && is_email( $part ) ) {
+				$emails[ strtolower( $part ) ] = sanitize_email( $part );
+			}
+		}
+		return $emails ? implode( ', ', array_values( $emails ) ) : $fallback;
+	}
+
 	public function sanitize_settings( $input ) {
 		$current = HD_DD_Plugin::settings();
 		return array(
-			'recipient_email' => isset( $input['recipient_email'] ) && is_email( $input['recipient_email'] )
-				? sanitize_email( $input['recipient_email'] )
-				: $current['recipient_email'],
+			'recipient_email' => $this->sanitize_email_list( isset( $input['recipient_email'] ) ? $input['recipient_email'] : '', $current['recipient_email'] ),
 			'page_id'         => isset( $input['page_id'] ) ? absint( $input['page_id'] ) : $current['page_id'],
 			'retention_days'  => isset( $input['retention_days'] ) ? absint( $input['retention_days'] ) : $current['retention_days'],
 			'github_repo'     => isset( $input['github_repo'] ) ? esc_url_raw( trim( $input['github_repo'] ) ) : $current['github_repo'],
@@ -102,8 +116,11 @@ class HD_DD_Admin {
 				<?php settings_fields( 'hd_dd_settings_group' ); ?>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="hd_recipient"><?php esc_html_e( 'Enquiry recipient email', 'hd-door-designer' ); ?></label></th>
-						<td><input name="<?php echo esc_attr( self::OPTION ); ?>[recipient_email]" id="hd_recipient" type="email" class="regular-text" value="<?php echo esc_attr( $s['recipient_email'] ); ?>" /></td>
+						<th scope="row"><label for="hd_recipient"><?php esc_html_e( 'Enquiry recipient emails', 'hd-door-designer' ); ?></label></th>
+						<td>
+							<textarea name="<?php echo esc_attr( self::OPTION ); ?>[recipient_email]" id="hd_recipient" class="regular-text" rows="3"><?php echo esc_textarea( $s['recipient_email'] ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Every enquiry notification is sent to all of these. One address per line (or comma-separated).', 'hd-door-designer' ); ?></p>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="hd_repo"><?php esc_html_e( 'GitHub repo (for updates)', 'hd-door-designer' ); ?></label></th>

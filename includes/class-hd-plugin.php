@@ -77,7 +77,7 @@ final class HD_DD_Plugin {
 	/** Convenience accessor for the plugin settings array. */
 	public static function settings() {
 		$defaults = array(
-			'recipient_email' => 'daniel@dreamfree.co.uk',
+			'recipient_email' => 'daniel@dreamfree.co.uk, hello@hertfordshiredoors.co.uk',
 			'page_id'         => 0,
 			'retention_days'  => 0, // 0 = keep indefinitely; surfaced in admin for GDPR.
 			'github_repo'     => '', // e.g. https://github.com/OWNER/hd-door-designer
