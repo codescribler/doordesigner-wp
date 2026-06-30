@@ -100,4 +100,13 @@ sdPlain.decorativeSideStyles = {}; // Berwyn etc. not decorative-capable
 const plainStep = SC.applicableSteps(sdPlain, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Berwyn' }, 'Door Glass': { label: 'Clarence' }, 'Frame Design': { label: 'Double Sidelight' }, 'Sidelight Type': { label: 'Glazed' } }).filter((s) => s.key === 'sidelightGlass')[0];
 assert.ok(!plainStep || !plainStep.choices.some((c) => /matches the door/i.test(c.label)), 'a non-decorative-capable style never offers "Matches the door"');
 
+// On a double door the hinge step's field is the Master Leaf (choices "Left/Right Leaf"), so its
+// wording is reframed — "Hinge side" + a hinges/handle hint is wrong for two leaves.
+const dblHinge = SC.applicableSteps(dbl, { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: 'Abbott' } }).filter((s) => s.key === 'hinge')[0];
+assert.equal(dblHinge.heading, 'Master Leaf', 'double-door hinge field is the Master Leaf');
+assert.ok(/leaf/i.test(dblHinge.label) && !/hinge side/i.test(dblHinge.label), 'double-door hinge step is reframed (not "Hinge side")');
+assert.ok(/master/i.test(dblHinge.hint), 'double-door hinge hint explains the master leaf');
+const sglHinge = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).filter((s) => s.key === 'hinge')[0];
+assert.equal(sglHinge.label, 'Hinge side', 'single-door hinge step keeps "Hinge side"');
+
 console.log('step-config OK');

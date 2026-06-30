@@ -116,7 +116,15 @@
       var r = resolve(step, n, d);
       if (!r.choices || !r.choices.length) { return; }
       var defaultLabel = step.key === 'letterplatePosition' ? letterplatePosDefault(n, d) : step.defaultLabel;
-      out.push({ key: step.key, label: step.label, hint: step.hint || '', name: step.name || step.label, heading: r.heading, tileType: step.tileType,
+      var label = step.label, hint = step.hint || '', name = step.name || step.label;
+      // The hinge step's field is the Master Leaf on a double door (the choices are "Left/Right
+      // Leaf", not hinge sides), so the single-door "hinge side" wording doesn't fit — reframe it.
+      if (step.key === 'hinge' && r.heading === 'Master Leaf') {
+        label = 'Which leaf opens first?';
+        name = 'Master leaf';
+        hint = 'On double doors the “master” leaf is the one you’ll open day-to-day; the other stays bolted top and bottom and only opens when you need the full width.';
+      }
+      out.push({ key: step.key, label: label, hint: hint, name: name, heading: r.heading, tileType: step.tileType,
         optional: !!step.optional, defaultLabel: defaultLabel, categoryFirst: !!step.categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
     });
     return out;
