@@ -66,8 +66,11 @@ assert.equal(shouldFlip(model, 'Single Door', single('Hinges on Right')), false,
 assert.equal(shouldFlip(model, 'Single Door', single('Hinges on Left')), true, 'Hinges on Left → flip so the handle moves to the right');
 const sidelitLeft = Object.assign({}, single('Hinges on Left'), { 'Frame Colour': { label: 'Anthracite Grey/White' }, 'Frame Design': { label: 'Double Sidelight' } });
 assert.equal(shouldFlip(model, 'Single Door', sidelitLeft), false, 'A sidelit door never flips (the frame fixes the side)');
-assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Right Leaf' } }), false, 'Right Leaf master = baseline → no flip');
-assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Left Leaf' } }), true, 'Left Leaf master → flip');
+// Endurance puts the handle on the MASTER leaf (verified live: "Left Leaf" master → handle on the
+// left). Our baseline draws the handle on the left leaf, so only "Right Leaf" mirrors. (This is the
+// OPPOSITE of the single-door hinge test — a leaf and a hinge side mean opposite handle sides.)
+assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Left Leaf' } }), false, 'Left Leaf master = handle on the left leaf (baseline) → no flip');
+assert.equal(shouldFlip(model, 'Double Door', { 'Door Type': { label: 'Double Door' }, 'Master Leaf': { label: 'Right Leaf' } }), true, 'Right Leaf master → flip so the handle moves to the right leaf');
 
 // 8. Letterplate is composited onto the door (it has captured image + geometry, exactly
 //    like a knocker). A selected letterplate must add a Letterplates layer; "No Letterplate"

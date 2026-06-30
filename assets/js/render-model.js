@@ -65,19 +65,23 @@
 		return name ? model.sideDesigns[name] : null;
 	}
 
-	// Whole-door horizontal mirror for the chosen hinge side. The captured baseline is a
-	// RIGHT-hinged / RIGHT-leaf door, so its handle already sits on the correct (left/latch)
-	// side. We therefore mirror ONLY when the customer picks the OPPOSITE (left) hinge.
-	// Sidelit doors never mirror — the frame shape fixes the side, and the sidelit
-	// composites are captured at the left-hinge baseline.
+	// Whole-door horizontal mirror so the handle ends up on the correct side. The captured baseline
+	// draws the handle on the LEFT (single door: a right-hinged door's latch side; double door: the
+	// LEFT leaf is the master). Sidelit doors never mirror — the frame shape fixes the side.
 	function shouldFlip(model, type, design) {
 		var T = model && model.types ? model.types[type] : null;
 		if (!T) { return false; }
 		var frameShape = (design['Frame Design'] && design['Frame Design'].label) || '';
 		var sidelit = !!(T.sidelights && T.sidelights.shapes && T.sidelights.shapes[frameShape]);
 		if (sidelit) { return false; }
-		var hinge = (design['Door Hinged On'] && design['Door Hinged On'].label) ||
-			(design['Master Leaf'] && design['Master Leaf'].label) || '';
+		// Double door: Endurance puts the handle on the MASTER leaf (verified live: "Left Leaf" master
+		// → handle on the left). Our baseline is the left-leaf master, so mirror only for "Right Leaf".
+		// This is the OPPOSITE test to the single-door hinge below — a leaf and a hinge side are
+		// opposites ("Left Leaf" active = handle left; "Hinges on Left" = handle on the right).
+		if (design['Master Leaf']) {
+			return /right/i.test(design['Master Leaf'].label || '');
+		}
+		var hinge = (design['Door Hinged On'] && design['Door Hinged On'].label) || '';
 		return /left/i.test(hinge);
 	}
 
