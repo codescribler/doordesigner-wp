@@ -21,6 +21,7 @@ const letterFile = (extra) => fileOf(assemble(model, TYPE, Object.assign({}, bas
 // 0. The model carries the recolour data.
 assert.ok(model.hardwareColours && model.hardwareColours['Stainless Steel'] === 'Satin', 'hardwareColours maps labels to filename tokens');
 assert.ok(model.furnitureColours && Array.isArray(model.furnitureColours.LeverLever), 'furnitureColours lists per-base availability');
+assert.ok(model.furnitureColourAliases && model.furnitureColourAliases.MattSilver === 'Satin', 'aliases map alternate tokens (MattSilver) to their canonical finish (Satin)');
 
 // 1. A lever handle recolours to each finish that has a variant.
 assert.equal(handleFile({ Handle: { label: 'Lever/Lever' }, 'Hardware Type': { label: 'Chrome' } }), 'LeverLeverChrome.png', 'Chrome = captured baseline');
@@ -65,7 +66,14 @@ assert.deepEqual(lever.variants, ['Chrome', 'Black', 'Gold', 'Satin', 'AntiqueBl
 
 assert.deepEqual(infoFor('Architectural Lever/Lever').variants, ['Chrome', 'Gold', 'Graphite'], 'Architectural lever: Chrome/Gold/Graphite only');
 assert.deepEqual(infoFor('Heritage Lever/Lever').variants, ['Chrome', 'Gold', 'AntiqueBlack', 'Graphite'], 'Heritage lever: 4 finishes');
-assert.deepEqual(infoFor('Finger Pull').variants, ['Chrome', 'Black', 'Gold'], 'Finger Pull: Chrome/Black/Gold');
+assert.deepEqual(infoFor('Finger Pull').variants, ['Chrome', 'Black', 'Gold', 'MattSilver'], 'Finger Pull: Chrome/Black/Gold + the MattSilver stainless variant');
+
+// 7b. The finger pull renders the Stainless Steel finish via its MattSilver token (it has no
+//     Satin variant). This is the bug the live-image check caught: before the alias the pull
+//     stayed Chrome and was wrongly greyed out for Stainless Steel.
+assert.equal(handleFile({ Handle: { label: 'Finger Pull' }, 'Hardware Type': { label: 'Stainless Steel' } }), 'HeritagePullMattSilver.png', 'Finger Pull + Stainless Steel -> MattSilver (Satin alias)');
+assert.equal(handleFile({ Handle: { label: 'Finger Pull' }, 'Hardware Type': { label: 'Black' } }), 'HeritagePullBlack.png', 'Finger Pull recolours to Black directly');
+assert.equal(handleFile({ Handle: { label: 'Finger Pull' }, 'Hardware Type': { label: 'Bronze' } }), 'HeritagePullChrome.png', 'Finger Pull has no Bronze (nor a Bronze alias) -> stays Chrome');
 
 // Fixed-finish handles report null (always shown, never greyed, never recoloured).
 assert.equal(infoFor('1200mm Pull Handle'), null, 'A stainless pull handle has no colour variants');

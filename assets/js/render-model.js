@@ -100,12 +100,27 @@
 		return null;
 	}
 
+	// The actual filename token to use for a finish on a given base. Normally the finish's own
+	// token, but some bases spell a finish with a different token (the finger pull renders the
+	// Stainless Steel finish as `MattSilver`, not the `Satin` the levers use), so fall back to
+	// an alias token the base actually has. Returns null when the base has neither.
+	function resolveColourToken(model, hwToken, variants) {
+		if (variants.indexOf(hwToken) !== -1) { return hwToken; }
+		var aliases = (model && model.furnitureColourAliases) || {};
+		for (var alt in aliases) {
+			if (Object.prototype.hasOwnProperty.call(aliases, alt) && aliases[alt] === hwToken && variants.indexOf(alt) !== -1) { return alt; }
+		}
+		return null;
+	}
+
 	function recolourFurniture(url, model, hwToken) {
 		if (!hwToken) { return url; }
 		var info = furnitureColourInfo(model, url);
-		if (!info || info.variants.indexOf(hwToken) === -1) { return url; } // fixed, or no such finish — keep as captured
+		if (!info) { return url; }
+		var token = resolveColourToken(model, hwToken, info.variants);
+		if (!token) { return url; } // fixed, or doesn't come in this finish — keep as captured
 		var mm = String(url).match(/^(.*\/)([^/]+)(\.\w+)$/);
-		return mm ? mm[1] + info.base + hwToken + mm[3] : url;
+		return mm ? mm[1] + info.base + token + mm[3] : url;
 	}
 
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';

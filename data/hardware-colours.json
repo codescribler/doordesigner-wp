@@ -8,6 +8,9 @@
     "Graphite": "Graphite",
     "Bronze": "Bronze"
   },
+  "aliases": {
+    "MattSilver": "Satin"
+  },
   "variants": {
     "Heritage": [
       "Chrome",
@@ -18,7 +21,8 @@
     "HeritagePull": [
       "Chrome",
       "Black",
-      "Gold"
+      "Gold",
+      "MattSilver"
     ],
     "Letterplate": [
       "Chrome",

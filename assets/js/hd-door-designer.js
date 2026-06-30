@@ -492,7 +492,11 @@
 		for (var lbl in model.hardwareColours) {
 			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, lbl)) { tokenToLabel[model.hardwareColours[lbl]] = lbl; }
 		}
-		return info.variants.map(function (t) { return tokenToLabel[t]; }).filter(Boolean);
+		// An alternate token (e.g. the finger pull's MattSilver) stands in for a canonical finish
+		// token (Satin), so resolve it before mapping to a finish label — otherwise that finish
+		// would look unavailable and the handle would be wrongly greyed out.
+		var aliases = model.furnitureColourAliases || {};
+		return info.variants.map(function (t) { return tokenToLabel[aliases[t] || t]; }).filter(Boolean);
 	};
 
 	// Why a handle tile is greyed out (or null if selectable). A recolourable handle is

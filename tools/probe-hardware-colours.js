@@ -41,8 +41,19 @@ const TOKENS = {
   'Graphite': 'Graphite',
   'Bronze': 'Bronze',
 };
+// Some furniture spells a finish with a DIFFERENT filename token than the rest. The Heritage
+// finger pull renders the "Stainless Steel" finish as `MattSilver`, not the `Satin` every
+// other base uses (verified against the images the live Endurance designer actually loads —
+// HeritagePullMattSilver.png exists; HeritagePullSatin.png 404s). Map each alternate token to
+// the canonical finish token it stands in for, so the recolour and the greying treat them as
+// the same finish. (alternate token -> canonical finish token)
+const ALIASES = { MattSilver: 'Satin' };
+
 // The set of filename tokens, longest-first so AntiqueBlack matches before Black.
 const TOKEN_SUFFIXES = Object.values(TOKENS).sort((a, b) => b.length - a.length);
+
+// Every token worth HEAD-checking per base: the canonical finish tokens plus the alternates.
+const PROBE_TOKENS = [...new Set([...Object.values(TOKENS), ...Object.keys(ALIASES)])];
 
 const ASSET_FALLBACK = 'https://bmapprocaldoorportalretail.azurewebsites.net';
 const ASSET_DIR = 'Assets/CompositeDoors/Images';
@@ -91,7 +102,7 @@ async function main() {
   const variants = {};
   for (const base of bases) {
     const found = [];
-    for (const tok of Object.values(TOKENS)) {
+    for (const tok of PROBE_TOKENS) {
       const url = `${assetBase}/${ASSET_DIR}/${folderOf[base]}/${base}${tok}.png`;
       // eslint-disable-next-line no-await-in-loop -- sequential keeps the host happy
       if (await head(url)) { found.push(tok); }
@@ -100,7 +111,7 @@ async function main() {
     console.log(`${base}: ${found.join(', ') || '(none)'}`);
   }
 
-  fs.writeFileSync(OUT, JSON.stringify({ tokens: TOKENS, variants }, null, 2) + '\n');
+  fs.writeFileSync(OUT, JSON.stringify({ tokens: TOKENS, aliases: ALIASES, variants }, null, 2) + '\n');
   console.log(`\nWrote ${path.relative(path.join(__dirname, '..'), OUT)} (${bases.length} bases).`);
 }
 

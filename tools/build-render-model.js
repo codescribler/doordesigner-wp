@@ -303,10 +303,10 @@ function loadHardwareColours() {
   const file = path.join(__dirname, '..', 'data', 'hardware-colours.json');
   try {
     const hc = JSON.parse(fs.readFileSync(file, 'utf8'));
-    return { hardwareColours: hc.tokens || {}, furnitureColours: hc.variants || {} };
+    return { hardwareColours: hc.tokens || {}, furnitureColours: hc.variants || {}, furnitureColourAliases: hc.aliases || {} };
   } catch (e) {
     console.warn('hardware-colours.json not found — preview will not recolour furniture. Run tools/probe-hardware-colours.js.');
-    return { hardwareColours: {}, furnitureColours: {} };
+    return { hardwareColours: {}, furnitureColours: {}, furnitureColourAliases: {} };
   }
 }
 
@@ -330,6 +330,7 @@ function build(raw) {
     _builtFrom: raw._capturedAt,
     hardwareColours: hc.hardwareColours,
     furnitureColours: hc.furnitureColours,
+    furnitureColourAliases: hc.furnitureColourAliases,
     glassThumbs: loadGlassThumbs(),
     types: {},
   };
