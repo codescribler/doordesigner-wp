@@ -471,6 +471,39 @@
     return map;
   };
 
+  // ── Per-finish furniture availability ───────────────────────────────────────
+  // Endurance FILTERS the Handle + Letterplate lists by the chosen Hardware Type (finish): e.g.
+  // Forged Black drops the 26 handles to 18 (recolourable ones removed). Walk Hardware Type on a
+  // plain (non-sidelit) door and record the exact Handle + Letterplate list per finish, so the
+  // wizard can offer precisely what Endurance offers — guaranteeing every finish×furniture pair
+  // it lets a customer pick is orderable. Run on Single Door.
+  EXT.captureFinishFurniture = async function () {
+    EXT.selectType('Single Door');
+    await waitForId('Door Type', field('Door Type').SubOptions.find(s => s.Description === 'Single Door').ID);
+    await sleep(600);
+    // keep it simple: a plain door (no sidelight) so only the finish varies.
+    const fd = field('Frame Design');
+    const plain = fd && fd.SubOptions.find(s => /^no sidelights$/i.test(s.Description));
+    if (plain && fd.CurrentID !== plain.ID) { await setOption(fd.Category, plain.ID, 'Frame Design'); await sleep(400); }
+
+    const hw = field('Hardware Type');
+    const cat = hw.Category, baseId = hw.CurrentID, list = hw.SubOptions || [];
+    const readList = (h) => { const ff = field(h); return ff ? (ff.SubOptions || []).map(s => s.Description) : []; };
+    const byFinish = {};
+    for (let i = 0; i < list.length; i++) {
+      await setOption(cat, list[i].ID, 'Hardware Type');
+      byFinish[list[i].Description] = { handles: readList('Handle'), letterplates: readList('Letterplate') };
+      console.log('[EXT]   finish ' + (i + 1) + '/' + list.length + ' ' + list[i].Description +
+        ': ' + byFinish[list[i].Description].handles.length + ' handles, ' + byFinish[list[i].Description].letterplates.length + ' letterplates');
+    }
+    await setOption(cat, baseId, 'Hardware Type');
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    window.__patch['Single Door'] = window.__patch['Single Door'] || { doorType: 'Single Door' };
+    window.__patch['Single Door'].finishFurniture = byFinish;
+    console.log('[EXT] per-finish furniture captured for ' + Object.keys(byFinish).length + ' finishes. Run EXT.downloadPatch("endurance-finish-furniture.json").');
+    return byFinish;
+  };
+
   EXT.downloadPatch = function (filename) {
     const data = window.__patch || {};
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -511,8 +544,8 @@
   };
 
   window.EXT = EXT;
-  console.log('%c[EXT v3.5 — side mapping] ready.', 'font-weight:bold');
-  console.log('  SIDE MAP (this step): await EXT.captureSideMapping();  then  EXT.downloadPatch("endurance-side-map.json");');
+  console.log('%c[EXT v3.6 — per-finish furniture] ready.', 'font-weight:bold');
+  console.log('  FINISH×FURNITURE (this step): await EXT.captureFinishFurniture();  then  EXT.downloadPatch("endurance-finish-furniture.json");');
   console.log('  SIDE DESIGNS (done):  await EXT.capturePatchSideDesigns();  then  EXT.downloadPatch("endurance-side-designs.json");');
   console.log('  SIDELIGHT composites:     await EXT.capturePatchSidelights();   then  EXT.downloadPatch();');
   console.log('  LIGHT (missing option data): await EXT.capturePatch();   then  EXT.downloadPatch();');
