@@ -257,6 +257,7 @@
 .hd-dd__tile-media--door {
   position: relative;
   width: 100%;
+  height: auto; /* override the base tile-media's fixed 90px so aspect-ratio sets the height */
   background: var(--stage);
   border-radius: 4px;
   margin-bottom: 6px;
