@@ -80,4 +80,28 @@ assert.equal(infoFor('1200mm Pull Handle'), null, 'A stainless pull handle has n
 assert.equal(infoFor('Forged Black Monkey Tail'), null, 'A forged handle has no standard colour variants');
 assert.equal(infoFor('Premium Stainless Lever Handles'), null, 'A premium stainless lever has no colour variants');
 
+// 8. Finish-availability (orderability audit F1/F2) — the LABELS a furniture item is offered in,
+//    which drives the wizard's handle AND letterplate greying. Same mapping as the App's
+//    furnitureAvailableColours: variant tokens (alias-resolved) -> finish labels; null for fixed.
+const tokenToLabel = {};
+for (const l in model.hardwareColours) { tokenToLabel[model.hardwareColours[l]] = l; }
+const aliasMap = model.furnitureColourAliases || {};
+const availFinishes = (url) => {
+  const i = furnitureColourInfo(model, url);
+  if (!i) { return null; }
+  return i.variants.map((t) => tokenToLabel[aliasMap[t] || t]).filter(Boolean);
+};
+const LP = model.types['Single Door'].letterplates;
+const HX = model.types['Single Door'].handles;
+// F1: architectural/heritage letterplates exist only in Chrome/Gold/Graphite — must be greyed elsewhere.
+assert.deepEqual(availFinishes(LP['Architectural Letterplate'].url).sort(), ['Chrome', 'Gold', 'Graphite'], 'Arch letterplate offered only in Chrome/Gold/Graphite');
+assert.equal(availFinishes(LP['Architectural Letterplate'].url).indexOf('Black'), -1, 'Arch letterplate NOT offered in Black (no such product) -> wizard must grey it');
+assert.deepEqual(availFinishes(LP['Letterplate'].url).sort(), ['Antique Black', 'Black', 'Bronze', 'Chrome', 'Gold', 'Graphite', 'Stainless Steel'], 'Generic letterplate offered in all seven standard finishes');
+// F2: a recolourable handle has no variant in the specialty finishes -> not offered there (now greyed).
+assert.equal(availFinishes(HX['Lever/Lever'].url).indexOf('Forged Black'), -1, 'Lever/Lever not offered in the specialty Forged Black finish');
+assert.ok(availFinishes(HX['Finger Pull'].url).indexOf('Stainless Steel') !== -1, 'Finger Pull IS offered in Stainless Steel (MattSilver alias)');
+// Fixed/product items stay unconstrained (null) — left selectable pending the validator question.
+assert.equal(availFinishes(HX['1200mm Pull Handle'].url), null, 'A stainless pull handle has no finish constraint');
+assert.equal(availFinishes(HX['Forged Black Monkey Tail'].url), null, 'A forged-black product handle is unconstrained here (its finish is in the product)');
+
 console.log('hardware-colour OK');

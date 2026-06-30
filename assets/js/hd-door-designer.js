@@ -220,7 +220,7 @@
 			if (!acted) { break; }
 		}
 
-		this.resetHandleIfIncompatible(); // a reloaded handle may not come in the reloaded finish
+		this.resetFurnitureIfIncompatible(); // a reloaded handle/letterplate may not come in the reloaded finish
 
 		// Land on the first required step still missing a choice (so they can complete it),
 		// else straight on the review. The banner explains anything that was dropped.
@@ -477,54 +477,66 @@
 	};
 
 	// ---- Context objects handed to the renderers ----------------------------
-	// --- Handle ↔ hardware-finish compatibility -----------------------------
-	// Each handle only comes in certain finishes (a lever in all seven, an architectural
-	// lever in just Chrome/Gold/Graphite, a stainless pull in none — it's intrinsically
-	// stainless). Returns the finish LABELS a handle is offered in, or null when the
-	// handle has no colour variants at all (fixed-finish — always shown, never recoloured).
-	App.prototype.handleAvailableColours = function (label) {
+	// --- Furniture ↔ hardware-finish compatibility --------------------------
+	// A recolourable furniture item (handle or letterplate) only comes in the finishes whose
+	// image file actually exists: a lever in all seven standard finishes, an architectural lever
+	// or letterplate in just Chrome/Gold/Graphite. Returns the finish LABELS it's offered in, or
+	// null when it has no recolour variants at all — a FIXED/product item (a stainless pull, a
+	// "Pewter Monkey Tail", a "Forged Black …"): those carry their finish in the product itself
+	// and are left unconstrained here. (Whether a fixed product is valid with a mismatched finish
+	// is an Endurance validator question, not a missing-file one — see docs/orderability-audit.md.)
+	App.prototype.furnitureAvailableColours = function (furnMap, label) {
 		var model = this.renderModel;
-		var T = (model && model.types) ? model.types[this.activeType()] : null;
-		if (!T || !T.handles[label] || !window.HD_DD_RenderModel) { return null; }
-		var info = window.HD_DD_RenderModel.furnitureColourInfo(model, T.handles[label].url);
+		if (!furnMap || !furnMap[label] || !window.HD_DD_RenderModel) { return null; }
+		var info = window.HD_DD_RenderModel.furnitureColourInfo(model, furnMap[label].url);
 		if (!info) { return null; }
 		var tokenToLabel = {};
 		for (var lbl in model.hardwareColours) {
 			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, lbl)) { tokenToLabel[model.hardwareColours[lbl]] = lbl; }
 		}
-		// An alternate token (e.g. the finger pull's MattSilver) stands in for a canonical finish
-		// token (Satin), so resolve it before mapping to a finish label — otherwise that finish
-		// would look unavailable and the handle would be wrongly greyed out.
+		// An alternate token (the finger pull's MattSilver) stands in for a canonical finish token
+		// (Satin), so resolve it before mapping to a finish label — else that finish looks unavailable.
 		var aliases = model.furnitureColourAliases || {};
 		return info.variants.map(function (t) { return tokenToLabel[aliases[t] || t]; }).filter(Boolean);
 	};
+	App.prototype.handleAvailableColours = function (label) {
+		var T = (this.renderModel && this.renderModel.types) ? this.renderModel.types[this.activeType()] : null;
+		return T ? this.furnitureAvailableColours(T.handles, label) : null;
+	};
 
-	// Why a handle tile is greyed out (or null if selectable). A recolourable handle is
-	// offered only in the finishes it actually comes in; picking it in another finish would
-	// silently fall back to its default ("the colour reverted"), so we disable it and say
-	// which finishes it does come in. Only standard (recolourable) finishes constrain the
-	// list — specialty finishes recolour no handle, so nothing is greyed for them.
+	// Why a handle/letterplate tile is greyed out (or null if selectable). A recolourable item is
+	// offered only in the finishes it actually comes in; picking it in another finish (including a
+	// specialty finish it has no variant for) would silently fall back to its default colour, and
+	// Endurance has no such product — so disable it and name the finishes it does come in.
 	App.prototype.tileDisabledReason = function (step, choice) {
-		if (step.key !== 'handle') { return null; }
+		if (step.key !== 'handle' && step.key !== 'letterplate') { return null; }
 		var model = this.renderModel;
 		var hw = this.wiz.state().design['Hardware Type'];
-		if (!hw || !model || !model.hardwareColours || !model.hardwareColours[hw.label]) { return null; }
-		var avail = this.handleAvailableColours(choice.label);
-		if (!avail || avail.indexOf(hw.label) !== -1) { return null; } // fixed-finish, or it comes in this finish
+		if (!hw || !model) { return null; }
+		var T = model.types ? model.types[this.activeType()] : null;
+		if (!T) { return null; }
+		var avail = this.furnitureAvailableColours(step.key === 'handle' ? T.handles : T.letterplates, choice.label);
+		if (!avail || avail.indexOf(hw.label) !== -1) { return null; } // fixed/product item, or it comes in this finish
 		return formatColourList(avail) + ' only';
 	};
 
-	// When the finish changes, drop a now-incompatible handle so the preview never shows it
-	// in the wrong (default) colour — the door falls back to the default lever in the chosen
-	// finish, and the customer re-picks a handle (incompatible ones greyed). Mirrors how the
-	// Endurance designer resets the handle when you change the hardware colour.
-	App.prototype.resetHandleIfIncompatible = function () {
+	// When the finish changes, drop a now-incompatible handle or letterplate so the preview never
+	// shows it in the wrong (default) colour — the door falls back to its default in the chosen
+	// finish and the customer re-picks (incompatible ones greyed). Mirrors the Endurance designer.
+	App.prototype.resetFurnitureIfIncompatible = function () {
 		var design = this.wiz.state().design;
 		var model = this.renderModel;
-		var hw = design['Hardware Type'], handle = design['Handle'];
-		if (!hw || !handle || !model || !model.hardwareColours || !model.hardwareColours[hw.label]) { return; }
-		var avail = this.handleAvailableColours(handle.label);
-		if (avail && avail.indexOf(hw.label) === -1) { delete design['Handle']; }
+		var hw = design['Hardware Type'];
+		if (!hw || !model) { return; }
+		var T = model.types ? model.types[this.activeType()] : null;
+		if (!T) { return; }
+		var self = this;
+		[['Handle', T.handles], ['Letterplate', T.letterplates]].forEach(function (pair) {
+			var sel = design[pair[0]];
+			if (!sel) { return; }
+			var avail = self.furnitureAvailableColours(pair[1], sel.label);
+			if (avail && avail.indexOf(hw.label) === -1) { delete design[pair[0]]; }
+		});
 	};
 
 	App.prototype.stepCtx = function (st, step) {
@@ -571,9 +583,9 @@
 		if (heading === 'Door Design' && savedCat != null) {
 			this.wiz.state().design._styleCategory = savedCat;
 		}
-		// Changing the finish can leave the chosen handle without that colour — drop it so
-		// the preview doesn't show it reverted to its default finish.
-		if (heading === 'Hardware Type') { this.resetHandleIfIncompatible(); }
+		// Changing the finish can leave the chosen handle/letterplate without that colour — drop it
+		// so the preview doesn't show it reverted to its default finish.
+		if (heading === 'Hardware Type') { this.resetFurnitureIfIncompatible(); }
 		this.render();
 	};
 
