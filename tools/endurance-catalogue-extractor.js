@@ -71,6 +71,17 @@
     return best.map(readImage).filter(Boolean);
   }
 
+  // The actual RENDERED layer stack (Job.Drawing.Elements) in full render coordinates — door and
+  // sidelight cleanly separated by X (door centre ≈ right, side panel ≈ left). SubOption.Images
+  // are in a smaller thumbnail space and don't reliably include the side panel, so side-design
+  // geometry is read from here. X/Y are element centres; W/H the size.
+  function drawingLayers() {
+    const els = (job().Drawing && job().Drawing.Elements) || [];
+    return els.filter(e => e.ImgFile).map(e => ({
+      url: e.ImgFile, cx: e.X, cy: e.Y, w: e.W, h: e.H, rotation: e.Rotation || 0, flipH: !!e.FlipH
+    }));
+  }
+
   async function waitForId(heading, id, timeout = 12000) {
     const t0 = Date.now();
     while (Date.now() - t0 < timeout) {
@@ -359,6 +370,70 @@
     return window.__patch;
   };
 
+  // ── Side-slab DESIGN capture ────────────────────────────────────────────────
+  // The plugin paints one generic Glazing/Side/Ornate.jpg overlay; Endurance gives each
+  // "Side Slab Design" its OWN aperture layout (82 designs, 6 cassette keys). This activates a
+  // sidelit frame, then walks Side Slab Design recording each design's side-panel layers
+  // (cassettes/glazing) WITH geometry — captured on ONE shape ("Sidelight Left"); the per-shape
+  // POSITION comes from the existing sidelitComposites. Run on Single Door (its sidelight feature).
+  EXT.captureSideSlabDesigns = async function (shapeName) {
+    const fd = field('Frame Design');
+    if (!fd) return null;
+    const baseFrame = fd.CurrentID;
+    const shape = fd.SubOptions.find(s => s.Description === (shapeName || 'Sidelight Left'))
+      || fd.SubOptions.find(s => s.Description !== 'No Sidelights' && /sidelight/i.test(s.Description));
+    if (!shape) { console.warn('[EXT] no sidelit frame shape available'); return null; }
+    await setOption(fd.Category, shape.ID, 'Frame Design');
+    await sleep(600); // let the side fields + layers appear
+    const ssd = field('Side Slab Design');
+    const ssg = field('Side Slab Glass Design');
+    if (!ssd) { await setOption(fd.Category, baseFrame, 'Frame Design'); console.warn('[EXT] no Side Slab Design field'); return null; }
+
+    // Split door vs side by X (full render coords): the side panel sits left of the door blank's
+    // left edge. Read from Drawing.Elements (drawingLayers), NOT SubOption.Images.
+    const doorBlankOf = (comp) => comp.find(l => /DoorBlanks\/Door Mould/i.test(l.url));
+    const sideBlankOf = (comp) => comp.find(l => /DoorBlanks\/Side Mould/i.test(l.url));
+    const db0 = doorBlankOf(drawingLayers());
+    const doorLeft = db0 ? (db0.cx - db0.w / 2) : 600;
+    const isSide = (l) => (l.cx != null) && (l.cx < doorLeft) && /(DoorCassettes|DoorGlazing|Glazing\/Side)/.test(l.url);
+
+    const cat = ssd.Category, baseId = ssd.CurrentID, list = ssd.SubOptions || [];
+    const designs = [];
+    for (let i = 0; i < list.length; i++) {
+      await setOption(cat, list[i].ID, 'Side Slab Design');
+      const comp = drawingLayers();
+      const sb = sideBlankOf(comp);
+      designs.push({ label: list[i].Description, id: list[i].ID, sideBlank: sb || null, layers: comp.filter(isSide) });
+      if ((i + 1) % 12 === 0 || i === list.length - 1) console.log('[EXT]   side slab design ' + (i + 1) + '/' + list.length);
+    }
+    await setOption(cat, baseId, 'Side Slab Design');
+    await setOption(fd.Category, baseFrame, 'Frame Design');
+    const withApertures = designs.filter(d => d.layers.length).length;
+    console.log('[EXT]   side slab designs: ' + designs.length + ' (' + withApertures + ' with aperture layers) on "' + shape.Description + '"');
+    if (!withApertures) console.warn('[EXT] ⚠ no aperture layers captured — the side layers may live in Drawing.Elements, not SubOption.Images. Paste this log to Claude.');
+    return { shape: shape.Description, doorLeft, sideGlassChoices: ssg ? (ssg.SubOptions || []).map(s => ({ label: s.Description, id: s.ID })) : [], designs };
+  };
+
+  EXT.capturePatchSideDesigns = async function (onlyTypes) {
+    const all = field('Door Type').SubOptions.map(s => s.Description);
+    const types = (onlyTypes && onlyTypes.length) ? all.filter(t => onlyTypes.indexOf(t) !== -1) : ['Single Door'];
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    for (const tName of types) {
+      EXT.selectType(tName);
+      const tid = field('Door Type').SubOptions.find(s => s.Description === tName).ID;
+      await waitForId('Door Type', tid);
+      await sleep(800);
+      const sd = await EXT.captureSideSlabDesigns();
+      if (sd) {
+        window.__patch[tName] = window.__patch[tName] || { doorType: tName };
+        window.__patch[tName].sideSlabDesigns = sd;
+      }
+      console.log('[EXT-patch] ' + tName + ' side designs: ' + (sd ? sd.designs.length : 'n/a'));
+    }
+    console.log('[EXT-patch] side designs done. Run EXT.downloadPatch().');
+    return window.__patch;
+  };
+
   EXT.downloadPatch = function (filename) {
     const data = window.__patch || {};
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -399,8 +474,9 @@
   };
 
   window.EXT = EXT;
-  console.log('%c[EXT v3.3 — sidelight composites] ready.', 'font-weight:bold');
-  console.log('  SIDELIGHT rendering capture (this step):  await EXT.capturePatchSidelights();  then  EXT.downloadPatch();');
-  console.log('  LIGHT (missing option data):              await EXT.capturePatch();  then  EXT.downloadPatch();');
-  console.log('  FULL (re-walk everything):                await EXT.captureAllTypes();  then  EXT.download();');
+  console.log('%c[EXT v3.4 — side-slab designs] ready.', 'font-weight:bold');
+  console.log('  SIDE DESIGNS (this step): await EXT.capturePatchSideDesigns();  then  EXT.downloadPatch("endurance-side-designs.json");');
+  console.log('  SIDELIGHT composites:     await EXT.capturePatchSidelights();   then  EXT.downloadPatch();');
+  console.log('  LIGHT (missing option data): await EXT.capturePatch();   then  EXT.downloadPatch();');
+  console.log('  FULL (re-walk everything):   await EXT.captureAllTypes(); then  EXT.download();');
 })();
