@@ -434,6 +434,43 @@
     return window.__patch;
   };
 
+  // ── Door→side mapping capture ───────────────────────────────────────────────
+  // Walks every Door Design on a sidelit frame and records which Side Slab Design + Side Slab
+  // Glass the designer shows for it. Reveals whether the side AUTO-pairs with the door (a real
+  // map to honour) or stays constant (independent — there is no map, the side is a free choice).
+  // TIP: before running, set the sidelight to "copy glazing" so any door→side coupling is active.
+  EXT.captureSideMapping = async function () {
+    EXT.selectType('Single Door');
+    await waitForId('Door Type', field('Door Type').SubOptions.find(s => s.Description === 'Single Door').ID);
+    await sleep(600);
+    const fd = field('Frame Design');
+    const baseFrame = fd.CurrentID;
+    const shape = fd.SubOptions.find(s => s.Description === 'Sidelight Left')
+      || fd.SubOptions.find(s => s.Description !== 'No Sidelights' && /sidelight/i.test(s.Description));
+    if (shape && fd.CurrentID !== shape.ID) { await setOption(fd.Category, shape.ID, 'Frame Design'); await sleep(500); }
+
+    const dd = field('Door Design');
+    const cat = dd.Category, baseId = dd.CurrentID, list = dd.SubOptions || [];
+    const cur = (h) => { const f = field(h); const s = f && (f.SubOptions || []).find(z => z.ID === f.CurrentID); return s ? s.Description : null; };
+    const map = {};
+    for (let i = 0; i < list.length; i++) {
+      await setOption(cat, list[i].ID, 'Door Design');
+      map[list[i].Description] = { sideDesign: cur('Side Slab Design'), sideGlass: cur('Side Slab Glass Design'), doorGlass: cur('Door Glass') };
+      if ((i + 1) % 15 === 0 || i === list.length - 1) console.log('[EXT]   side-map ' + (i + 1) + '/' + list.length);
+    }
+    await setOption(cat, baseId, 'Door Design');
+    await setOption(fd.Category, baseFrame, 'Frame Design');
+    const distinctSide = new Set(Object.values(map).map(v => v.sideDesign));
+    const glassFollows = Object.values(map).filter(v => v.sideGlass === v.doorGlass).length;
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    window.__patch['Single Door'] = window.__patch['Single Door'] || { doorType: 'Single Door' };
+    window.__patch['Single Door'].sideMapping = map;
+    console.log('[EXT] side mapping: ' + Object.keys(map).length + ' door designs, ' + distinctSide.size +
+      ' distinct side designs (1 = no auto-map), side-glass==door-glass on ' + glassFollows + '/' + Object.keys(map).length + '.');
+    console.log('[EXT] Run EXT.downloadPatch("endurance-side-map.json").');
+    return map;
+  };
+
   EXT.downloadPatch = function (filename) {
     const data = window.__patch || {};
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -474,8 +511,9 @@
   };
 
   window.EXT = EXT;
-  console.log('%c[EXT v3.4 — side-slab designs] ready.', 'font-weight:bold');
-  console.log('  SIDE DESIGNS (this step): await EXT.capturePatchSideDesigns();  then  EXT.downloadPatch("endurance-side-designs.json");');
+  console.log('%c[EXT v3.5 — side mapping] ready.', 'font-weight:bold');
+  console.log('  SIDE MAP (this step): await EXT.captureSideMapping();  then  EXT.downloadPatch("endurance-side-map.json");');
+  console.log('  SIDE DESIGNS (done):  await EXT.capturePatchSideDesigns();  then  EXT.downloadPatch("endurance-side-designs.json");');
   console.log('  SIDELIGHT composites:     await EXT.capturePatchSidelights();   then  EXT.downloadPatch();');
   console.log('  LIGHT (missing option data): await EXT.capturePatch();   then  EXT.downloadPatch();');
   console.log('  FULL (re-walk everything):   await EXT.captureAllTypes(); then  EXT.download();');

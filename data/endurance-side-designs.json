@@ -1,0 +1,4602 @@
+{
+  "_schema": "patch-v1",
+  "Single Door": {
+    "doorType": "Single Door",
+    "sideSlabDesigns": {
+      "shape": "Sidelight Left",
+      "doorLeft": 501,
+      "sideGlassChoices": [
+        {
+          "label": "Adina",
+          "id": 5733
+        },
+        {
+          "label": "Clara",
+          "id": 5734
+        },
+        {
+          "label": "Clear",
+          "id": 5735
+        },
+        {
+          "label": "Diamonte",
+          "id": 5736
+        },
+        {
+          "label": "Eden",
+          "id": 5737
+        },
+        {
+          "label": "Ennis",
+          "id": 5738
+        },
+        {
+          "label": "Geo",
+          "id": 5739
+        },
+        {
+          "label": "Gracia Blue",
+          "id": 5740
+        },
+        {
+          "label": "Gracia Clear",
+          "id": 5741
+        },
+        {
+          "label": "Gracia Green",
+          "id": 5742
+        },
+        {
+          "label": "Graphite",
+          "id": 5743
+        },
+        {
+          "label": "Harmony",
+          "id": 5744
+        },
+        {
+          "label": "Iris",
+          "id": 5745
+        },
+        {
+          "label": "Kerner",
+          "id": 5746
+        },
+        {
+          "label": "Murano Black",
+          "id": 5747
+        },
+        {
+          "label": "Murano Blue",
+          "id": 5748
+        },
+        {
+          "label": "Murano Green",
+          "id": 5749
+        },
+        {
+          "label": "Nova",
+          "id": 5750
+        },
+        {
+          "label": "Olympias Blue",
+          "id": 5751
+        },
+        {
+          "label": "Olympias Clear",
+          "id": 5752
+        },
+        {
+          "label": "Olympias Green",
+          "id": 5753
+        },
+        {
+          "label": "Patterned",
+          "id": 5758
+        },
+        {
+          "label": "Sarah",
+          "id": 5754
+        },
+        {
+          "label": "Satin",
+          "id": 5755
+        },
+        {
+          "label": "Spring",
+          "id": 5756
+        },
+        {
+          "label": "Unglazed",
+          "id": 5757
+        },
+        {
+          "label": "Virtue",
+          "id": 5759
+        }
+      ],
+      "designs": [
+        {
+          "label": "Apo Infill Side R",
+          "id": 243,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Denali Infill Side L ",
+          "id": 244,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Denali Infill Side R",
+          "id": 245,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Diran Infill Side L ",
+          "id": 246,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Diran Infill Side R ",
+          "id": 247,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Elbrus Infill Side",
+          "id": 248,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kabru Infill Side",
+          "id": 252,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 12/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kentmere Infill Side",
+          "id": 253,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kuppe Infill Side",
+          "id": 249,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Mixen Infill Side",
+          "id": 251,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Rhobell Infil Side",
+          "id": 250,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Starling Infill Side",
+          "id": 254,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/Diamond.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Abbott Infill Side",
+          "id": 174,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Abbott Solid Side",
+          "id": 116,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 309.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 780,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1250,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1720.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Algas Infill Side",
+          "id": 240,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Algas Solid Side",
+          "id": 156,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 289.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 219.5,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Alto Infill Side",
+          "id": 237,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Alto Solid Side",
+          "id": 166,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 801,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Aneto Infill Side",
+          "id": 235,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Aneto Solid Side",
+          "id": 90,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 363.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 785.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1207.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 41,
+              "cy": 1629.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Apo Infill Side L ",
+          "id": 242,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Apo Solid Side L",
+          "id": 98,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Apo Solid Side R",
+          "id": 111,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Ben Nevis Infill Side",
+          "id": 109,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Ben Nevis Solid Side",
+          "id": 229,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Bleaklow Infill Side",
+          "id": 222,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/764.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Bleaklow Solid Side",
+          "id": 158,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/764.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 39.5,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Bowmont Infil Side ",
+          "id": 241,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 8/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Bowmont Solid Side",
+          "id": 119,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 8/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 294,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 984,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Calva Infill Side",
+          "id": 232,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Calva Solid Side",
+          "id": 100,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 202,
+              "h": 151,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 345,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1070,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 81,
+              "cy": 1795,
+              "w": 250,
+              "h": 200,
+              "rotation": 90,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Denali Solid Side L",
+          "id": 160,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 628,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Denali Solid Side R",
+          "id": 161,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 978,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Diran Solid Side L",
+          "id": 91,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1386.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Diran Solid Side R",
+          "id": 112,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 293.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1005,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 293.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1005,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 293.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1005,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Elbrus Solid Side",
+          "id": 93,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 289.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Esk Infill Side",
+          "id": 101,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Esk Solid Side",
+          "id": 220,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 853.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1357.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Etna Infill Side",
+          "id": 238,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Etna Solid Side",
+          "id": 88,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 675,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Fuji Infill Side",
+          "id": 234,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/848.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 254,
+              "h": 1270,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Fuji Solid Side",
+          "id": 165,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/848.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1013,
+              "w": 254,
+              "h": 1270,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Grasmoor Infill Side",
+          "id": 110,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Grassmoor Solid Side",
+          "id": 228,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Hallin Infill Side",
+          "id": 233,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Hallin Solid Side",
+          "id": 102,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 621.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 899.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kabru Solid Side",
+          "id": 147,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 12/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 236.5,
+              "cy": 369.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kentmere Solid Side",
+          "id": 103,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Bullion/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Bullion/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Bullion/Diamond.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 520,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1070,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1620,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Ketu Infill Side",
+          "id": 224,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Ketu Solid Side ",
+          "id": 171,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Knott Infill Side ",
+          "id": 231,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Knott Solid Side",
+          "id": 104,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 343.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Kuppe Solid Side",
+          "id": 92,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Lingmoor Infill Side",
+          "id": 239,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Adina/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Lingmoor Solid Side",
+          "id": 105,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 725.5,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Mardale Infill Side",
+          "id": 209,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Mardale Solid Side",
+          "id": 225,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Mayon Infill Side",
+          "id": 227,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Mayon Solid Side",
+          "id": 167,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 9/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 649,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "McKinley Infill Side",
+          "id": 108,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "McKinley Solid Side",
+          "id": 226,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": []
+        },
+        {
+          "label": "Mixen Solid Side",
+          "id": 148,
+          "sideBlank": null,
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K2.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 202,
+              "h": 912,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K2/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 715,
+              "w": 250,
+              "h": 965,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Mont Blanc Infill Side",
+          "id": 230,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Mont Blanc Solid Side",
+          "id": 94,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 5/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 317,
+              "cy": 279.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Nab Infill Side",
+          "id": 236,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Nab Solid Side",
+          "id": 179,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 363.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 785.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1207.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1629.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Pen Infill Side",
+          "id": 223,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Pen Solid Side",
+          "id": 97,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1020.5,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Rhobell Solid Side",
+          "id": 150,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 831.5,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Scafell Infill Side",
+          "id": 205,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 8/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/848.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 254,
+              "h": 1270,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Scafell Solid Side",
+          "id": 99,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 8/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/848.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 203,
+              "h": 1219,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/848/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 826.5,
+              "w": 254,
+              "h": 1270,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Starling Solid Side",
+          "id": 106,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/NoGlass.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Bullion/Diamond.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 259,
+              "h": 339,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/Diamond/White.png?ver=9.28.26",
+              "cx": 197.5,
+              "cy": 388.5,
+              "w": 330,
+              "h": 420,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Totes Infill Side",
+          "id": 221,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clear/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Totes Solid Side",
+          "id": 183,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 840,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/764.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 177,
+              "h": 1625,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/764/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1025,
+              "w": 255,
+              "h": 1670,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Tove Infill Side",
+          "id": 218,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Tove Solid Side",
+          "id": 107,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 10/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 572,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Tux Infill Side",
+          "id": 219,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Tux Solid Side",
+          "id": 96,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 327.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 834,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 1340.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Urner Infill Side",
+          "id": 216,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Urner Solid Side",
+          "id": 95,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 1/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 499,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K1.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 202,
+              "h": 151,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 328.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 605.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K1/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 882.5,
+              "w": 250,
+              "h": 200,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Walton Infill Side",
+          "id": 217,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2 Flipped/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clara/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        },
+        {
+          "label": "Walton Solid Core Side",
+          "id": 89,
+          "sideBlank": {
+            "url": "Assets/CompositeDoors/Images/DoorBlanks/Side Mould 2 Flipped/White.jpg?ver=9.28.26",
+            "cx": 217,
+            "cy": 1082,
+            "w": 460,
+            "h": 2050,
+            "rotation": 0,
+            "flipH": false
+          },
+          "layers": [
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/NoGlass.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorGlazing/Clarence/K15.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 198,
+              "h": 604,
+              "rotation": 0,
+              "flipH": false
+            },
+            {
+              "url": "Assets/CompositeDoors/Images/DoorCassettes/K15/White.png?ver=9.28.26",
+              "cx": 217,
+              "cy": 539,
+              "w": 250,
+              "h": 655,
+              "rotation": 0,
+              "flipH": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

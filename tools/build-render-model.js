@@ -323,6 +323,48 @@ function loadGlassThumbs() {
   }
 }
 
+// Side-slab design layouts (captured read-only by the extractor's captureSideSlabDesigns, on a
+// "Sidelight Left" frame). Each design's glass apertures arrive in Endurance render coords; we
+// transform them into our stage with a door-anchored uniform 0.15 scale, then store each aperture
+// as an OFFSET from our side-panel centre so assemble() can place it at whatever panel position a
+// given sidelit shape uses (left/right/double). Optional — missing file keeps the obscure overlay.
+function loadSideDesigns() {
+  let raw;
+  try {
+    raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'endurance-side-designs.json'), 'utf8'));
+  } catch (e) {
+    console.warn('endurance-side-designs.json not found — sidelights keep the generic obscure overlay. Run the extractor capture.');
+    return null;
+  }
+  const node = raw['Single Door'] && raw['Single Door'].sideSlabDesigns;
+  if (!node || !Array.isArray(node.designs)) { return null; }
+
+  // Transform anchors (Endurance "Sidelight Left" → our coords):
+  const SCALE = 0.15;                       // door 921×2050 Endurance → 138.15×307.5 ours
+  const E_DOOR = { cx: 962, cy: 1070 };     // Endurance door-blank centre on this shape
+  const MY_DOOR = { cx: 145.125, cy: 162.3 }; // ours: baseDoorCx(77.625)+doorOffsetX(67.5), door cy
+  const MY_PANEL = { cx: 32.55, cy: 160.425 }; // our Sidelight-Left side-panel (Ornate overlay) centre
+  const toMy = (ex, ey) => ({ x: MY_DOOR.cx + (ex - E_DOOR.cx) * SCALE, y: MY_DOOR.cy + (ey - E_DOOR.cy) * SCALE });
+
+  const out = {};
+  node.designs.forEach((d) => {
+    const aps = [];
+    const seen = new Set();
+    (d.layers || []).forEach((l) => {
+      const m = String(l.url).match(/DoorGlazing\/[^/]+\/([^/]+)\.png/); // the glass aperture carries the key
+      if (!m) { return; }
+      const sig = Math.round(l.cx) + ',' + Math.round(l.cy) + ',' + Math.round(l.w);
+      if (seen.has(sig)) { return; }
+      seen.add(sig);
+      const c = toMy(l.cx, l.cy);
+      aps.push({ key: m[1], ox: +(c.x - MY_PANEL.cx).toFixed(2), oy: +(c.y - MY_PANEL.cy).toFixed(2), w: +(l.w * SCALE).toFixed(2), h: +(l.h * SCALE).toFixed(2) });
+    });
+    if (aps.length) { out[d.label] = { apertures: aps }; }
+  });
+  console.log('side designs: ' + Object.keys(out).length + ' glazed layouts loaded');
+  return out;
+}
+
 function build(raw) {
   const hc = loadHardwareColours();
   const model = {
@@ -332,6 +374,7 @@ function build(raw) {
     furnitureColours: hc.furnitureColours,
     furnitureColourAliases: hc.furnitureColourAliases,
     glassThumbs: loadGlassThumbs(),
+    sideDesigns: loadSideDesigns(),
     types: {},
   };
   ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });
