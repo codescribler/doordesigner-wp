@@ -660,6 +660,20 @@
 		function img(url) { return { kind: 'img', url: encodeURI(url) }; }
 
 		if (step.key === 'style') {
+			// Double doors show every design as a composited tile (blank + grey "no glass" apertures,
+			// both leaves) so the design is obvious — the bare blank alone can't tell two designs on
+			// the same mould apart. Other types keep the lightweight single blank thumbnail.
+			if (this.activeType() === 'Double Door' && window.HD_DD_RenderModel) {
+				var dd = { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: choice.label }, 'Door Colour (External)': { label: T.baselineColour } };
+				var raw = window.HD_DD_RenderModel.assemble(this.renderModel, 'Double Door', dd);
+				var maxX = 0, maxY = 0;
+				var layers = raw.map(function (l) {
+					maxX = Math.max(maxX, (l.cx || 0) + (l.w || 0) / 2);
+					maxY = Math.max(maxY, (l.cy || 0) + (l.h || 0) / 2);
+					return { url: l.url.replace(/(DoorCassettes\/[^/]+\/Thumbnails\/)[^/]+(\.png)/, '$1NoGlass$2'), cx: l.cx, cy: l.cy, w: l.w, h: l.h, rotation: l.rotation || 0, flipH: !!l.flipH };
+				});
+				return { kind: 'layers', base: base, stage: { width: Math.ceil(maxX) || 294, height: Math.ceil(maxY) || 318 }, layers: layers };
+			}
 			var s = T.styles[choice.label];
 			if (s && s.mould) { return img(base + BLANKS + s.mould + '/Thumbnails/' + T.baselineColour + '.jpg'); }
 			return null;

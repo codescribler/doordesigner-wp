@@ -21,6 +21,27 @@
 			t.appendChild(im);
 		}
 		else if (media && media.kind === 'swatch') { var sw = el('div', 'hd-dd__swatch'); sw.style.background = media.color; t.appendChild(sw); }
+		else if (media && media.kind === 'layers') {
+			// Composited door tile: each assemble layer placed absolutely as a % of the stage box,
+			// so the whole design (both leaves, apertures) shows without a per-tile canvas.
+			var sw2 = media.stage.width, sh2 = media.stage.height;
+			var box = el('div', 'hd-dd__tile-media hd-dd__tile-media--door');
+			box.style.aspectRatio = sw2 + ' / ' + sh2;
+			media.layers.forEach(function (l) {
+				var lim = el('img', 'hd-dd__layer');
+				lim.alt = ''; lim.loading = 'lazy';
+				lim.onerror = function () { if (lim.parentNode) { lim.parentNode.removeChild(lim); } };
+				lim.style.left = ((l.cx - l.w / 2) / sw2 * 100) + '%';
+				lim.style.top = ((l.cy - l.h / 2) / sh2 * 100) + '%';
+				lim.style.width = (l.w / sw2 * 100) + '%';
+				lim.style.height = (l.h / sh2 * 100) + '%';
+				if (l.flipH) { lim.style.transform = 'scaleX(-1)'; }
+				var rel = l.url;
+				lim.src = encodeURI((/^https?:\/\//.test(rel) || rel.charAt(0) === '/' || !media.base) ? rel : (media.base + '/' + rel));
+				box.appendChild(lim);
+			});
+			t.appendChild(box);
+		}
 		t.appendChild(el('span', 'hd-dd__tile-label', friendly(choice.label)));
 		// A handle that doesn't come in the chosen finish is greyed out with a note of the
 		// finishes it does come in, instead of silently rendering in its default colour.
@@ -86,6 +107,7 @@
 			return;
 		}
 		var carousel = el('div', 'hd-dd__carousel');
+		if (step.key === 'style') { carousel.className += ' hd-dd__carousel--doors'; } // roomier door grid
 		var choices = step.choices;
 		if (step.categoryFirst) { choices = choices.filter(function (c) { return ctx.categoryOf(c.label) === ctx.design._styleCategory; }); }
 		choices.forEach(function (c) { carousel.appendChild(tile(step, c, ctx)); });

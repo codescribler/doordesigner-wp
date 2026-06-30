@@ -109,4 +109,11 @@ assert.ok(/master/i.test(dblHinge.hint), 'double-door hinge hint explains the ma
 const sglHinge = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).filter((s) => s.key === 'hinge')[0];
 assert.equal(sglHinge.label, 'Hinge side', 'single-door hinge step keeps "Hinge side"');
 
+// Double doors show ALL designs as a visual grid (no category gate); single doors keep the
+// category-first picker (the side-by-side leaves make a double-door design self-evident).
+const dblStyle = SC.applicableSteps(dbl, { 'Door Type': { label: 'Double Door' } }).filter((s) => s.key === 'style')[0];
+assert.equal(dblStyle.categoryFirst, false, 'double-door style step shows every design (no category gate)');
+const sglStyle = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' } }).filter((s) => s.key === 'style')[0];
+assert.equal(sglStyle.categoryFirst, true, 'single-door style step keeps the category-first picker');
+
 console.log('step-config OK');

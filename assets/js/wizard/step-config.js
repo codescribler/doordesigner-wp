@@ -117,6 +117,10 @@
       if (!r.choices || !r.choices.length) { return; }
       var defaultLabel = step.key === 'letterplatePosition' ? letterplatePosDefault(n, d) : step.defaultLabel;
       var label = step.label, hint = step.hint || '', name = step.name || step.label;
+      // Double doors skip the style CATEGORY gate and show every design as a visual grid (the side-
+      // by-side leaves make the design obvious — no guessing what "Contemporary" means).
+      var isDouble = d['Door Type'] && d['Door Type'].label === 'Double Door';
+      var categoryFirst = !!step.categoryFirst && !(step.key === 'style' && isDouble);
       // The hinge step's field is the Master Leaf on a double door (the choices are "Left/Right
       // Leaf", not hinge sides), so the single-door "hinge side" wording doesn't fit — reframe it.
       if (step.key === 'hinge' && r.heading === 'Master Leaf') {
@@ -125,7 +129,7 @@
         hint = 'On double doors the “master” leaf is the one you’ll open day-to-day; the other stays bolted top and bottom and only opens when you need the full width.';
       }
       out.push({ key: step.key, label: label, hint: hint, name: name, heading: r.heading, tileType: step.tileType,
-        optional: !!step.optional, defaultLabel: defaultLabel, categoryFirst: !!step.categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
+        optional: !!step.optional, defaultLabel: defaultLabel, categoryFirst: categoryFirst, groupFirst: !!step.groupFirst, choices: r.choices });
     });
     return out;
   }

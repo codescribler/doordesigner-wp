@@ -195,6 +195,13 @@
   padding: 8px 16px 4px;
 }
 
+/* Door-design picker: roomier tiles so the whole design (and, on double doors, both
+   leaves) reads clearly — no guessing from a category name. */
+.hd-dd__carousel--doors {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
 /* Choice tile */
 .hd-dd__tile {
   border: 1px solid var(--line);
@@ -243,6 +250,22 @@
   background: var(--stage);
   display: block;
   margin-bottom: 6px;
+}
+
+/* Composited door tile (style picker): assemble layers placed absolutely as a % of the
+   stage box, so the design — both leaves, apertures — shows without a per-tile canvas. */
+.hd-dd__tile-media--door {
+  position: relative;
+  width: 100%;
+  background: var(--stage);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.hd-dd__tile-media--door .hd-dd__layer {
+  position: absolute;
+  object-fit: fill;
+  pointer-events: none;
 }
 
 /* Colour swatch (background applied by JS; no image) */
@@ -774,6 +797,8 @@
   .hd-dd__app--step .hd-dd__steptitle { text-align: left; margin: 6px 0 2px; font-size: 17px; }
   .hd-dd__app--step .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
   .hd-dd__app--step .hd-dd__carousel  { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); padding: 4px 0 4px; }
+  /* Door designs stay legible on a phone — two across, not many tiny ones. */
+  .hd-dd__app--step .hd-dd__carousel--doors { grid-template-columns: 1fr 1fr; gap: 8px; }
   .hd-dd__app--step .hd-dd__change    { margin-left: 0; margin-right: 0; }
 }
 
