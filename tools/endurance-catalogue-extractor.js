@@ -504,6 +504,39 @@
     return byFinish;
   };
 
+  // ── Finish-specific letterplates ────────────────────────────────────────────
+  // Endurance offers letterplate PRODUCTS that only appear at certain finishes — "Stainless Steel
+  // Letterplate", "Premium Matt Black Letterplate", etc. — which our catalogue (captured at Chrome)
+  // doesn't have. Walk the Letterplate field AT each of those finishes and capture each letterplate's
+  // layer (image + geometry), so the build can add them and the wizard can offer them there.
+  EXT.captureSpecialtyLetterplates = async function () {
+    EXT.selectType('Single Door');
+    await waitForId('Door Type', field('Door Type').SubOptions.find(s => s.Description === 'Single Door').ID);
+    await sleep(600);
+    const fd = field('Frame Design');
+    const plain = fd && fd.SubOptions.find(s => /^no sidelights$/i.test(s.Description));
+    if (plain && fd.CurrentID !== plain.ID) { await setOption(fd.Category, plain.ID, 'Frame Design'); await sleep(400); }
+
+    const hw = field('Hardware Type');
+    const baseFin = hw.CurrentID;
+    const out = {};
+    for (const finishLabel of ['Stainless Steel', 'Matt Black', 'Satin Brass']) {
+      const fopt = hw.SubOptions.find(s => s.Description === finishLabel);
+      if (!fopt) { continue; }
+      await setOption(hw.Category, fopt.ID, 'Hardware Type');
+      await sleep(300);
+      const baseUrls = new Set(fullComposite().map((l) => l.url));
+      out[finishLabel] = await EXT.walkField('Letterplate', baseUrls);
+      console.log('[EXT]   ' + finishLabel + ': ' + (out[finishLabel] ? out[finishLabel].choices.length : 0) + ' letterplate choices captured');
+    }
+    await setOption(hw.Category, baseFin, 'Hardware Type');
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    window.__patch['Single Door'] = window.__patch['Single Door'] || { doorType: 'Single Door' };
+    window.__patch['Single Door'].specialtyLetterplates = out;
+    console.log('[EXT] specialty letterplates captured for ' + Object.keys(out).length + ' finishes. Run EXT.downloadPatch("endurance-specialty-letterplates.json").');
+    return out;
+  };
+
   EXT.downloadPatch = function (filename) {
     const data = window.__patch || {};
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -544,8 +577,8 @@
   };
 
   window.EXT = EXT;
-  console.log('%c[EXT v3.6 — per-finish furniture] ready.', 'font-weight:bold');
-  console.log('  FINISH×FURNITURE (this step): await EXT.captureFinishFurniture();  then  EXT.downloadPatch("endurance-finish-furniture.json");');
+  console.log('%c[EXT v3.7 — specialty letterplates] ready.', 'font-weight:bold');
+  console.log('  SPECIALTY LETTERPLATES (this step): await EXT.captureSpecialtyLetterplates();  then  EXT.downloadPatch("endurance-specialty-letterplates.json");');
   console.log('  SIDE DESIGNS (done):  await EXT.capturePatchSideDesigns();  then  EXT.downloadPatch("endurance-side-designs.json");');
   console.log('  SIDELIGHT composites:     await EXT.capturePatchSidelights();   then  EXT.downloadPatch();');
   console.log('  LIGHT (missing option data): await EXT.capturePatch();   then  EXT.downloadPatch();');
