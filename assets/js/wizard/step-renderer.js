@@ -6,22 +6,22 @@
 	'use strict';
 	function el(tag, cls, txt) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (txt != null) { n.textContent = txt; } return n; }
 
-	function tile(step, choice, ctx) {
-		var t = el('button', 'hd-dd__tile');
-		t.type = 'button';
-		if (ctx.design[ctx.heading] && ctx.design[ctx.heading].label === choice.label) { t.className += ' is-selected'; }
-		var media = ctx.thumbFor(step, choice); // {kind:'img',url} | {kind:'swatch',color} | null
-		if (media && media.kind === 'img') {
+	// Append a thumbnail to a tile/category button. Shared so the style-category picker can show
+	// a representative door image the same way an option tile shows its own thumbnail.
+	// media: {kind:'img',url} | {kind:'swatch',color} | {kind:'layers',...} | {kind:'svg',svg} | null
+	function appendMedia(node, media, altLabel) {
+		if (!media) { return; }
+		if (media.kind === 'img') {
 			var im = el('img', 'hd-dd__tile-media');
-			im.alt = choice.label; im.loading = 'lazy';
+			im.alt = altLabel || ''; im.loading = 'lazy';
 			// A few Endurance assets 404 (e.g. some pull-bar handles). Drop a broken image
 			// so the tile falls back to a clean label instead of a broken-image icon.
 			im.onerror = function () { if (im.parentNode) { im.parentNode.removeChild(im); } };
 			im.src = media.url;
-			t.appendChild(im);
+			node.appendChild(im);
 		}
-		else if (media && media.kind === 'swatch') { var sw = el('div', 'hd-dd__swatch'); sw.style.background = media.color; t.appendChild(sw); }
-		else if (media && media.kind === 'layers') {
+		else if (media.kind === 'swatch') { var sw = el('div', 'hd-dd__swatch'); sw.style.background = media.color; node.appendChild(sw); }
+		else if (media.kind === 'layers') {
 			// Composited door tile: each assemble layer placed absolutely as a % of the stage box,
 			// so the whole design (both leaves, apertures) shows without a per-tile canvas.
 			var sw2 = media.stage.width, sh2 = media.stage.height;
@@ -40,8 +40,20 @@
 				lim.src = encodeURI((/^https?:\/\//.test(rel) || rel.charAt(0) === '/' || !media.base) ? rel : (media.base + '/' + rel));
 				box.appendChild(lim);
 			});
-			t.appendChild(box);
+			node.appendChild(box);
 		}
+		else if (media.kind === 'svg') {
+			var sbox = el('div', 'hd-dd__tile-media hd-dd__tile-media--sil');
+			sbox.innerHTML = media.svg; // trusted, code-generated silhouette
+			node.appendChild(sbox);
+		}
+	}
+
+	function tile(step, choice, ctx) {
+		var t = el('button', 'hd-dd__tile');
+		t.type = 'button';
+		if (ctx.design[ctx.heading] && ctx.design[ctx.heading].label === choice.label) { t.className += ' is-selected'; }
+		appendMedia(t, ctx.thumbFor(step, choice), choice.label);
 		t.appendChild(el('span', 'hd-dd__tile-label', friendly(choice.label)));
 		// A handle that doesn't come in the chosen finish is greyed out with a note of the
 		// finishes it does come in, instead of silently rendering in its default colour.
@@ -71,9 +83,10 @@
 			var sel = ctx.design[step.heading];
 			var activeGroup = (sel ? ctx.groupOf(sel.label) : null) || ctx.frameGroup();
 			if (!activeGroup) {
-				var grow = el('div', 'hd-dd__carousel');
+				var grow = el('div', 'hd-dd__carousel hd-dd__carousel--frames');
 				uniqueGroups(step, ctx).forEach(function (g) {
 					var b = el('button', 'hd-dd__tile'); b.type = 'button';
+					if (ctx.groupSil) { var mg = el('div', 'hd-dd__tile-media hd-dd__tile-media--sil'); mg.innerHTML = ctx.groupSil(g); b.appendChild(mg); }
 					b.appendChild(el('span', 'hd-dd__tile-label', g));
 					b.addEventListener('click', function () {
 						var opts = step.choices.filter(function (c) { return ctx.groupOf(c.label) === g; });
@@ -87,7 +100,7 @@
 			var change = el('button', 'hd-dd__change', '‹ Change'); change.type = 'button';
 			change.addEventListener('click', function () { ctx.clearChoice(step.heading); });
 			container.appendChild(change);
-			var fcar = el('div', 'hd-dd__carousel');
+			var fcar = el('div', 'hd-dd__carousel hd-dd__carousel--frames');
 			step.choices.filter(function (c) { return ctx.groupOf(c.label) === activeGroup; })
 				.forEach(function (c) { fcar.appendChild(tile(step, c, ctx)); });
 			container.appendChild(fcar);
@@ -96,9 +109,14 @@
 
 		if (step.categoryFirst && !ctx.design._styleCategory) {
 			var cats = uniqueCategories(step, ctx);
-			var row = el('div', 'hd-dd__carousel');
+			// Show a representative door per category so a first-time buyer can see what
+			// "Contemporary" / "Georgian" look like instead of guessing from the word alone.
+			var row = el('div', 'hd-dd__carousel hd-dd__carousel--doors');
 			cats.forEach(function (cat) {
 				var b = el('button', 'hd-dd__tile'); b.type = 'button';
+				var rep = null;
+				for (var i = 0; i < step.choices.length; i++) { if (ctx.categoryOf(step.choices[i].label) === cat) { rep = step.choices[i]; break; } }
+				if (rep) { appendMedia(b, ctx.thumbFor(step, rep), cat); }
 				b.appendChild(el('span', 'hd-dd__tile-label', cat));
 				b.addEventListener('click', function () { ctx.design._styleCategory = cat; ctx.rerender(); });
 				row.appendChild(b);
@@ -108,6 +126,9 @@
 		}
 		var carousel = el('div', 'hd-dd__carousel');
 		if (step.key === 'style') { carousel.className += ' hd-dd__carousel--doors'; } // roomier door grid
+		// Silhouette-led choices (glazed/solid sides, hinge side, letterplate position) get the
+		// roomy frame grid so the generated drawing has space to read.
+		else if (step.key === 'sidelightType' || step.key === 'hinge' || step.key === 'letterplatePosition') { carousel.className += ' hd-dd__carousel--frames'; }
 		var choices = step.choices;
 		if (step.categoryFirst) { choices = choices.filter(function (c) { return ctx.categoryOf(c.label) === ctx.design._styleCategory; }); }
 		choices.forEach(function (c) { carousel.appendChild(tile(step, c, ctx)); });

@@ -93,6 +93,91 @@
 		'Avantal': 'Sleek aluminium with slim frames and more glass.'
 	};
 
+	// ---- Option silhouettes -------------------------------------------------
+	// Small, code-generated line drawings (shared hd-dd__sil-* palette) so text-only choices
+	// — frame shape, glazed/solid sides, hinge/leaf side, letterplate position — read as
+	// pictures, not just words. viewBox coordinates are schematic, not to scale.
+	function silRound(n) { return Math.round(n * 10) / 10; }
+	function silRect(c, X, Y, W, H, R) { return '<rect class="' + c + '" x="' + silRound(X) + '" y="' + silRound(Y) + '" width="' + silRound(W) + '" height="' + silRound(H) + '" rx="' + R + '"/>'; }
+	function silLine(c, X1, Y1, X2, Y2) { return '<line class="' + c + '" x1="' + silRound(X1) + '" y1="' + silRound(Y1) + '" x2="' + silRound(X2) + '" y2="' + silRound(Y2) + '"/>'; }
+	function silCircle(c, CX, CY, R) { return '<circle class="' + c + '" cx="' + silRound(CX) + '" cy="' + silRound(CY) + '" r="' + R + '"/>'; }
+
+	// Frame-shape silhouette — generated from the option label so the customer sees the layout
+	// (side panels, a window above, half-height "flag" panels) instead of guessing from words.
+	// opts.sideFill 'solid' draws the side panels closed (for the glazed-vs-solid step) rather
+	// than glazed; the window above is always glazed. Uses the same hd-dd__sil-* classes as the
+	// type silhouettes so the drawing style matches.
+	function frameSil(label, opts) {
+		var l = String(label || '');
+		var sideCls = (opts && opts.sideFill === 'solid') ? 'hd-dd__sil-solid' : 'hd-dd__sil-glass';
+		var both = /double|both/i.test(l), left = both || /left/i.test(l), right = both || /right/i.test(l);
+		var half = /half flag/i.test(l), midrail = /midrail/i.test(l), toplight = /toplight/i.test(l);
+		var doorW = 40, panelW = 15, gap = 3, doorH = 92, topH = 18, m = 8;
+		var lp = left ? (panelW + gap) : 0, rp = right ? (panelW + gap) : 0;
+		var innerW = lp + doorW + rp, innerH = (toplight ? topH + gap : 0) + doorH;
+		var x = m, y = m, doorTopY = y + (toplight ? topH + gap : 0), doorX = x + lp;
+		var s = ['<svg viewBox="0 0 ' + silRound(innerW + m * 2) + ' ' + silRound(innerH + m * 2) + '" class="hd-dd__sil" aria-hidden="true">'];
+		s.push(silRect('hd-dd__sil-frame', x - 4, y - 4, innerW + 8, innerH + 8, 3));
+		if (toplight) { s.push(silRect('hd-dd__sil-glass', x, y, innerW, topH, 1.5)); }
+		if (left) { var lh = half ? doorH * 0.55 : doorH; s.push(silRect(sideCls, x, doorTopY + (doorH - lh), panelW, lh, 1.5));
+			if (midrail && !half) { s.push(silLine('hd-dd__sil-line', x, doorTopY + doorH * 0.5, x + panelW, doorTopY + doorH * 0.5)); } }
+		s.push(silRect('hd-dd__sil-panel', doorX, doorTopY, doorW, doorH, 2));
+		s.push(silLine('hd-dd__sil-line', doorX + 6, doorTopY + doorH * 0.42, doorX + doorW - 6, doorTopY + doorH * 0.42));
+		s.push(silRect('hd-dd__sil-handle', doorX + doorW - 8, doorTopY + doorH * 0.5, 4.5, 15, 2.2));
+		if (right) { var rx = doorX + doorW + gap, rh = half ? doorH * 0.55 : doorH; s.push(silRect(sideCls, rx, doorTopY + (doorH - rh), panelW, rh, 1.5));
+			if (midrail && !half) { s.push(silLine('hd-dd__sil-line', rx, doorTopY + doorH * 0.5, rx + panelW, doorTopY + doorH * 0.5)); } }
+		s.push('</svg>');
+		return s.join('');
+	}
+	// The three top-level frame groups map to a representative shape.
+	function groupSil(group) {
+		var rep = /window above/i.test(group) ? 'Toplight' : (/side panels/i.test(group) ? 'Double Sidelight' : 'No Sidelights');
+		return frameSil(rep);
+	}
+
+	// Hinge / master-leaf side.
+	//  • Double doors (opts.isDouble): show the master (handle) leaf and the other leaf bolted
+	//    top + bottom, mirrored with the SAME shouldFlip result the canvas uses (opts.flip) so the
+	//    tile and the live preview can never disagree about which leaf carries the handle.
+	//  • Single doors: just mark the hinge knuckles on the chosen edge (opts.hingeRight). No handle
+	//    is drawn — the live preview shows the handle, and a sidelit door's handle side is fixed by
+	//    the frame (shouldFlip ignores the hinge), so drawing one here could contradict the render.
+	function hingeSil(opts) {
+		var W = 104, H = 132, inner;
+		if (opts.isDouble) {
+			inner = silRect('hd-dd__sil-frame', 10, 8, 84, 116, 3)
+				+ silLine('hd-dd__sil-frame', 52, 10, 52, 122)
+				+ silRect('hd-dd__sil-panel', 16, 16, 30, 100, 2)
+				+ silRect('hd-dd__sil-panel', 58, 16, 30, 100, 2)
+				+ silRect('hd-dd__sil-handle', 45, 58, 4.5, 18, 2.2)
+				+ silCircle('hd-dd__sil-bolt', 73, 22, 2.4)
+				+ silCircle('hd-dd__sil-bolt', 73, 110, 2.4);
+			var body = opts.flip ? '<g transform="translate(' + W + ',0) scale(-1,1)">' + inner + '</g>' : inner;
+			return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="hd-dd__sil" aria-hidden="true">' + body + '</svg>';
+		}
+		var kx = opts.hingeRight ? 72 : 28; // knuckle column on the chosen hinge edge
+		inner = silRect('hd-dd__sil-frame', 27, 8, 50, 116, 3)
+			+ silRect('hd-dd__sil-panel', 34, 16, 36, 100, 2)
+			+ silLine('hd-dd__sil-line', 40, 54, 64, 54)
+			+ silLine('hd-dd__sil-line', 40, 78, 64, 78)
+			+ silRect('hd-dd__sil-hinge', kx - 2, 24, 4, 11, 1)
+			+ silRect('hd-dd__sil-hinge', kx - 2, 60, 4, 11, 1)
+			+ silRect('hd-dd__sil-hinge', kx - 2, 96, 4, 11, 1);
+		return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="hd-dd__sil" aria-hidden="true">' + inner + '</svg>';
+	}
+
+	// Letterplate position — a plain door with the letterbox slot drawn at the middle or the
+	// bottom rail, so "Middle vs Bottom" is a picture rather than a guess.
+	function letterplatePosSil(label) {
+		var slotY = /bottom/i.test(String(label || '')) ? 104 : 64;
+		return '<svg viewBox="0 0 104 132" class="hd-dd__sil" aria-hidden="true">'
+			+ silRect('hd-dd__sil-frame', 27, 8, 50, 116, 3)
+			+ silRect('hd-dd__sil-panel', 34, 16, 36, 100, 2)
+			+ silLine('hd-dd__sil-line', 39, 40, 65, 40)
+			+ silRect('hd-dd__sil-plate', 40, slotY, 24, 7, 2)
+			+ '</svg>';
+	}
+
 	function el(tag, cls, txt) {
 		var n = document.createElement(tag);
 		if (cls) { n.className = cls; }
@@ -397,6 +482,12 @@
 		this.backBtn.hidden = false;
 		this.backBtn.disabled = false;
 
+		// No point showing a door preview before a style is chosen — the frame + style steps use
+		// the full width for their (now visual) option tiles. From the next step on the preview returns.
+		var showPreview = st.atReview || (!!design['Door Design'] && key !== 'style' && key !== 'frame');
+		this.canvas.hidden = !showPreview;
+		if (this.layoutEl) { this.layoutEl.classList.toggle('hd-dd__app--nopreview', !showPreview); }
+
 		this.repaintPreview(activeType, design);
 
 		// One funnel event per distinct view, so the analytics show where people drop off.
@@ -580,6 +671,7 @@
 			onSelect: function (heading, choice) { self.onSelect(heading, choice); },
 			categoryOf: function (label) { return self.categoryOf(label); },
 			groupOf: function (label) { return HD_DD_StepConfig.frameGroup(label); },
+			groupSil: function (group) { return groupSil(group); },
 			frameGroup: function () { return self._frameGroup || null; },
 			setFrameGroup: function (g) { self._frameGroup = g; self.render(); },
 			clearChoice: function (heading) { delete self.wiz.state().design[heading]; self._frameGroup = null; self.render(); },
@@ -652,6 +744,34 @@
 		if (step.key === 'hardware') {
 			return { kind: 'swatch', color: HARDWARE_HEX[choice.label] || '#ccc' };
 		}
+		// Frame shape (side panels / window above) — a generated silhouette of the layout.
+		if (step.key === 'frame') {
+			return { kind: 'svg', svg: frameSil(choice.label) };
+		}
+		// Glazed-vs-solid side panels — the actual frame shape, drawn glazed or closed. Endurance
+		// labels the closed option "Unglazed" (some catalogues "Solid"); match both.
+		if (step.key === 'sidelightType') {
+			var frameLabel = (this.wiz.state().design['Frame Design'] || {}).label || 'Double Sidelight';
+			return { kind: 'svg', svg: frameSil(frameLabel, { sideFill: /solid|unglaz/i.test(choice.label) ? 'solid' : 'glass' }) };
+		}
+		// Letterplate position — the slot drawn at the middle or the bottom rail.
+		if (step.key === 'letterplatePosition') {
+			return { kind: 'svg', svg: letterplatePosSil(choice.label) };
+		}
+		// Hinge / master-leaf side.
+		if (step.key === 'hinge') {
+			if (this.activeType() === 'Double Door') {
+				// Mirror the leaf drawing with the exact flip the canvas will use, so the tile and
+				// the live preview always agree on which leaf carries the handle.
+				var hd = this.wiz.state().design, probe = {};
+				for (var pk in hd) { if (Object.prototype.hasOwnProperty.call(hd, pk)) { probe[pk] = hd[pk]; } }
+				probe[step.heading] = choice;
+				var flip = !!(window.HD_DD_RenderModel && this.renderModel &&
+					window.HD_DD_RenderModel.shouldFlip(this.renderModel, this.activeType(), probe));
+				return { kind: 'svg', svg: hingeSil({ isDouble: true, flip: flip }) };
+			}
+			return { kind: 'svg', svg: hingeSil({ isDouble: false, hingeRight: /right/i.test(choice.label || '') }) };
+		}
 		var base = this.assetBase();
 		var T = (this.renderModel && this.renderModel.types) ? this.renderModel.types[this.activeType()] : null;
 		if (!base || !T) { return null; }
@@ -694,6 +814,20 @@
 			}
 			return null;
 		}
+		if (step.key === 'sidelightGlass') {
+			var gt2 = this.renderModel && this.renderModel.glassThumbs;
+			// "Matches the door" (id null) — show the door's own chosen glass, since that's what
+			// the decorative side panels mirror. Otherwise show the obscure/privacy glass pattern.
+			if (choice.id == null) {
+				var dg = this.wiz.state().design['Door Glass'];
+				var dgKey = dg && gt2 && gt2[dg.label];
+				if (dg && dgKey) { return img(base + '/Assets/CompositeDoors/Images/DoorGlazing/' + dg.label + '/Thumbnails/' + dgKey + '.png'); }
+				return { kind: 'svg', svg: frameSil('Double Sidelight') };
+			}
+			var sgKey = gt2 && gt2[choice.label];
+			if (sgKey) { return img(base + '/Assets/CompositeDoors/Images/DoorGlazing/' + choice.label + '/Thumbnails/' + sgKey + '.png'); }
+			return null;
+		}
 		if (step.key === 'handle') {
 			var h = T.handles[choice.label];
 			// Handle products look identical on every door type, but some types (e.g.
@@ -713,7 +847,7 @@
 			if (lp && lp.url) { return img(base + '/' + lp.url); }
 			return null;
 		}
-		// type, frame, hinge, sidelightGlass → label/icon only.
+		// type → drawn by the page-1 chooser, not here.
 		return null;
 	};
 

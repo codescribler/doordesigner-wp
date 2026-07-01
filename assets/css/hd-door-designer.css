@@ -202,6 +202,13 @@
   gap: 12px;
 }
 
+/* Frame-shape picker: a generated silhouette of the layout (side panels / window above),
+   roomy tiles like the door-type chooser — so the choice is visual, not just words. */
+.hd-dd__carousel--frames { grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)); gap: 12px; }
+.hd-dd__carousel--frames .hd-dd__tile { padding: 12px 10px; }
+.hd-dd__carousel--frames .hd-dd__tile-label { color: var(--ink); font-weight: 600; font-size: 13px; }
+.hd-dd__tile-media--sil { height: 108px; padding: 4px; background: transparent; border-radius: 0; margin-bottom: 6px; }
+
 /* Choice tile */
 .hd-dd__tile {
   border: 1px solid var(--line);
@@ -305,6 +312,13 @@
 .hd-dd__sil-mullion { stroke: #cfdde4; stroke-width: 1.4; }
 .hd-dd__sil-kick { fill: #eef0f1; stroke: #cfcfcf; stroke-width: 1.4; }
 .hd-dd__sil-handle { fill: var(--brand); }
+/* Closed (unglazed) side panel — a solid leaf, warmer than the blue glass so glazed vs solid
+   reads at a glance. Hinge knuckles + shoot bolts are a muted metal grey; the letterplate slot
+   takes the brand accent like the handle so the eye lands on the thing being chosen. */
+.hd-dd__sil-solid { fill: #ece7dd; stroke: #cdbfa6; stroke-width: 1.6; }
+.hd-dd__sil-hinge { fill: #9aa0a6; }
+.hd-dd__sil-bolt { fill: #9aa0a6; }
+.hd-dd__sil-plate { fill: var(--brand); }
 
 
 /* ==========================================================================
@@ -663,6 +677,14 @@
   }
   .hd-dd__canvas { max-width: 460px; }
 
+  /* Before a style is chosen there's no door to preview — drop the preview column and give the
+     (now visual) frame + style tiles the full width. */
+  .hd-dd__app--nopreview {
+    grid-template-columns: 1fr;
+    grid-template-areas: "head" "body" "cta";
+  }
+  .hd-dd__app--nopreview .hd-dd__stage { display: none; }
+
   /* Left-align the step title + options now they sit in their own column. */
   .hd-dd__steptitle { text-align: left; margin: 8px 0 2px; font-size: 20px; }
   .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
@@ -798,9 +820,17 @@
   .hd-dd__app--step .hd-dd__steptitle { text-align: left; margin: 6px 0 2px; font-size: 17px; }
   .hd-dd__app--step .hd-dd__stephint  { text-align: left; margin: 0 0 8px; }
   .hd-dd__app--step .hd-dd__carousel  { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); padding: 4px 0 4px; }
-  /* Door designs stay legible on a phone — two across, not many tiny ones. */
-  .hd-dd__app--step .hd-dd__carousel--doors { grid-template-columns: 1fr 1fr; gap: 8px; }
+  /* Door designs + silhouette tiles stay legible on a phone — two across, not many tiny ones. */
+  .hd-dd__app--step .hd-dd__carousel--doors,
+  .hd-dd__app--step .hd-dd__carousel--frames { grid-template-columns: 1fr 1fr; gap: 8px; }
   .hd-dd__app--step .hd-dd__change    { margin-left: 0; margin-right: 0; }
+
+  /* Before a style is chosen: no preview, options take the whole width. */
+  .hd-dd__app--step.hd-dd__app--nopreview {
+    grid-template-columns: 1fr;
+    grid-template-areas: "head" "body" "cta";
+  }
+  .hd-dd__app--step.hd-dd__app--nopreview .hd-dd__stage { display: none; }
 }
 
 
