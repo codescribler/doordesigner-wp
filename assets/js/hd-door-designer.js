@@ -25,6 +25,10 @@
 	var CFG = window.HD_DD_CONFIG || {};
 	var I18N = CFG.i18n || {};
 
+	// Funnel reporter (site-wide hdAnalytics). The WP dependency chain guarantees the
+	// module is loaded; the QA harness may omit its script tag, so fall back to a no-op.
+	var Funnel = window.HD_DD_Funnel || { step: function () {}, lead: function () {} };
+
 	// Hardware-finish swatch chips — a representative colour per Endurance finish (the
 	// asset host has no per-finish swatch image). A subtle gradient gives a metallic read.
 	var HARDWARE_HEX = {
@@ -506,6 +510,10 @@
 		if (!viewKey || viewKey === this._lastView) { return; }
 		this._lastView = viewKey;
 		this.track('door_step_' + viewKey);
+		// The two choice-less funnel steps fire on arrival (the internal 'form' view is
+		// reported as 'details'); wizard steps fire on advance instead — see advance().
+		if (viewKey === 'review') { Funnel.step('review'); }
+		else if (viewKey === 'form') { Funnel.step('details'); }
 	};
 
 	App.prototype.renderTypeChooser = function () {
@@ -524,7 +532,7 @@
 			// line carries the plain-English clarification ("aluminium").
 			t.appendChild(el('span', 'hd-dd__tile-label', label));
 			if (TYPE_DESC[label]) { t.appendChild(el('span', 'hd-dd__tile-desc', TYPE_DESC[label])); }
-			t.addEventListener('click', function () { self.wiz.selectType(label); self.render(); });
+			t.addEventListener('click', function () { self.onSelect('Door Type', { label: label }); });
 			row.appendChild(t);
 		});
 		this.body.appendChild(row);
@@ -693,7 +701,8 @@
 	// A tile tap. Door-type tiles live in the chooser and call selectType directly;
 	// this guard keeps onSelect correct should a "Door Type" heading ever flow through.
 	App.prototype.onSelect = function (heading, choice) {
-		if (heading === 'Door Type') { this.wiz.selectType(choice.label); this.render(); return; }
+		// The type chooser auto-advances (no Continue), so its funnel event fires here.
+		if (heading === 'Door Type') { Funnel.step('type', choice.label); this.wiz.selectType(choice.label); this.render(); return; }
 
 		// The wizard's select() runs pruneInvalid(), which strips any design key that
 		// isn't a current step heading — including the step renderer's UI-only
@@ -727,6 +736,13 @@
 				this.wiz.back();
 			}
 		} else {
+			// Report the step being left, with the choice (picked or default-accepted)
+			// that carries the visitor forward. Steps merely viewed report nothing —
+			// that gap is the funnel's drop-off signal.
+			if (!st.atReview) {
+				var stepLeft = st.steps[st.stepIndex];
+				if (stepLeft) { Funnel.step(stepLeft.key, (st.design[stepLeft.heading] || {}).label); }
+			}
 			this.wiz.next();
 		}
 		this.render();
@@ -1035,6 +1051,7 @@
 			submitBtn.disabled = false;
 			if (res.ok && res.body && res.body.ok) {
 				self.track('door_quote_submitted'); // the conversion event — the whole funnel's goal
+				Funnel.lead();
 				// Keep their details so "Design another door" doesn't make them re-type.
 				self._lastContact = { name: data.name, telephone: data.telephone, email: data.email, postcode: data.postcode };
 				self.renderSuccess(res.body);
