@@ -15,6 +15,13 @@
   QA (production serves a same-origin mirror); a 404 just falls back to a label tile.
 -->
 <link rel="stylesheet" href="../assets/css/hd-door-designer.css">
+<script>
+  // hdAnalytics stub — logs funnel calls so the walkthrough below is verifiable.
+  window.hdAnalytics = {
+    step: function (f, s, o) { console.log('[hdAnalytics] step', f, s, JSON.stringify(o)); },
+    lead: function (f) { console.log('[hdAnalytics] lead', f); }
+  };
+</script>
 <style>
   /* Harness-page chrome ONLY. The wizard itself is styled exclusively by the real
      plugin stylesheet linked above, so this harness reflects production 1:1.
@@ -42,6 +49,7 @@
 <script src="../assets/js/wizard/wizard-controller.js"></script>
 <script src="../assets/js/wizard/step-renderer.js"></script>
 <script src="../assets/js/wizard/review.js"></script>
+<script src="../assets/js/wizard/funnel.js"></script>
 <!-- app bootstrap (exposes window.HD_DD_App; its DOMContentLoaded auto-start finds no
      [data-hd-door-designer] node here, so we mount manually below) -->
 <script src="../assets/js/hd-door-designer.js"></script>
