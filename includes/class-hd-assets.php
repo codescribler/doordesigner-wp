@@ -60,6 +60,7 @@ class HD_DD_Assets {
 		wp_register_script( self::HANDLE . '-wizard', HD_DD_URL . 'assets/js/wizard/wizard-controller.js', array( self::HANDLE . '-stepcfg' ), $ver_js, true );
 		wp_register_script( self::HANDLE . '-steprender', HD_DD_URL . 'assets/js/wizard/step-renderer.js', array(), $ver_js, true );
 		wp_register_script( self::HANDLE . '-review', HD_DD_URL . 'assets/js/wizard/review.js', array(), $ver_js, true );
+		wp_register_script( self::HANDLE . '-funnel', HD_DD_URL . 'assets/js/wizard/funnel.js', array(), $ver_js, true );
 
 		// App bootstrap depends on the compositor + every wizard module.
 		wp_register_script(
@@ -70,6 +71,7 @@ class HD_DD_Assets {
 				self::HANDLE . '-wizard',
 				self::HANDLE . '-steprender',
 				self::HANDLE . '-review',
+				self::HANDLE . '-funnel',
 			),
 			$ver_js,
 			true
