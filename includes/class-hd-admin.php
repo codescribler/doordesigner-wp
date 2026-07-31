@@ -1,7 +1,8 @@
 <?php
 /**
- * wp-admin: an enquiries list (each with a copyable structured payload) and a
- * settings screen (recipient email, GitHub repo for updates, GDPR retention).
+ * wp-admin: an enquiries list (each with a copyable structured payload), a
+ * per-enquiry detail view (the full design spec, for re-creating it in the
+ * designer) and a settings screen (recipient email, GitHub repo, retention).
  *
  * @package HD_Door_Designer
  */
@@ -173,6 +174,11 @@ class HD_DD_Admin {
 		if ( ! current_user_can( self::CAP ) ) {
 			return;
 		}
+		$enquiry_id = isset( $_GET['enquiry'] ) ? absint( $_GET['enquiry'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view selector.
+		if ( $enquiry_id ) {
+			$this->render_detail( $enquiry_id );
+			return;
+		}
 		$rows  = $this->repository->list( 200, 0 );
 		$total = $this->repository->count();
 		?>
@@ -220,7 +226,7 @@ class HD_DD_Admin {
 							?>
 							<tr>
 								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
-								<td><strong><?php echo esc_html( $row->reference ); ?></strong></td>
+								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
@@ -252,6 +258,103 @@ class HD_DD_Admin {
 				function hdDdConfirmDelete( form ) { var n = form.querySelectorAll( 'input[name="enquiry_ids[]"]:checked' ).length; if ( ! n ) { window.alert( 'Please select at least one enquiry to delete.' ); return false; } return window.confirm( 'Permanently delete ' + n + ' selected ' + ( n === 1 ? 'enquiry' : 'enquiries' ) + '? This cannot be undone.' ); }
 				</script>
 			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Single-enquiry view (admin.php?page=hd-door-enquiries&enquiry=ID): the full
+	 * design spec in the catalogue's exact vocabulary, so the door can be
+	 * re-created option by option in the designer.
+	 */
+	private function render_detail( $id ) {
+		$back = admin_url( 'admin.php?page=' . self::MENU_SLUG );
+		$row  = $this->repository->get( $id );
+		if ( ! $row ) {
+			?>
+			<div class="wrap">
+				<h1><?php esc_html_e( 'Door Enquiries', 'hd-door-designer' ); ?></h1>
+				<div class="notice notice-error"><p><?php esc_html_e( 'Enquiry not found — it may have been deleted.', 'hd-door-designer' ); ?></p></div>
+				<p><a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'Back to enquiries', 'hd-door-designer' ); ?></a></p>
+			</div>
+			<?php
+			return;
+		}
+
+		$design  = json_decode( (string) $row->design, true );
+		$payload = json_decode( (string) $row->payload, true );
+		$image   = ( is_array( $payload ) && ! empty( $payload['image'] ) ) ? $payload['image'] : '';
+		$lock    = ( is_array( $payload ) && isset( $payload['derived']['suggestedLock'] ) ) ? $payload['derived']['suggestedLock'] : '';
+
+		// "Open in designer" reuses the customer's reload link: designer page + ?design=token.
+		$designer_url = '';
+		if ( ! empty( $row->token ) ) {
+			$page_id = (int) HD_DD_Plugin::settings()['page_id'];
+			$base    = $page_id ? get_permalink( $page_id ) : home_url( '/' );
+			if ( $base ) {
+				$designer_url = add_query_arg( 'design', rawurlencode( $row->token ), $base );
+			}
+		}
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( $row->reference ); ?></h1>
+			<p>
+				<a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'Back to enquiries', 'hd-door-designer' ); ?></a>
+				<?php if ( $designer_url ) : ?>
+					&nbsp;<a href="<?php echo esc_url( $designer_url ); ?>" target="_blank" rel="noopener" class="button button-primary"><?php esc_html_e( 'Open in designer', 'hd-door-designer' ); ?></a>
+				<?php endif; ?>
+			</p>
+
+			<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+				<?php if ( $image ) : ?>
+					<div style="flex:0 0 auto;">
+						<a href="<?php echo esc_url( $image ); ?>" target="_blank" rel="noopener">
+							<img src="<?php echo esc_url( $image ); ?>" alt="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Door preview for %s', 'hd-door-designer' ), $row->reference ) ); ?>" style="width:280px;height:auto;border:1px solid #ddd;border-radius:4px;background:#fff;" />
+						</a>
+					</div>
+				<?php endif; ?>
+
+				<div style="flex:1 1 420px;min-width:320px;max-width:720px;">
+					<h2><?php esc_html_e( 'Enquiry', 'hd-door-designer' ); ?></h2>
+					<table class="widefat striped">
+						<tbody>
+							<tr><th style="width:200px;"><?php esc_html_e( 'Received', 'hd-door-designer' ); ?></th><td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td></tr>
+							<tr><th><?php esc_html_e( 'Customer', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_name ); ?></td></tr>
+							<tr><th><?php esc_html_e( 'Email', 'hd-door-designer' ); ?></th><td><a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a></td></tr>
+							<tr><th><?php esc_html_e( 'Telephone', 'hd-door-designer' ); ?></th><td><a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a></td></tr>
+							<tr><th><?php esc_html_e( 'Postcode', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_postcode ); ?></td></tr>
+							<?php if ( '' !== $lock ) : ?>
+								<tr><th><?php esc_html_e( 'Suggested lock', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $lock ); ?></td></tr>
+							<?php endif; ?>
+						</tbody>
+					</table>
+
+					<h2><?php esc_html_e( 'Design specification', 'hd-door-designer' ); ?></h2>
+					<?php if ( is_array( $design ) && $design ) : ?>
+						<p class="description"><?php esc_html_e( 'Every option exactly as chosen — work through the designer top to bottom to re-create it.', 'hd-door-designer' ); ?></p>
+						<table class="widefat striped">
+							<tbody>
+								<?php foreach ( $design as $heading => $choice ) : ?>
+									<tr>
+										<th style="width:200px;"><?php echo esc_html( $heading ); ?></th>
+										<td>
+											<?php echo esc_html( is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '' ); ?>
+											<?php if ( is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) : ?>
+												<small style="color:#8a8e96;">(#<?php echo (int) $choice['id']; ?>)</small>
+											<?php endif; ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php else : ?>
+						<p><?php esc_html_e( 'No design data was stored with this enquiry.', 'hd-door-designer' ); ?></p>
+					<?php endif; ?>
+
+					<h2><?php esc_html_e( 'Full payload', 'hd-door-designer' ); ?></h2>
+					<textarea readonly rows="14" style="width:100%;font-family:monospace;font-size:11px;" onclick="this.select();"><?php echo esc_textarea( wp_json_encode( $payload ? $payload : $design, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); ?></textarea>
+				</div>
+			</div>
 		</div>
 		<?php
 	}
