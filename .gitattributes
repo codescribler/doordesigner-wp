@@ -9,3 +9,4 @@
 /HANDOFF.md                  export-ignore
 /endurance-catalogue.json    export-ignore
 /data/endurance-patch.json   export-ignore
+/tests/                      export-ignore
