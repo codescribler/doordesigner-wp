@@ -130,6 +130,46 @@ Labels are resolved **server-side from the catalogue by id**, so they match the
 downstream portal exactly (including odd casing / trailing spaces). `suggestedLock`
 is derived from the handle and is **non-binding** — the lock is decided at quoting.
 
+## Nothing is ever silently dropped
+
+Hard-won rules — a real enquiry was lost in September 2026 when browser autofill
+filled the anti-spam field and the server answered with a fake success:
+
+- **Honeypot hits are stored, not discarded.** A filled `hd_hp` field marks the enquiry
+  `status = flagged`, adds `"flags": ["honeypot"]` to the payload and prefixes the
+  notification subject with `[Possible bot]`. The customer still sees the normal
+  thank-you and gets the acknowledgement email. Treat flagged rows as real unless the
+  details look fake.
+- **Failed submissions are recorded and emailed.** Any POST to `/enquiry` that does not
+  end in a stored enquiry (consent missing, validation error, database error, or a nonce
+  failure the browser could not heal) is stored as a `status = failed` row (reference
+  `HD-F-…`, no reload token) with whatever the customer typed, written to the PHP error
+  log, and emailed to the enquiry recipients as `Door designer: submission FAILED — …`.
+  Failure emails are throttled to one per IP per 10 minutes; rows are always stored.
+  See `includes/class-hd-failure-log.php`.
+- **Stale nonces heal themselves.** A designer tab left open past the nonce lifetime used
+  to fail with "Cookie check failed". `assets/js/api-client.js` fetches a fresh nonce from
+  `GET /nonce` and retries once (header `X-HD-DD-Attempt: 2`); only a failure on that
+  retry counts as a failed submission.
+
+Flagged and failed rows carry a coloured badge in **Door Enquiries** and a notice on the
+detail view.
+
+## Tests
+
+No framework — plain Node and PHP scripts that exit non-zero on failure:
+
+```
+node tests/js/api-client.test.js      # REST client: nonce self-heal
+node tests/js/funnel.test.js          # hdAnalytics reporter
+node tools/tests/test-*.js            # wizard, render model, step config…
+php tests/php/run.php                 # honeypot flagging, failure log, nonce endpoint, admin labels
+php tools/tests/test-image-proxy.php  # image-proxy path validator
+```
+
+The PHP tests run the real enquiry pipeline against small WordPress stand-ins in
+`tests/php/wp-stubs.php` — no WordPress install needed.
+
 ## Release / update flow (GitHub)
 
 Updates surface in wp-admin via [`YahnisElsts/plugin-update-checker`](https://github.com/YahnisElsts/plugin-update-checker).
@@ -155,8 +195,9 @@ design. Notes:
 hd-door-designer.php        Main plugin file (header, constants, bootstrap)
 uninstall.php               Clean teardown (drops table + options)
 composer.json               Declares the update-checker dependency
-includes/                   One class per concern (catalogue, enquiry, repo, mailer, admin, updater…)
-assets/css, assets/js       Scoped front-end (compositor + app controller + styles)
+includes/                   One class per concern (catalogue, enquiry, repo, mailer, failure log, admin, updater…)
+assets/css, assets/js       Scoped front-end (compositor + app controller + REST client + styles)
+tests/                      Node + PHP unit tests (see Tests above)
 data/                       endurance-catalogue-full.json lives here (the data backbone)
 tools/                      The extractor + the structure/rules reference catalogue
 ```
