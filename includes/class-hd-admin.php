@@ -226,7 +226,7 @@ class HD_DD_Admin {
 							?>
 							<tr>
 								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
-								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a></td>
+								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
@@ -298,6 +298,10 @@ class HD_DD_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( $row->reference ); ?></h1>
+			<?php $status_label = self::status_label( $row->status, $payload ); ?>
+			<?php if ( '' !== $status_label ) : ?>
+				<div class="notice <?php echo 'failed' === (string) $row->status ? 'notice-error' : 'notice-warning'; ?>"><p><?php echo esc_html( $status_label ); ?></p></div>
+			<?php endif; ?>
 			<p>
 				<a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'Back to enquiries', 'hd-door-designer' ); ?></a>
 				<?php if ( $designer_url ) : ?>
@@ -357,6 +361,47 @@ class HD_DD_Admin {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Plain-text label for a row that needs a second look: a honeypot hit ('flagged') or a
+	 * submission that never became an enquiry ('failed'). Empty for a normal enquiry.
+	 *
+	 * @param string     $status  Row status.
+	 * @param array|null $payload Decoded payload JSON.
+	 * @return string
+	 */
+	public static function status_label( $status, $payload ) {
+		$status = (string) $status;
+		if ( 'flagged' === $status ) {
+			return __( 'Possible bot (hidden field filled — usually just autofill; treat as real)', 'hd-door-designer' );
+		}
+		if ( 'failed' !== $status ) {
+			return '';
+		}
+		$label   = __( 'FAILED', 'hd-door-designer' );
+		$failure = ( is_array( $payload ) && isset( $payload['failure'] ) && is_array( $payload['failure'] ) ) ? $payload['failure'] : array();
+		if ( ! empty( $failure['message'] ) ) {
+			$label .= ' — ' . $failure['message'];
+			if ( ! empty( $failure['fields'] ) && is_array( $failure['fields'] ) ) {
+				foreach ( $failure['fields'] as $field => $msg ) {
+					$label .= ' ' . $field . ': ' . $msg;
+				}
+			}
+		}
+		return $label;
+	}
+
+	/** The list's coloured badge for status_label(), or '' for a normal row. Escaped. */
+	private static function status_badge( $status, $payload ) {
+		$label = self::status_label( $status, $payload );
+		if ( '' === $label ) {
+			return '';
+		}
+		$style = 'failed' === (string) $status
+			? 'background:#fde8e8;color:#b32d2e;border:1px solid #f0b4b4;'
+			: 'background:#fff4d6;color:#7a5a00;border:1px solid #e8cf86;';
+		return '<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;line-height:1.3;' . $style . '">' . esc_html( $label ) . '</span>';
 	}
 
 	/** One-line "Single Door · Ketu · Irish Oak" style summary for the list. */

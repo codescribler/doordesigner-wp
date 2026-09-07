@@ -37,6 +37,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Updater */
 	public $updater;
 
+	/** @var HD_DD_Failure_Log */
+	public $failure_log;
+
 	/**
 	 * Singleton accessor (also the plugins_loaded callback).
 	 *
@@ -64,6 +67,7 @@ final class HD_DD_Plugin {
 		$this->enquiry    = new HD_DD_Enquiry( $this->repository, $this->catalogue );
 		$this->admin      = new HD_DD_Admin( $this->repository );
 		$this->updater    = new HD_DD_Updater();
+		$this->failure_log = new HD_DD_Failure_Log( $this->repository );
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -72,6 +76,7 @@ final class HD_DD_Plugin {
 		$this->enquiry->register();
 		$this->admin->register();
 		$this->updater->register();
+		$this->failure_log->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */

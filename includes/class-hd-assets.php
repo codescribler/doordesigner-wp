@@ -62,6 +62,9 @@ class HD_DD_Assets {
 		wp_register_script( self::HANDLE . '-review', HD_DD_URL . 'assets/js/wizard/review.js', array(), $ver_js, true );
 		wp_register_script( self::HANDLE . '-funnel', HD_DD_URL . 'assets/js/wizard/funnel.js', array(), $ver_js, true );
 
+		// REST client: JSON headers, the nonce, and the stale-nonce self-heal.
+		wp_register_script( self::HANDLE . '-apiclient', HD_DD_URL . 'assets/js/api-client.js', array(), $ver_js, true );
+
 		// App bootstrap depends on the compositor + every wizard module.
 		wp_register_script(
 			self::HANDLE,
@@ -72,6 +75,7 @@ class HD_DD_Assets {
 				self::HANDLE . '-steprender',
 				self::HANDLE . '-review',
 				self::HANDLE . '-funnel',
+				self::HANDLE . '-apiclient',
 			),
 			$ver_js,
 			true
@@ -137,6 +141,7 @@ class HD_DD_Assets {
 			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),
 			'genericError' => __( 'Something went wrong. Please try again.', 'hd-door-designer' ),
+			'sessionExpired' => __( 'Your session had expired. Please reload the page and send your design again.', 'hd-door-designer' ),
 			'consent'      => __( 'I agree to Hertfordshire Doors contacting me about this enquiry.', 'hd-door-designer' ),
 		);
 	}

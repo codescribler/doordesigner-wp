@@ -52,6 +52,19 @@ class HD_DD_Enquiry {
 				),
 			)
 		);
+
+		// A fresh REST nonce for a designer tab left open past the nonce lifetime (see
+		// assets/js/api-client.js). Public: anonymous visitors already get the same nonce in
+		// the page HTML, and a logged-in visitor's nonce is bound to their own session cookie.
+		register_rest_route(
+			HD_DD_REST_NS,
+			'/nonce',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'rest_get_nonce' ),
+				'permission_callback' => '__return_true',
+			)
+		);
 	}
 
 	/**
@@ -79,16 +92,32 @@ class HD_DD_Enquiry {
 		return true;
 	}
 
+	/**
+	 * Hand the browser a fresh 'wp_rest' nonce. Core resets the current user to 0 for a
+	 * nonce-less REST call, so restore the cookie user first — otherwise a logged-in
+	 * visitor (e.g. an admin testing the designer) would get a nonce that never verifies.
+	 */
+	public function rest_get_nonce( WP_REST_Request $request ) {
+		$uid = wp_validate_auth_cookie( '', 'logged_in' );
+		if ( $uid ) {
+			wp_set_current_user( $uid );
+		}
+		$response = new WP_REST_Response( array( 'nonce' => wp_create_nonce( 'wp_rest' ) ), 200 );
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
+		return $response;
+	}
+
 	public function rest_submit( WP_REST_Request $request ) {
 		$params = $request->get_json_params();
 		if ( ! is_array( $params ) ) {
 			$params = $request->get_params();
 		}
 
-		// Honeypot: bots fill hidden fields. Pretend success, store nothing.
-		if ( ! empty( $params['hd_hp'] ) ) {
-			return new WP_REST_Response( array( 'ok' => true, 'reference' => 'HD-IGNORED' ), 200 );
-		}
+		// Honeypot: the hidden field was filled in. Bots do that — but so does browser and
+		// password-manager autofill for REAL customers (a genuine enquiry was lost this way).
+		// So a hit is never discarded: it goes through every normal check, is stored and
+		// emailed like any other enquiry, and is simply FLAGGED for a second look.
+		$flagged = ! empty( $params['hd_hp'] );
 
 		// --- Consent (GDPR) -------------------------------------------------
 		if ( empty( $params['consent'] ) ) {
@@ -134,6 +163,7 @@ class HD_DD_Enquiry {
 				'telephone' => $telephone,
 				'postcode'  => $postcode,
 				'design'    => $design,
+				'status'    => $flagged ? 'flagged' : 'new',
 				'payload'   => array(), // filled below once we have the reference.
 				'source_ip' => $this->client_ip(),
 			)
@@ -150,6 +180,9 @@ class HD_DD_Enquiry {
 		$payload = $this->build_payload( $saved['reference'], compact( 'name', 'email', 'telephone', 'postcode' ), $design );
 		if ( $image ) {
 			$payload['image'] = $image['url'];
+		}
+		if ( $flagged ) {
+			$payload['flags'] = array( 'honeypot' );
 		}
 		$this->repository->update_payload( $saved['id'], $payload );
 

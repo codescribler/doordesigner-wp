@@ -9,6 +9,7 @@
  *   HD_DD_Review        — the final summary + "get a quote" CTA
  *   HD_DD_Preview       — canvas compositor that repaints the door each change
  *   HD_DD_RenderModel   — (used by the compositor) layer assembler
+ *   HD_DD_ApiClient     — REST client (JSON headers, nonce, stale-nonce self-heal)
  *
  * The App takes its three data sources PRELOADED (customerView, renderModel,
  * categories) so the browser QA harness can construct it directly without REST.
@@ -203,15 +204,12 @@
 		return out;
 	}
 
+	// REST plumbing (JSON headers, nonce, stale-nonce self-heal) lives in HD_DD_ApiClient.
+	// The QA harness may omit its script tag — it has no REST endpoint to call anyway.
+	var client = window.HD_DD_ApiClient ? window.HD_DD_ApiClient.create({ restUrl: CFG.restUrl || '', nonce: CFG.nonce }) : null;
 	function api(path, opts) {
-		opts = opts || {};
-		var headers = { 'Content-Type': 'application/json' };
-		if (CFG.nonce) { headers['X-WP-Nonce'] = CFG.nonce; }
-		if (opts.headers) { Object.keys(opts.headers).forEach(function (k) { headers[k] = opts.headers[k]; }); }
-		opts.headers = headers;
-		return fetch((CFG.restUrl || '') + path, opts).then(function (r) {
-			return r.json().then(function (body) { return { ok: r.ok, status: r.status, body: body }; });
-		});
+		if (!client) { return Promise.reject(new Error('HD_DD_ApiClient is not loaded')); }
+		return client.request(path, opts);
 	}
 
 	// ---- App ----------------------------------------------------------------
@@ -1065,7 +1063,12 @@
 					if (n) { n.textContent = fieldErrors[k]; }
 				});
 			}
-			statusEl.textContent = (res.body && res.body.message) || I18N.genericError || 'Something went wrong.';
+			var message = (res.body && res.body.message) || I18N.genericError || 'Something went wrong.';
+			if (window.HD_DD_ApiClient && window.HD_DD_ApiClient.isNonceFailure(res)) {
+				// The client already fetched a fresh nonce and retried once; that retry failed too.
+				message = I18N.sessionExpired || 'Your session had expired. Please reload the page and send your design again.';
+			}
+			statusEl.textContent = message;
 		}).catch(function () {
 			submitBtn.disabled = false;
 			statusEl.textContent = I18N.genericError || 'Something went wrong.';

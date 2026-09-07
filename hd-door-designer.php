@@ -44,6 +44,7 @@ require_once HD_DD_DIR . 'includes/class-hd-catalogue.php';
 require_once HD_DD_DIR . 'includes/class-hd-image-proxy.php';
 require_once HD_DD_DIR . 'includes/class-hd-lock-deriver.php';
 require_once HD_DD_DIR . 'includes/class-hd-mailer.php';
+require_once HD_DD_DIR . 'includes/class-hd-failure-log.php';
 require_once HD_DD_DIR . 'includes/class-hd-enquiry.php';
 require_once HD_DD_DIR . 'includes/class-hd-shortcode.php';
 require_once HD_DD_DIR . 'includes/class-hd-assets.php';

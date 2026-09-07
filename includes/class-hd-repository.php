@@ -72,8 +72,9 @@ class HD_DD_Repository {
 	/**
 	 * Insert an enquiry.
 	 *
-	 * @param array $data Pre-sanitised fields plus 'design' (array) and 'payload' (array).
-	 * @return array{id:int,reference:string}|WP_Error
+	 * @param array $data Pre-sanitised fields plus 'design' (array), 'payload' (array) and an
+	 *                    optional 'status' ('new' by default; 'flagged' for a honeypot hit).
+	 * @return array{id:int,reference:string,token:string}|WP_Error
 	 */
 	public function insert( array $data ) {
 		global $wpdb;
@@ -88,7 +89,7 @@ class HD_DD_Repository {
 				'reference'         => $reference,
 				'token'             => $token,
 				'created_at'        => $now,
-				'status'            => 'new',
+				'status'            => ( isset( $data['status'] ) && '' !== $data['status'] ) ? $data['status'] : 'new',
 				'customer_name'     => $data['name'],
 				'customer_email'    => $data['email'],
 				'customer_phone'    => $data['telephone'],
@@ -108,6 +109,51 @@ class HD_DD_Repository {
 			'id'        => (int) $wpdb->insert_id,
 			'reference' => $reference,
 			'token'     => $token,
+		);
+	}
+
+	/**
+	 * Record a submission that did NOT become an enquiry (validation, nonce or save
+	 * failure) so the customer can still be called back. Reference HD-F-…, no reload
+	 * token, status 'failed'. Values are cut to their column widths: this must not fail.
+	 *
+	 * @param array $data name/email/telephone/postcode (as typed), 'design' (array), 'payload' (array), 'source_ip'.
+	 * @return array{id:int,reference:string}|WP_Error
+	 */
+	public function insert_failure( array $data ) {
+		global $wpdb;
+
+		$reference = 'HD-F-' . gmdate( 'YmdHis' ) . '-' . strtolower( wp_generate_password( 4, false ) );
+		$cut       = function ( $key, $len ) use ( $data ) {
+			$v = isset( $data[ $key ] ) ? (string) $data[ $key ] : '';
+			return function_exists( 'mb_substr' ) ? mb_substr( $v, 0, $len ) : substr( $v, 0, $len );
+		};
+
+		$ok = $wpdb->insert(
+			self::table(),
+			array(
+				'reference'         => $reference,
+				'token'             => null,
+				'created_at'        => current_time( 'mysql' ),
+				'status'            => 'failed',
+				'customer_name'     => $cut( 'name', 190 ),
+				'customer_email'    => $cut( 'email', 190 ),
+				'customer_phone'    => $cut( 'telephone', 40 ),
+				'customer_postcode' => $cut( 'postcode', 16 ),
+				'design'            => wp_json_encode( isset( $data['design'] ) ? $data['design'] : array() ),
+				'payload'           => wp_json_encode( isset( $data['payload'] ) ? $data['payload'] : array() ),
+				'source_ip'         => $cut( 'source_ip', 45 ),
+			),
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+		);
+
+		if ( false === $ok ) {
+			return new WP_Error( 'hd_dd_db_insert_failed', __( 'Could not record the failed submission.', 'hd-door-designer' ) );
+		}
+
+		return array(
+			'id'        => (int) $wpdb->insert_id,
+			'reference' => $reference,
 		);
 	}
 

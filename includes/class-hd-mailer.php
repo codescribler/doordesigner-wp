@@ -25,6 +25,9 @@ class HD_DD_Mailer {
 			$reference,
 			isset( $payload['customer']['name'] ) ? $payload['customer']['name'] : ''
 		);
+		if ( ! empty( $payload['flags'] ) ) {
+			$subject = __( '[Possible bot] ', 'hd-door-designer' ) . $subject;
+		}
 
 		$body = self::build_body( $payload );
 
@@ -161,6 +164,10 @@ class HD_DD_Mailer {
 		$lines = array();
 
 		$lines[] = __( 'A new door enquiry has come in from the website configurator.', 'hd-door-designer' );
+		if ( ! empty( $payload['flags'] ) ) {
+			$lines[] = '';
+			$lines[] = __( 'FLAGGED: the hidden anti-spam field was filled in. That is usually browser or password-manager autofill on a real customer, occasionally a bot — treat this as a normal enquiry unless the details look fake.', 'hd-door-designer' );
+		}
 		$lines[] = '';
 		$lines[] = __( 'REFERENCE: ', 'hd-door-designer' ) . ( isset( $payload['reference'] ) ? $payload['reference'] : '' );
 		$lines[] = __( 'RECEIVED:  ', 'hd-door-designer' ) . ( isset( $payload['submittedAt'] ) ? $payload['submittedAt'] : '' );
