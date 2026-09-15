@@ -96,6 +96,9 @@ class HD_DD_Assets {
 				'renderModelUrl' => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/render-model' ) ) ),
 				'categoriesUrl'  => esc_url_raw( HD_DD_URL . 'data/style-categories.json' ),
 				'nonce'          => wp_create_nonce( 'wp_rest' ),
+				// Stamped on every funnel event (see wizard/funnel.js) so the manager
+				// dashboard can compare completion per release.
+				'version'        => HD_DD_VERSION,
 				'catalogueReady' => $this->catalogue->is_available(),
 				'renderReady'    => $this->catalogue->render_model_available(),
 				// Asset base for preview images: a setting override, else the model's own

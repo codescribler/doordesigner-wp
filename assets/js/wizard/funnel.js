@@ -21,18 +21,32 @@
     return (typeof window !== 'undefined' && window.hdAnalytics) ? window.hdAnalytics : null;
   }
 
+  // This plugin's own version, printed into HD_DD_CONFIG by class-hd-assets.php.
+  // Read at call time, not at load: the config is localised onto the main app
+  // script, which loads after this file. Stamped on every event so the manager
+  // dashboard can compare completion per release.
+  function version() {
+    var cfg = (typeof window !== 'undefined' && window.HD_DD_CONFIG) ? window.HD_DD_CONFIG : null;
+    return (cfg && cfg.version) ? String(cfg.version) : '';
+  }
+
   function step(key, choice) {
     var t = tracker();
     if (!t) { return; }
     var opts = { order: ORDER[key] };
     if (choice) { opts.choice = choice; }
+    var ver = version();
+    if (ver) { opts.version = ver; }
     try { t.step(FUNNEL, key, opts); } catch (e) { /* analytics is best-effort */ }
   }
 
   function lead() {
     var t = tracker();
     if (!t) { return; }
-    try { t.lead(FUNNEL); } catch (e) { /* analytics is best-effort */ }
+    var ver = version();
+    try {
+      if (ver) { t.lead(FUNNEL, { version: ver }); } else { t.lead(FUNNEL); }
+    } catch (e) { /* analytics is best-effort */ }
   }
 
   return { ORDER: ORDER, step: step, lead: lead };

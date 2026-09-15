@@ -19,6 +19,7 @@ preserved exactly.
 | Enquiry capture → validate → save → email (with structured payload) | ✅ built |
 | GitHub auto-update wiring | ✅ wired (needs the library vendored + repo URL set) |
 | Guided visual wizard (one step at a time, category-first styles, live preview, progress, back/edit) | ✅ built — `assets/js/wizard/` implements Layout C flow; `tools/tests/test-wizard-controller.js` validates controller logic; step-config resolves per-type rules (Double=no frame-shape/+Master Leaf; Avantal=no internal-colour/knocker) |
+| Funnel analytics | ✅ built — every wizard step and the final submit are reported to the site's `hdAnalytics` beacon (`assets/js/wizard/funnel.js`), stamped with the plugin version so the manager's Marketing page shows completion per release |
 | Compact "customer view" catalogue (REST) | ✅ built — serves 176 KB instead of the 1.2 MB full file |
 | Layer model + assembler (`tools/build-render-model.js`, `assets/js/render-model.js`) | ✅ built & validated across all 4 types — shared Node/browser assembler resolves style/colour/cassette/glazing/frame/handle/knocker + double-door leaves into geometry-placed layers (`data/render-model.json`, 253 KB) |
 | Browser compositor (canvas) + UI wiring | ✅ built — `assets/js/preview.js` paints the layers; app fetches `/render-model`, renders on every change; `/preview-test.html` is a standalone QA harness (no WordPress needed) |
@@ -179,6 +180,9 @@ Updates surface in wp-admin via [`YahnisElsts/plugin-update-checker`](https://gi
 2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
 3. Create a **GitHub release** for that tag (attach a built zip if you use release assets).
 4. Within the check interval, wp-admin → Plugins shows the update.
+5. Nothing to note for the stats: each release becomes its own cohort on the manager's
+   Marketing page from the first day the site serves it (design:
+   `hertsdoorsmanager/docs/superpowers/specs/2026-09-15-designer-version-cohorts-design.md`).
 
 ## Privacy / GDPR
 

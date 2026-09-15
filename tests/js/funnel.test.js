@@ -13,7 +13,7 @@ var calls = [];
 global.window = {
   hdAnalytics: {
     step: function (funnel, name, opts) { calls.push(['step', funnel, name, opts]); },
-    lead: function (funnel) { calls.push(['lead', funnel]); }
+    lead: function (funnel, opts) { calls.push(opts === undefined ? ['lead', funnel] : ['lead', funnel, opts]); }
   }
 };
 
@@ -31,6 +31,29 @@ assert.deepStrictEqual(calls[3], ['step', 'door-designer', 'details', { order: 1
 
 Funnel.lead();
 assert.deepStrictEqual(calls[4], ['lead', 'door-designer']);
+
+// 2b) With the plugin's config present, every event names the designer version so
+//     the manager can compare completion per release.
+global.window.HD_DD_CONFIG = { version: '0.2.55' };
+calls.length = 0;
+
+Funnel.step('style', 'Balmoral');
+assert.deepStrictEqual(calls[0], ['step', 'door-designer', 'style', { order: 3, choice: 'Balmoral', version: '0.2.55' }]);
+
+Funnel.step('review');
+assert.deepStrictEqual(calls[1], ['step', 'door-designer', 'review', { order: 15, version: '0.2.55' }]);
+
+Funnel.lead();
+assert.deepStrictEqual(calls[2], ['lead', 'door-designer', { version: '0.2.55' }]);
+
+// An empty version is the same as no config at all — no `version` key, plain lead().
+global.window.HD_DD_CONFIG = { version: '' };
+calls.length = 0;
+Funnel.step('details');
+assert.deepStrictEqual(calls[0], ['step', 'door-designer', 'details', { order: 16 }]);
+Funnel.lead();
+assert.deepStrictEqual(calls[1], ['lead', 'door-designer']);
+delete global.window.HD_DD_CONFIG;
 
 // 3) A tracker that throws must never reach the caller.
 global.window = {
