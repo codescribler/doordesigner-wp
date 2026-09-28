@@ -65,8 +65,16 @@ function currentComposite() {
   return L;
 }
 
+// A style's slab. Eiger reuses the baseline's K1 cassette image at a DIFFERENT position
+// (like Bowmont's top windows) — the case the URL-only delta used to drop.
+function slabFor(style) {
+  const L = [img(A + 'DoorBlanks/Mould1/Thumbnails/Anthracite Grey.jpg', 77, 162, 138, 307)];
+  if (/Eiger/.test(style)) { L.push(img(A + 'DoorCassettes/K1/Thumbnails/Anthracite Grey.png', 51, 49, 30, 22)); }
+  return L;
+}
+
 function mkField(heading, cat, descs, kind) {
-  const subs = descs.map((d) => ({ Description: d, ID: idOf(heading + '::' + d), Images: kind === 'rich' ? currentComposite() : (kind === 'slab' ? [img(A + 'DoorBlanks/Mould1/Thumbnails/Anthracite Grey.jpg', 77, 162, 138, 307)] : []), IsSelected: false }));
+  const subs = descs.map((d) => ({ Description: d, ID: idOf(heading + '::' + d), Images: kind === 'rich' ? currentComposite() : (kind === 'slab' ? slabFor(d) : []), IsSelected: false }));
   let sel = subs.find((s) => s.Description === cur[heading]) || subs[0];
   if (sel) { cur[heading] = sel.Description; sel.IsSelected = true; }
   return { Heading: heading, Category: cat, CurrentID: sel ? sel.ID : 0, CurrentOption: sel ? sel.Description : '', SubOptions: subs, Visible: subs.length > 0 };
@@ -154,6 +162,17 @@ const EXT = global.window.EXT;
     console.log('\nSidelit composites (Single): ' + Object.keys(scp).join(', '));
     console.log('  Double Sidelight: ' + dbl.length + ' layers, ' + sideGlass + ' side-glass, wideFrame=' + wideFrame + ', doorShifted=' + doorShifted);
   }
+
+  // Door Design recapture: every style's FULL slab, keeping reused-image layers.
+  await EXT.capturePatchStyles(['Single Door']);
+  const slabs = (patch['Single Door'] || {}).styleSlabs || {};
+  CATALOG['Single Door'].styles.forEach((st) => { if (!slabs[st] || !slabs[st].length) { problems.push('styleSlabs missing style: ' + st); } });
+  const eigerK1 = (slabs['Eiger'] || []).filter((l) => /DoorCassettes\/K1\//.test(l.url));
+  if (eigerK1.length !== 1 || eigerK1[0].cx !== 51) { problems.push('Eiger slab lost its off-centre K1 cassette'); }
+  const k1 = (cx) => ({ url: A + 'DoorCassettes/K1/Thumbnails/Anthracite Grey.png', cx: cx, cy: 49, w: 82, h: 37 });
+  if (EXT.layerKey(k1(51)) === EXT.layerKey(k1(77))) { problems.push('layerKey ignores position'); }
+  if (EXT.layerKey(k1(77)) !== EXT.layerKey(k1(77.0001))) { problems.push('layerKey too sensitive to float noise'); }
+  console.log('\nStyle slabs (Single): ' + Object.keys(slabs).join(', ') + ' — Eiger K1 kept at cx ' + (eigerK1[0] || {}).cx);
 
   console.log('\n=== PATCH SUMMARY ===');
   need.forEach((t) => {

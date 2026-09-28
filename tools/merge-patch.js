@@ -7,7 +7,8 @@
  *   3. node tools/build-render-model.js          → rebuilds the render model
  *
  * The patch carries only the previously-missing pieces per type:
- *   knockerByStyle, glazingByStyle (refresh), sidelights (fixed), letterplate (layers).
+ *   knockerByStyle, glazingByStyle (refresh), sidelights (fixed), letterplate (layers),
+ *   styleSlabs (each Door Design's FULL slab — EXT.capturePatchStyles()).
  */
 'use strict';
 const fs = require('fs');
@@ -27,6 +28,7 @@ function collectImageUrls(full) {
     if (t.glazingLayerSamples) { (t.glazingLayerSamples.samples || []).forEach((s) => eat(s.delta)); }
     if (t.sidelights) { eat(t.sidelights.delta); }
     if (t.sidelitComposites) { Object.values(t.sidelitComposites).forEach((layers) => eat(layers)); }
+    if (t.styleSlabs) { Object.values(t.styleSlabs).forEach((layers) => eat(layers)); }
   });
   return Array.from(set).sort();
 }
@@ -44,6 +46,7 @@ function merge(full, patch) {
     if (p.glazingByStyle) { t.glazingByStyle = p.glazingByStyle; did.push('glazingByStyle'); }
     if (p.sidelights) { t.sidelights = p.sidelights; did.push('sidelights[' + Object.keys(p.sidelights.fields || {}).join(',') + ']'); }
     if (p.letterplate) { t.fields = t.fields || {}; t.fields['Letterplate'] = p.letterplate; did.push('letterplate'); }
+    if (p.styleSlabs) { t.styleSlabs = p.styleSlabs; did.push('styleSlabs(' + Object.keys(p.styleSlabs).length + ')'); }
     if (p.sidelitComposites) { t.sidelitComposites = p.sidelitComposites; did.push('sidelitComposites(' + Object.keys(p.sidelitComposites).length + ')'); }
     applied.push(type + ': ' + did.join(', '));
   });

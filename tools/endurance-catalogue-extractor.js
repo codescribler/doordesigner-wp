@@ -54,6 +54,14 @@
 
   // Layers of one field's currently-selected SubOption (full composite for the
   // "rich" fields; slab only for Door Design / Door Colour).
+  // A layer's identity is its image AND where it sits. Comparing by URL alone dropped any
+  // layer a choice reuses from the baseline at a DIFFERENT position — e.g. Bowmont's two small
+  // top windows are the same K1 cassette image as Abbott's (the baseline), so they vanished.
+  const r1 = (n) => Math.round((+n || 0) * 10) / 10;
+  const layerKey = (l) => l.url + '@' + [r1(l.cx), r1(l.cy), r1(l.w), r1(l.h)].join(',');
+  const keySet = (layers) => new Set(layers.map(layerKey));
+  EXT.layerKey = layerKey;
+
   function fieldComposite(heading) {
     const f = field(heading);
     const sel = f ? selectedOf(f) : null;
@@ -146,7 +154,7 @@
       // their contributed layer (e.g. the letterplate) is still captured.
       let comp = fieldComposite(heading);
       if (!comp.length) { comp = fullComposite(); }
-      const delta = comp.filter(l => !baseUrls.has(l.url));
+      const delta = comp.filter(l => !baseUrls.has(layerKey(l)));
       choices.push({ label: s.Description, id: s.ID, delta });
       sigs.add(delta.map(l => l.url).join('|'));
       if ((i + 1) % 12 === 0 || i === list.length - 1) console.log('[EXT]   ' + heading + ' ' + (i + 1) + '/' + list.length);
@@ -186,7 +194,7 @@
     for (let i = 0; i < list.length; i++) {
       await setOption(cat, list[i].ID, 'Door Glass');
       const comp = fieldComposite('Door Glass');
-      samples.push({ label: list[i].Description, id: list[i].ID, delta: comp.filter(l => !baseUrls.has(l.url)) });
+      samples.push({ label: list[i].Description, id: list[i].ID, delta: comp.filter(l => !baseUrls.has(layerKey(l))) });
     }
     await setOption(cat, baseId, 'Door Glass');
     console.log('[EXT]   glazing-layer samples on "' + style + '": ' + samples.length);
@@ -219,7 +227,7 @@
       // convenience aliases (back-compat with the customer view)
       sidelightType: slFields['Sidelight Type'] || { choices: [] },
       sidelightGlass: slFields['Sidelight Glass'] || { choices: [] },
-      delta: comp.filter(l => !baseUrls.has(l.url))
+      delta: comp.filter(l => !baseUrls.has(layerKey(l)))
     };
     await setOption(fd.Category, baseId, 'Frame Design');
     console.log('[EXT]   sidelights (' + sidelit.Description + '): fields [' + Object.keys(slFields).join(', ') + '], ' + out.delta.length + ' layers');
@@ -258,7 +266,7 @@
     console.log('[EXT] capturing ' + type + ' …');
 
     const baseComposite = fullComposite();
-    const baseUrls = new Set(baseComposite.map(l => l.url));
+    const baseUrls = keySet(baseComposite); // layer keys (url + geometry), see layerKey
     const baseSelection = {};
     opts().forEach(o => { const s = selectedOf(o); if (s) baseSelection[o.Heading] = { label: s.Description, id: s.ID }; });
     console.log('[EXT]   baseline composite: ' + baseComposite.length + ' layers (' + [...new Set(baseComposite.map(l => folderOf(l.url)))].join(', ') + ')');
@@ -309,7 +317,7 @@
     const type = field('Door Type').CurrentOption;
     console.log('[EXT-patch] ' + type + ' …');
     const baseComposite = fullComposite();
-    const baseUrls = new Set(baseComposite.map(l => l.url));
+    const baseUrls = keySet(baseComposite); // layer keys (url + geometry), see layerKey
     const out = { doorType: type };
 
     // Per-style knocker (+ refresh glazing for free). Gate on the TYPE, not the
@@ -525,7 +533,7 @@
       if (!fopt) { continue; }
       await setOption(hw.Category, fopt.ID, 'Hardware Type');
       await sleep(300);
-      const baseUrls = new Set(fullComposite().map((l) => l.url));
+      const baseUrls = keySet(fullComposite());
       out[finishLabel] = await EXT.walkField('Letterplate', baseUrls);
       console.log('[EXT]   ' + finishLabel + ': ' + (out[finishLabel] ? out[finishLabel].choices.length : 0) + ' letterplate choices captured');
     }
@@ -535,6 +543,35 @@
     window.__patch['Single Door'].specialtyLetterplates = out;
     console.log('[EXT] specialty letterplates captured for ' + Object.keys(out).length + ' finishes. Run EXT.downloadPatch("endurance-specialty-letterplates.json").');
     return out;
+  };
+
+  // Door Design recapture: each style's FULL slab (blank + every cassette), not a delta, so
+  // no aperture can be lost to a baseline match. Quick — one walk of the style list per type.
+  //   await EXT.capturePatchStyles();  EXT.downloadPatch();  → node tools/merge-patch.js
+  EXT.capturePatchStyles = async function (onlyTypes) {
+    const all = field('Door Type').SubOptions.map(s => s.Description);
+    const types = (onlyTypes && onlyTypes.length) ? all.filter(t => onlyTypes.indexOf(t) !== -1) : all;
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    for (const tName of types) {
+      EXT.selectType(tName);
+      const tid = field('Door Type').SubOptions.find(s => s.Description === tName).ID;
+      await waitForId('Door Type', tid);
+      await sleep(800);
+      const dd = field('Door Design');
+      const baseId = dd.CurrentID;
+      const styleSlabs = {};
+      for (let i = 0; i < dd.SubOptions.length; i++) {
+        const s = dd.SubOptions[i];
+        await setOption(dd.Category, s.ID, 'Door Design');
+        styleSlabs[s.Description] = fieldComposite('Door Design');
+        if ((i + 1) % 15 === 0 || i === dd.SubOptions.length - 1) console.log('[EXT-styles] ' + tName + ' ' + (i + 1) + '/' + dd.SubOptions.length);
+      }
+      await setOption(dd.Category, baseId, 'Door Design');
+      window.__patch[tName] = Object.assign(window.__patch[tName] || { doorType: tName }, { styleSlabs: styleSlabs });
+    }
+    window.__patch._capturedAt = new Date().toISOString();
+    console.log('[EXT-styles] done. Run EXT.downloadPatch().');
+    return window.__patch;
   };
 
   EXT.downloadPatch = function (filename) {
