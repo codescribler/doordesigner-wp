@@ -134,9 +134,14 @@ function buildType(node, typeName) {
   const styles = {};
   const dd = node.fields['Door Design'];
   const glazingByStyle = node.glazingByStyle || {};
+  // A full per-style slab capture (EXT.capturePatchStyles) wins over the delta: the delta
+  // loses any layer a style reuses from the baseline at a different position.
+  const slabs = node.styleSlabs || {};
   (dd ? dd.choices : []).forEach((c) => {
-    const blank = keep(c.delta, 'DoorBlanks')[0];
-    const cassettes = keep(c.delta, 'DoorCassettes');
+    const slab = slabs[c.label];
+    const layers = slab || c.delta;
+    const blank = keep(layers, 'DoorBlanks')[0];
+    const cassettes = keep(layers, 'DoorCassettes');
     const pb = blank ? parseBlank(blank.url) : null;
     const pc = cassettes[0] ? parseCassette(cassettes[0].url) : null;
     const styleMould = pb ? pb.mould : baselineMould;
@@ -147,9 +152,12 @@ function buildType(node, typeName) {
     // second, misaligned panel layout over the door — the "overlaid styles" bug. A
     // different-mould style with no captured cassettes is a solid door whose panels are
     // already in its blank pressing (like Brecon), so it needs no cassettes at all.
-    const inheritBaseline = !cassettes.length && styleGlazed && styleMould === baselineMould;
+    const inheritBaseline = !slab && !cassettes.length && styleGlazed && styleMould === baselineMould;
     const useCassettes = cassettes.length ? cassettes : (inheritBaseline ? baseCassettes : []);
-    const cassetteGeom = useCassettes.map(geom);
+    // Each aperture keeps its OWN cassette key: a few styles mix two (Cheviot = small K5
+    // squares over tall K2 panels), and drawing every aperture with the first key stretched
+    // the wrong frame + glass image into the other apertures.
+    const cassetteGeom = useCassettes.map((l) => Object.assign(geom(l), { key: (parseCassette(l.url) || {}).key || null }));
     styles[c.label] = {
       mould: styleMould,
       cassetteKey: pc ? pc.key : (inheritBaseline ? baselineCassetteKey : null),
@@ -429,25 +437,31 @@ function build(raw) {
 // ─── Assembler: single source of truth, shared with the browser compositor ──
 const { assemble } = require('../assets/js/render-model.js');
 
-// ─── main ───────────────────────────────────────────────────────────────────
-const raw = JSON.parse(fs.readFileSync(SRC, 'utf8'));
-const model = build(raw);
-fs.writeFileSync(OUT, JSON.stringify(model));
-const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
-console.log('render-model.json written: ' + kb + 'KB; types: ' + Object.keys(model.types).join(', '));
+// ─── main (only when run directly — tests require build() without writing the file) ──
+function main() {
+  const raw = JSON.parse(fs.readFileSync(SRC, 'utf8'));
+  const model = build(raw);
+  fs.writeFileSync(OUT, JSON.stringify(model));
+  const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
+  console.log('render-model.json written: ' + kb + 'KB; types: ' + Object.keys(model.types).join(', '));
+  const manifest = require('./image-manifest.js').imageManifest(raw, model, assemble);
+  fs.writeFileSync(path.join(__dirname, '..', 'data', 'image-manifest.json'), JSON.stringify({ builtFrom: raw._capturedAt, images: manifest }));
+  console.log('image-manifest.json written: ' + manifest.length + ' images (pre-fetched by the site image warmer)');
 
-if (process.argv.includes('--test')) {
-  const design = {
-    'Door Type': { label: 'Single Door' },
-    'Door Design': { label: 'Eiger' },
-    'Door Colour (External)': { label: 'Irish Oak' },
-    'Door Glass': { label: 'Comete' },
-    'Frame Colour': { label: 'Irish Oak/White' },
-    'Handle': { label: 'Lever/Pad' },
-    'Knocker': { label: 'Forged Black Bull Ring' }
-  };
-  console.log('\n--- assemble sample: Single / Eiger / Irish Oak / Comete glazing / Irish Oak frame ---');
-  assemble(model, 'Single Door', design).forEach((l) => console.log('  [' + l.slot + '] ' + l.url.split('/').slice(3).join('/') + '  @(' + l.cx + ',' + l.cy + ' ' + l.w + 'x' + l.h + ')'));
+  if (process.argv.includes('--test')) {
+    const design = {
+      'Door Type': { label: 'Single Door' },
+      'Door Design': { label: 'Eiger' },
+      'Door Colour (External)': { label: 'Irish Oak' },
+      'Door Glass': { label: 'Comete' },
+      'Frame Colour': { label: 'Irish Oak/White' },
+      'Handle': { label: 'Lever/Pad' },
+      'Knocker': { label: 'Forged Black Bull Ring' }
+    };
+    console.log('\n--- assemble sample: Single / Eiger / Irish Oak / Comete glazing / Irish Oak frame ---');
+    assemble(model, 'Single Door', design).forEach((l) => console.log('  [' + l.slot + '] ' + l.url.split('/').slice(3).join('/') + '  @(' + l.cx + ',' + l.cy + ' ' + l.w + 'x' + l.h + ')'));
+  }
 }
 
 module.exports = { build, assemble };
+if (require.main === module) { main(); }

@@ -156,11 +156,12 @@
 		// blank (style mould + colour)
 		if (style.mould && style.blankGeom) { push(ASSET_PREFIX + 'DoorBlanks/' + style.mould + '/Thumbnails/' + colour + '.jpg', style.blankGeom); }
 		// cassettes (style key + colour)
-		(style.cassetteGeom || []).forEach(function (g) { if (style.cassetteKey) { push(ASSET_PREFIX + 'DoorCassettes/' + style.cassetteKey + '/Thumbnails/' + colour + '.png', g); } });
+		// Each aperture may carry its own cassette key (styles that mix two frame types).
+		(style.cassetteGeom || []).forEach(function (g) { var k = g.key || style.cassetteKey; if (k) { push(ASSET_PREFIX + 'DoorCassettes/' + k + '/Thumbnails/' + colour + '.png', g); } });
 		// glazing (glass image at each aperture; geometry from the style's inner cassettes)
 		var glass = get('Door Glass');
 		if (glass && !/^unglazed$/i.test(glass) && style.cassetteKey && (style.glazingGeom || []).length) {
-			style.glazingGeom.forEach(function (g) { push(ASSET_PREFIX + 'DoorGlazing/' + glass + '/Thumbnails/' + style.cassetteKey + '.png', g); });
+			style.glazingGeom.forEach(function (g) { push(ASSET_PREFIX + 'DoorGlazing/' + glass + '/Thumbnails/' + (g.key || style.cassetteKey) + '.png', g); });
 		}
 		// handle. Some types didn't capture every handle's layer (e.g. levers on double
 		// doors) — borrow the image from a type that has it, drawn at this type's handle

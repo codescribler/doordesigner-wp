@@ -171,4 +171,12 @@ assert.ok(!model.sideDesignByKey[model.types['Single Door'].styles['Berwyn'].cas
 const noKeyMatch = sideOf(assemble(model, 'Single Door', Object.assign({}, slBase, { 'Door Design': { label: 'Berwyn' }, 'Door Glass': { label: 'Clarence' }, 'Sidelight Glass': { label: 'Matches the door' } })));
 assert.ok(noKeyMatch.every((l) => /Side\/Ornate/.test(l.url)), 'a door with no key-matched side layout falls back to the Ornate overlay even on "Matches the door"');
 
+// Styles that mix two cassette types draw each aperture with its OWN key: Cheviot has small
+// K5 squares over tall K2 panels — the tall glass must be the K2 image, not K5 stretched.
+const cheviot = assemble(model, 'Single Door', { 'Door Design': { label: 'Cheviot' }, 'Door Colour (External)': { label: 'White' }, 'Door Glass': { label: 'Satin' } });
+const glassKeys = cheviot.filter((l) => l.slot === 'DoorGlazing').map((l) => l.url.split('/').pop());
+assert.ok(glassKeys.includes('K5.png') && glassKeys.includes('K2.png'), 'Cheviot glass uses both K5 and K2 images: ' + glassKeys.join(','));
+const cassetteKeys = new Set(cheviot.filter((l) => l.slot === 'DoorCassettes').map((l) => l.url.split('/')[4]));
+assert.ok(cassetteKeys.has('K5') && cassetteKeys.has('K2'), 'Cheviot cassettes use both keys');
+
 console.log('render-model OK');
