@@ -2,9 +2,10 @@
 /**
  * On-demand image cache (proxy). The preview's asset base points at this endpoint, so
  * the browser requests every door image from THIS site. Each image is fetched once from
- * the upstream Endurance host, stored under uploads/, and served locally thereafter —
- * no runtime dependency on the upstream once cached, and only what's actually used is
- * stored (no thousands-of-files pre-mirror).
+ * the upstream Endurance host, stored under uploads/, and served locally thereafter.
+ * Images bundled in the plugin (assets/img/endurance/) are served directly, and
+ * HD_DD_Image_Warmer pre-fetches the rest (data/image-manifest.json) in the background,
+ * so the preview keeps working while the upstream host is slow or down.
  *
  *   GET /wp-json/hd-door-designer/v1/img/Assets/CompositeDoors/Images/...
  *
@@ -79,10 +80,18 @@ class HD_DD_Image_Proxy {
 			return new WP_REST_Response( array( 'error' => 'bad path', 'received' => $raw ), 400 );
 		}
 
-		$file = $this->cache_file( $path );
-		if ( ! file_exists( $file ) && ! $this->fetch_and_store( $path, $file ) ) {
-			// Couldn't cache it (uploads not writable, transient upstream issue, …) — redirect
-			// to the upstream image so the preview never breaks worse than direct loading.
+		$file = $this->local_file( $path );
+		if ( ! $file && $this->ensure( $path ) ) {
+			$file = $this->cache_file( $path );
+		}
+		if ( ! $file ) {
+			// Upstream is down: answer at once. Redirecting to a host that isn't responding only
+			// makes the visitor's browser hang too; the preview simply skips a missing layer.
+			if ( self::upstream_down() ) {
+				return new WP_REST_Response( array( 'error' => 'upstream unavailable' ), 404 );
+			}
+			// Couldn't cache it (uploads not writable, …) — redirect to the upstream image so
+			// the preview never breaks worse than direct loading.
 			$host = $this->source_host();
 			if ( $host ) {
 				$encoded = implode( '/', array_map( 'rawurlencode', explode( '/', $path ) ) );
@@ -94,6 +103,35 @@ class HD_DD_Image_Proxy {
 
 		$this->stream( $file, $path );
 		exit; // streamed raw above; bypass REST's JSON encoding.
+	}
+
+	/**
+	 * A file already on this site for the path: the uploads cache, else the copy bundled in the
+	 * plugin (assets/img/endurance/…). null when neither exists.
+	 */
+	public function local_file( $path ) {
+		$file = $this->cache_file( $path );
+		if ( file_exists( $file ) ) {
+			return $file;
+		}
+		$bundled = HD_DD_DIR . 'assets/img/endurance/' . $path;
+		return file_exists( $bundled ) ? $bundled : null;
+	}
+
+	/** Make sure the path is cached locally, fetching it upstream if needed. */
+	public function ensure( $path ) {
+		if ( $this->local_file( $path ) ) {
+			return true;
+		}
+		if ( self::upstream_down() ) {
+			return false;
+		}
+		return $this->fetch_and_store( $path, $this->cache_file( $path ) );
+	}
+
+	/** True while the upstream host recently failed to respond (a short back-off). */
+	public static function upstream_down() {
+		return (bool) get_transient( 'hd_dd_upstream_down' );
 	}
 
 	/** Absolute path to the local cache file for a (validated) relative path. */
@@ -123,9 +161,15 @@ class HD_DD_Image_Proxy {
 			return false;
 		}
 		$encoded = implode( '/', array_map( 'rawurlencode', explode( '/', $path ) ) );
-		$resp    = wp_remote_get( $host . '/' . $encoded, array( 'timeout' => 15 ) );
-		if ( is_wp_error( $resp ) || 200 !== (int) wp_remote_retrieve_response_code( $resp ) ) {
+		$resp    = wp_remote_get( $host . '/' . $encoded, array( 'timeout' => 8 ) );
+		if ( is_wp_error( $resp ) ) {
+			// No response at all (timeout / connection refused): back off for 10 minutes so
+			// every visitor isn't made to wait on a host that is down.
+			set_transient( 'hd_dd_upstream_down', 1, 10 * MINUTE_IN_SECONDS );
 			return false;
+		}
+		if ( 200 !== (int) wp_remote_retrieve_response_code( $resp ) ) {
+			return false; // a genuine 404 etc. — this image just doesn't exist upstream.
 		}
 		$body = wp_remote_retrieve_body( $resp );
 		if ( '' === $body ) {
