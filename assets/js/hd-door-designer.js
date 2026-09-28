@@ -30,21 +30,8 @@
 	// module is loaded; the QA harness may omit its script tag, so fall back to a no-op.
 	var Funnel = window.HD_DD_Funnel || { step: function () {}, lead: function () {} };
 
-	// Hardware-finish swatch chips — a representative colour per Endurance finish (the
-	// asset host has no per-finish swatch image). A subtle gradient gives a metallic read.
-	var HARDWARE_HEX = {
-		'Chrome':          'linear-gradient(135deg,#e9edf1,#aab0b8)',
-		'Black':           '#1f1f1f',
-		'Gold':            'linear-gradient(135deg,#e0c06a,#b8902f)',
-		'Stainless Steel': 'linear-gradient(135deg,#cdd1d6,#a3a8ae)',
-		'Antique Black':   '#2b2722',
-		'Graphite':        '#4c5054',
-		'Bronze':          'linear-gradient(135deg,#8a6a48,#5d422a)',
-		'Forged Black':    '#1b1b1b',
-		'Pewter':          'linear-gradient(135deg,#9a9ca0,#74777b)',
-		'Matt Black':      '#2b2b2b',
-		'Satin Brass':     'linear-gradient(135deg,#c6a86a,#9c7f45)'
-	};
+	var Shared = window.HD_DD_Shared;
+	var HARDWARE_HEX = Shared.HARDWARE_HEX;
 
 	// Customer-facing display names for internal/trade labels. The stored design keeps
 	// the EXACT Endurance label; this only changes what the customer reads on screen.
@@ -190,20 +177,6 @@
 		return n;
 	}
 
-	// "Chrome, Gold & Graphite" — for the "…only" note on greyed handle tiles.
-	function formatColourList(arr) {
-		if (!arr || !arr.length) { return ''; }
-		if (arr.length === 1) { return arr[0]; }
-		return arr.slice(0, -1).join(', ') + ' & ' + arr[arr.length - 1];
-	}
-
-	// Drop UI-only keys (anything prefixed with "_") from the design payload.
-	function cleanDesign(design) {
-		var out = {};
-		Object.keys(design).forEach(function (h) { if (h.charAt(0) !== '_') { out[h] = design[h]; } });
-		return out;
-	}
-
 	// REST plumbing (JSON headers, nonce, stale-nonce self-heal) lives in HD_DD_ApiClient.
 	// The QA harness may omit its script tag — it has no REST endpoint to call anyway.
 	var client = window.HD_DD_ApiClient ? window.HD_DD_ApiClient.create({ restUrl: CFG.restUrl || '', nonce: CFG.nonce }) : null;
@@ -218,24 +191,7 @@
 		this.customerView = customerView;
 		this.renderModel = renderModel || null;
 		this.categories = categories || null;
-		// Mark, per type, the styles whose mould offers the Middle/Bottom letterplate-position
-		// choice (from the render model) so the wizard can show that step only where it applies.
-		if (renderModel && renderModel.types && customerView && customerView.byType) {
-			var sideByKey = renderModel.sideDesignByKey || {};
-			Object.keys(customerView.byType).forEach(function (t) {
-				var rmStyles = (renderModel.types[t] || {}).styles || {};
-				var posStyles = {};
-				var decoStyles = {}; // styles that can show a decorative (door-matching) sidelight
-				Object.keys(rmStyles).forEach(function (s) {
-					// 'bottom' = a glazed style whose Middle plate covers the glass (default it to the
-					// bottom rail); 'middle' = the plate's natural central spot is already clear.
-					if (rmStyles[s].letterplateBottomCy != null) { posStyles[s] = rmStyles[s].letterplateDefaultBottom ? 'bottom' : 'middle'; }
-					if (rmStyles[s].cassetteKey && sideByKey[rmStyles[s].cassetteKey]) { decoStyles[s] = true; }
-				});
-				customerView.byType[t].letterplatePosStyles = posStyles;
-				customerView.byType[t].decorativeSideStyles = decoStyles;
-			});
-		}
+		Shared.enrichCustomerView(customerView, renderModel);
 		this.wiz = HD_DD_Wizard.create(customerView, HD_DD_StepConfig);
 		this.compositor = null;
 		// key of the step painted on the PREVIOUS render — used by the _styleCategory
@@ -550,27 +506,6 @@
 		try { this.compositor.render(type, design); } catch (e) { /* tolerate a missing asset */ }
 	};
 
-	// A PNG snapshot of the composited door for the enquiry — downscaled to a sensible width
-	// and flattened onto the stage colour so it reads in any email client. Returns null if the
-	// canvas is empty or (on dev hotlinking) cross-origin-tainted, in which case we submit the
-	// spec without an image rather than block the customer.
-	App.prototype.snapshotDoor = function () {
-		var cv = this.canvas;
-		if (!cv || !cv.width || !cv.height) { return null; }
-		try {
-			var maxW = 480;
-			var scale = Math.min(1, maxW / cv.width);
-			var out = document.createElement('canvas');
-			out.width = Math.round(cv.width * scale);
-			out.height = Math.round(cv.height * scale);
-			var ctx = out.getContext('2d');
-			ctx.fillStyle = '#f3f3f1';
-			ctx.fillRect(0, 0, out.width, out.height);
-			ctx.drawImage(cv, 0, 0, out.width, out.height);
-			return out.toDataURL('image/png');
-		} catch (e) { return null; }
-	};
-
 	// Funnel tracking (Microsoft Clarity, if installed) — fire a custom event per view so
 	// you can see exactly which step loses people. Best-effort: a no-op if Clarity is absent.
 	App.prototype.track = function (name) {
@@ -578,93 +513,16 @@
 	};
 
 	// ---- Context objects handed to the renderers ----------------------------
-	// --- Furniture ↔ hardware-finish compatibility --------------------------
-	// A recolourable furniture item (handle or letterplate) only comes in the finishes whose
-	// image file actually exists: a lever in all seven standard finishes, an architectural lever
-	// or letterplate in just Chrome/Gold/Graphite. Returns the finish LABELS it's offered in, or
-	// null when it has no recolour variants at all — a FIXED/product item (a stainless pull, a
-	// "Pewter Monkey Tail", a "Forged Black …"): those carry their finish in the product itself
-	// and are left unconstrained here. (Whether a fixed product is valid with a mismatched finish
-	// is an Endurance validator question, not a missing-file one — see docs/orderability-audit.md.)
-	App.prototype.furnitureAvailableColours = function (furnMap, label) {
-		var model = this.renderModel;
-		if (!furnMap || !furnMap[label] || !window.HD_DD_RenderModel) { return null; }
-		var info = window.HD_DD_RenderModel.furnitureColourInfo(model, furnMap[label].url);
-		if (!info) { return null; }
-		var tokenToLabel = {};
-		for (var lbl in model.hardwareColours) {
-			if (Object.prototype.hasOwnProperty.call(model.hardwareColours, lbl)) { tokenToLabel[model.hardwareColours[lbl]] = lbl; }
-		}
-		// An alternate token (the finger pull's MattSilver) stands in for a canonical finish token
-		// (Satin), so resolve it before mapping to a finish label — else that finish looks unavailable.
-		var aliases = model.furnitureColourAliases || {};
-		return info.variants.map(function (t) { return tokenToLabel[aliases[t] || t]; }).filter(Boolean);
-	};
-	App.prototype.handleAvailableColours = function (label) {
-		var T = (this.renderModel && this.renderModel.types) ? this.renderModel.types[this.activeType()] : null;
-		return T ? this.furnitureAvailableColours(T.handles, label) : null;
-	};
-
-	// The finish LABELS a handle/letterplate is offered in, read from Endurance's exact per-finish
-	// lists (model.finishFurniture). Returns null when we have no such data (caller then falls back
-	// to the variant-token heuristic). The labels carry the odd trailing space, so match trimmed.
-	App.prototype.furnitureFinishes = function (label, kind) {
-		var ff = this.renderModel && this.renderModel.finishFurniture;
-		if (!ff) { return null; }
-		var target = String(label).trim();
-		var out = [];
-		for (var fin in ff) {
-			if (!Object.prototype.hasOwnProperty.call(ff, fin)) { continue; }
-			var list = ff[fin][kind] || [];
-			for (var i = 0; i < list.length; i++) { if (String(list[i]).trim() === target) { out.push(fin); break; } }
-		}
-		return out;
-	};
-
-	// Why a handle/letterplate tile is greyed out (or null if selectable). Endurance filters these
-	// lists by finish, so we offer exactly what it offers for the chosen finish — guaranteeing the
-	// pair is orderable. Falls back to the recolour-variant heuristic when per-finish data is absent.
+	// Furniture ↔ finish compatibility lives in HD_DD_Shared (design-shared.js): Endurance
+	// filters handles/letterplates by finish, so a tile is greyed when the pair isn't orderable.
 	App.prototype.tileDisabledReason = function (step, choice) {
-		if (step.key !== 'handle' && step.key !== 'letterplate') { return null; }
-		var hw = this.wiz.state().design['Hardware Type'];
-		if (!hw) { return null; }
-		var kind = step.key === 'handle' ? 'handles' : 'letterplates';
-		var finishes = this.furnitureFinishes(choice.label, kind);
-		if (finishes !== null) {
-			// `[]` = an item we model that Endurance never lists (label drift) — don't block it.
-			if (!finishes.length || finishes.indexOf(hw.label) !== -1) { return null; }
-			return formatColourList(finishes) + ' only';
-		}
-		var model = this.renderModel;
-		var T = model && model.types ? model.types[this.activeType()] : null;
-		if (!T) { return null; }
-		var avail = this.furnitureAvailableColours(step.key === 'handle' ? T.handles : T.letterplates, choice.label);
-		if (!avail || avail.indexOf(hw.label) !== -1) { return null; }
-		return formatColourList(avail) + ' only';
+		return Shared.disabledReason(this.renderModel, this.activeType(), this.wiz.state().design, step.key, choice.label);
 	};
 
 	// When the finish changes, drop a now-incompatible handle or letterplate so the preview never
-	// shows an item the chosen finish doesn't offer — it falls back to the default and the customer
-	// re-picks (incompatible ones greyed). Mirrors how the Endurance designer resets the handle.
+	// shows an item the chosen finish doesn't offer — the customer re-picks (incompatible ones greyed).
 	App.prototype.resetFurnitureIfIncompatible = function () {
-		var design = this.wiz.state().design;
-		var model = this.renderModel;
-		var hw = design['Hardware Type'];
-		if (!hw || !model) { return; }
-		var T = model.types ? model.types[this.activeType()] : null;
-		var self = this;
-		[['Handle', 'handles'], ['Letterplate', 'letterplates']].forEach(function (pair) {
-			var sel = design[pair[0]];
-			if (!sel) { return; }
-			var finishes = self.furnitureFinishes(sel.label, pair[1]);
-			if (finishes !== null) {
-				if (finishes.length && finishes.indexOf(hw.label) === -1) { delete design[pair[0]]; }
-				return;
-			}
-			if (!T) { return; }
-			var avail = self.furnitureAvailableColours(pair[0] === 'Handle' ? T.handles : T.letterplates, sel.label);
-			if (avail && avail.indexOf(hw.label) === -1) { delete design[pair[0]]; }
-		});
+		Shared.resetFurnitureIfIncompatible(this.renderModel, this.activeType(), this.wiz.state().design);
 	};
 
 	App.prototype.stepCtx = function (st, step) {
@@ -865,19 +723,8 @@
 		return null;
 	};
 
-	// Borrow a handle's image from any door type that captured it (handle products are
-	// identical across types). Used for thumbnails only — the canvas keeps each type's
-	// own captured geometry, falling back to the baseline handle when a type lacks one.
 	App.prototype.handleImageFromAnyType = function (label) {
-		var types = this.renderModel && this.renderModel.types;
-		if (!types) { return null; }
-		for (var t in types) {
-			if (Object.prototype.hasOwnProperty.call(types, t)) {
-				var hh = types[t].handles && types[t].handles[label];
-				if (hh && hh.url) { return hh.url; }
-			}
-		}
-		return null;
+		return Shared.handleImageFromAnyType(this.renderModel, label);
 	};
 
 	App.prototype.categoryOf = function (label) {
@@ -885,51 +732,29 @@
 		return (map && map[label]) || null;
 	};
 
-	// ---- Enquiry form (rendered in the body so the door preview stays visible) -----
-	App.prototype.renderForm = function () {
-		this.body.innerHTML = '';
-		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.formTitle || 'Get your free quote'));
-		this.body.appendChild(el('div', 'hd-dd__form-reassure',
-			I18N.reassure || 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.'));
-		if (!this._formEl) { this._formEl = this.buildForm(); }
-		this.body.appendChild(this._formEl);
+	// ---- Enquiry (form, submit, thank-you) — shared with the swipe flow via HD_DD_Enquiry ----
+	App.prototype.enquiryCtl = function () {
+		var self = this;
+		if (!this._enquiry) {
+			this._enquiry = window.HD_DD_Enquiry.create({
+				api: api, cfg: CFG, i18n: I18N, funnel: Funnel,
+				getDesign: function () { return self.wiz.state().design; },
+				getCanvas: function () { return self.canvas; },
+				track: function (name) { self.track(name); },
+				experiment: function () { return self.experiment || null; },
+				onSuccess: function (result) { self.renderSuccess(result); }
+			});
+		}
+		return this._enquiry;
 	};
 
-	// The post-submission screen — shown while the customer is most engaged. Confirms,
-	// points to the revisit link, frames price, and invites another design.
+	App.prototype.renderForm = function () { this.enquiryCtl().renderForm(this.body); };
+
+	// The post-submission screen — a self-contained, centred terminal screen (no sticky preview).
 	App.prototype.renderSuccess = function (result) {
 		var self = this;
-		this.setPhase('done'); // a self-contained, centred terminal screen (no sticky preview)
-		this.body.innerHTML = '';
-		var wrap = el('div', 'hd-dd__thanks');
-		// Their designed door, inline at the top — a confirmation visual that reads top-to-bottom
-		// (the wizard's sticky preview is hidden in this phase, so nothing is cut off).
-		if (this._designImage) {
-			var pic = el('img', 'hd-dd__thanks-img');
-			pic.src = this._designImage;
-			pic.alt = 'Your door design';
-			wrap.appendChild(pic);
-		}
-		wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Thank you — your design is on its way to us.'));
-		wrap.appendChild(el('div', 'hd-dd__thanks-text',
-			'We’ll be in touch shortly with your free, no-obligation quote — usually within one working day. We’ve also emailed you a copy with a link to revisit or tweak this design.'));
-		wrap.appendChild(el('div', 'hd-dd__thanks-price',
-			'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.'));
-
-		var again = el('button', 'hd-dd__thanks-again', 'Design another door');
-		again.type = 'button';
-		again.addEventListener('click', function () { self.designAnother(); });
-		wrap.appendChild(again);
-		wrap.appendChild(el('div', 'hd-dd__thanks-note', 'Quoting for more than one door? Design the next one now — we already have your details.'));
-
-		// A reliable, bookmarkable revisit link (works even if the email doesn't arrive).
-		if (result && result.token) {
-			var link = el('a', 'hd-dd__thanks-link', 'Revisit this design');
-			link.href = window.location.origin + window.location.pathname + '?design=' + encodeURIComponent(result.token);
-			wrap.appendChild(link);
-		}
-
-		this.body.appendChild(wrap);
+		this.setPhase('done');
+		this.enquiryCtl().renderSuccess(this.body, result, function () { self.designAnother(); });
 		this.backBtn.hidden = true;
 		this.continueBtn.hidden = true;
 		// Land at the top so the whole message reads from "Thank you" — not part-scrolled.
@@ -944,166 +769,12 @@
 		this._atForm = false;
 		this._frameGroup = null;
 		this._reloadNote = null;
-		this._formEl = null; // rebuild so the form pre-fills from _lastContact
+		this.enquiryCtl().reset();
 		this.render();
 		try { this.root.scrollIntoView({ block: 'start' }); } catch (e) { /* older browsers */ }
 	};
 
-	App.prototype.buildForm = function () {
-		var self = this;
-		var form = document.createElement('form');
-		form.id = 'hd-dd-form';
-		form.className = 'hd-dd__form';
-		form.setAttribute('novalidate', 'novalidate');
-
-		[
-			{ name: 'name', label: 'Name', type: 'text', autocomplete: 'name' },
-			{ name: 'telephone', label: 'Telephone', type: 'tel', autocomplete: 'tel' },
-			{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email' },
-			{ name: 'postcode', label: 'Post code', type: 'text', autocomplete: 'postal-code' }
-		].forEach(function (fld) {
-			var row = el('label', 'hd-dd__form-row');
-			row.appendChild(el('span', 'hd-dd__form-label', fld.label));
-			var input = document.createElement('input');
-			input.className = 'hd-dd__form-input';
-			input.type = fld.type;
-			input.name = fld.name;
-			input.required = true;
-			input.setAttribute('autocomplete', fld.autocomplete);
-			// Pre-fill from the previous submission so "Design another door" is quick.
-			if (self._lastContact && self._lastContact[fld.name] != null) { input.value = self._lastContact[fld.name]; }
-			row.appendChild(input);
-			var err = el('span', 'hd-dd__form-error');
-			err.setAttribute('data-error-for', fld.name);
-			row.appendChild(err);
-			form.appendChild(row);
-		});
-
-		// Honeypot (bots fill it; humans never see it).
-		var hp = document.createElement('input');
-		hp.type = 'text';
-		hp.name = 'hd_hp';
-		hp.className = 'hd-dd__hp';
-		hp.tabIndex = -1;
-		hp.setAttribute('autocomplete', 'off');
-		hp.setAttribute('aria-hidden', 'true');
-		form.appendChild(hp);
-
-		var consent = el('label', 'hd-dd__consent');
-		var cb = document.createElement('input');
-		cb.type = 'checkbox';
-		cb.name = 'consent';
-		cb.required = true;
-		consent.appendChild(cb);
-		consent.appendChild(el('span', null, I18N.consent || 'I agree to be contacted about this enquiry.'));
-		form.appendChild(consent);
-
-		var submit = el('button', 'hd-dd__submit', I18N.submit || 'Send my free quote request');
-		submit.type = 'submit';
-		form.appendChild(submit);
-		form.appendChild(el('div', 'hd-dd__form-trust',
-			I18N.trust || 'No spam, ever — your details are only used to prepare your quote.'));
-		form.appendChild(el('div', 'hd-dd__form-status'));
-		var statusEl = form.querySelector('.hd-dd__form-status');
-		statusEl.setAttribute('role', 'status');
-		statusEl.setAttribute('aria-live', 'polite');
-
-		form.addEventListener('submit', function (e) { e.preventDefault(); self.submit(form); });
-		return form;
-	};
-
-	App.prototype.submit = function (form) {
-		var self = this;
-		var statusEl = form.querySelector('.hd-dd__form-status');
-		var submitBtn = form.querySelector('.hd-dd__submit');
-		var f = form.elements; // named access (form.name is shadowed by the control named "name").
-		var data = {
-			name: f['name'].value,
-			telephone: f['telephone'].value,
-			email: f['email'].value,
-			postcode: f['postcode'].value,
-			consent: f['consent'].checked,
-			hd_hp: f['hd_hp'].value,
-			design: cleanDesign(this.wiz.state().design),
-			// The designer's own page (no query) — the server validates it's same-origin and
-			// builds the "revisit your design" email link from it.
-			pageUrl: window.location.origin + window.location.pathname
-		};
-
-		// Capture what the door actually LOOKS like so the request for quote carries the image,
-		// not just the spec. Production serves the layers same-origin (the proxy) so the canvas
-		// exports cleanly; guard anyway so a stray cross-origin layer can never block a submit.
-		var snapshot = this.snapshotDoor();
-		if (snapshot) { data.image = snapshot; }
-		this._designImage = snapshot || null; // shown on the thank-you screen
-
-		// QA harness has no WordPress REST endpoint — acknowledge without posting.
-		if (!CFG.restUrl) {
-			statusEl.textContent = I18N.previewOnly || 'Preview mode — enquiry not sent.';
-			return;
-		}
-
-		statusEl.textContent = '…';
-		submitBtn.disabled = true;
-		api('enquiry', { method: 'POST', body: JSON.stringify(data) }).then(function (res) {
-			submitBtn.disabled = false;
-			if (res.ok && res.body && res.body.ok) {
-				self.track('door_quote_submitted'); // the conversion event — the whole funnel's goal
-				Funnel.lead();
-				// Keep their details so "Design another door" doesn't make them re-type.
-				self._lastContact = { name: data.name, telephone: data.telephone, email: data.email, postcode: data.postcode };
-				self.renderSuccess(res.body);
-				return;
-			}
-			Array.prototype.forEach.call(form.querySelectorAll('.hd-dd__form-error'), function (n) { n.textContent = ''; });
-			var fieldErrors = res.body && res.body.data && res.body.data.fields;
-			if (fieldErrors) {
-				Object.keys(fieldErrors).forEach(function (k) {
-					var n = form.querySelector('[data-error-for="' + k + '"]');
-					if (n) { n.textContent = fieldErrors[k]; }
-				});
-			}
-			var message = (res.body && res.body.message) || I18N.genericError || 'Something went wrong.';
-			if (window.HD_DD_ApiClient && window.HD_DD_ApiClient.isNonceFailure(res)) {
-				// The client already fetched a fresh nonce and retried once; that retry failed too.
-				message = I18N.sessionExpired || 'Your session had expired. Please reload the page and send your design again.';
-			}
-			statusEl.textContent = message;
-		}).catch(function () {
-			submitBtn.disabled = false;
-			statusEl.textContent = I18N.genericError || 'Something went wrong.';
-		});
-	};
-
-	// ---- WordPress entry ----------------------------------------------------
-	function startFromConfig(root) {
-		var catUrl = CFG.catalogueUrl || (CFG.restUrl + 'catalogue');
-		var rmUrl = CFG.renderModelUrl || (CFG.restUrl + 'render-model');
-		Promise.all([
-			fetch(catUrl).then(function (r) { return r.json(); }),
-			fetch(rmUrl).then(function (r) { return r.json(); }).catch(function () { return null; }),
-			window.HD_DD_CATEGORIES ? Promise.resolve(window.HD_DD_CATEGORIES)
-				: (CFG.categoriesUrl ? fetch(CFG.categoriesUrl).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null))
-		]).then(function (res) {
-			var cv = res[0] && res[0].catalogue ? res[0].catalogue : res[0];
-			var rm = (res[1] && res[1].available && res[1].model) ? res[1].model : null;
-			if (!cv || !cv.byType) {
-				root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
-				return;
-			}
-			var app = new App(root, cv, rm, res[2]);
-			// ?design=<token> reloads a previously saved design (the "revisit" email link).
-			var saved = null;
-			try { saved = new URLSearchParams(window.location.search).get('design'); } catch (e) { saved = null; }
-			if (saved) { app.loadSavedDesign(saved); } else { app.render(); }
-		}).catch(function () {
-			root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
-		});
-	}
-
-	// Expose for the QA harness; auto-start every shortcode container.
+	// Started by boot.js (which loads the data and decides which flow a visitor gets); also
+	// constructed directly by the QA harness.
 	window.HD_DD_App = App;
-	document.addEventListener('DOMContentLoaded', function () {
-		Array.prototype.forEach.call(document.querySelectorAll('[data-hd-door-designer]'), startFromConfig);
-	});
 })();

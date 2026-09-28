@@ -51,65 +51,19 @@
 <script src="../assets/js/wizard/review.js"></script>
 <script src="../assets/js/wizard/funnel.js"></script>
 <script src="../assets/js/api-client.js"></script>
-<!-- app bootstrap (exposes window.HD_DD_App; its DOMContentLoaded auto-start finds no
-     [data-hd-door-designer] node here, so we mount manually below) -->
+<script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/enquiry.js"></script>
+<script src="harness-data.js"></script>
+<!-- classic app (exposes window.HD_DD_App; boot.js normally starts it — here we mount manually) -->
 <script src="../assets/js/hd-door-designer.js"></script>
 <script>
 (function () {
   var mount = document.getElementById('mount');
   var statusEl = document.getElementById('harness-status');
 
-  // Mirror of class-hd-catalogue.php → customer_view(): project the full catalogue
-  // down to the compact, customer-facing shape the wizard consumes.
-  var CUSTOMER_HEADINGS = [
-    'Door Type', 'Frame Design', 'Frame Colour', 'Door Design',
-    'Door Colour (External)', 'Door Colour (Internal)', 'Door Glass',
-    'Door Hinged On', 'Master Leaf', 'Hardware Type', 'Handle', 'Letterplate', 'Knocker'
-  ];
-  function slimChoices(choices) {
-    return (choices || []).map(function (c) { return { label: c.label || '', id: c.id != null ? c.id : null }; });
-  }
-  function slimGlazing(byStyle) {
-    var out = {};
-    Object.keys(byStyle || {}).forEach(function (s) { out[s] = Array.isArray(byStyle[s]) ? slimChoices(byStyle[s]) : []; });
-    return out;
-  }
-  function slimSidelights(node) {
-    if (!node || typeof node !== 'object') { return null; }
-    function pick(key) { return (node[key] && Array.isArray(node[key].choices)) ? slimChoices(node[key].choices) : []; }
-    return { sidelightType: pick('sidelightType'), sidelightGlass: pick('sidelightGlass') };
-  }
-  function buildCustomerView(full) {
-    var types = [], byType = {};
-    Object.keys(full).forEach(function (typeName) {
-      var node = full[typeName];
-      if (!node || typeof node !== 'object' || !node.fields) { return; } // skip _assetBase/_schema/etc.
-      types.push(typeName);
-      var fields = {};
-      CUSTOMER_HEADINGS.forEach(function (h) {
-        if (node.fields[h] && node.fields[h].choices) { fields[h] = slimChoices(node.fields[h].choices); }
-      });
-      byType[typeName] = {
-        hingeSideField: node.fields['Door Hinged On'] ? 'Door Hinged On' : (node.fields['Master Leaf'] ? 'Master Leaf' : ''),
-        hasInternalColour: !!node.fields['Door Colour (Internal)'],
-        hasKnocker: !!node.fields['Knocker'],
-        hasFrameShape: !!(node.fields['Frame Design'] && node.fields['Frame Design'].choices.length > 1),
-        fields: fields,
-        glazingByStyle: slimGlazing(node.glazingByStyle),
-        knockerByStyle: slimGlazing(node.knockerByStyle),
-        sidelights: slimSidelights(node.sidelights)
-      };
-    });
-    return { types: types, byType: byType };
-  }
-
-  Promise.all([
-    fetch('../data/endurance-catalogue-full.json').then(function (r) { return r.json(); }),
-    fetch('../data/render-model.json').then(function (r) { return r.json(); }),
-    fetch('../data/style-categories.json').then(function (r) { return r.json(); }).catch(function () { return null; })
-  ]).then(function (res) {
-    var full = res[0], model = res[1], categories = res[2];
-    var customerView = buildCustomerView(full);
+  window.HD_DD_HarnessData.load().then(function (data) {
+    var model = data.model, categories = data.categories;
+    var customerView = data.customerView;
     // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host.
     window.HD_DD_CONFIG = { assetBase: model._assetBase, heroImage: 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' };
     statusEl.textContent = 'Loaded ' + customerView.types.length + ' door types · assetBase ' + model._assetBase;
