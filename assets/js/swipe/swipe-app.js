@@ -1,0 +1,236 @@
+// assets/js/swipe/swipe-app.js
+// The swipe flow's controller: state, navigation, analytics. Rendering lives in swipe-view.js.
+//
+// Order: showcase (pick a design) → door type (+ hinge) → colour → glass → handle (+ finish)
+// → letterplate → knocker → side panels → your door → enquiry form. Choices are stored through
+// the classic HD_DD_Wizard, so validity rules, defaults and pruning are exactly the classic
+// flow's; the enquiry payload is identical.
+(function () {
+	'use strict';
+
+	var CFG = window.HD_DD_CONFIG || {};
+	var SC = window.HD_DD_StepConfig;
+	var FS = window.HD_DD_FlowSteps;
+	var DI = window.HD_DD_DesignIndex;
+	var Shared = window.HD_DD_Shared;
+
+	// The colour designs are shown in on the showcase (and the colour the door starts in).
+	var SHOWCASE_COLOUR = { composite: 'Anthracite Grey', aluminium: 'Anthracite Grey (Smooth)' };
+
+	function SwipeApp(root, customerView, renderModel, categories, opts) {
+		opts = opts || {};
+		this.root = root;
+		this.cv = Shared.enrichCustomerView(customerView, renderModel);
+		this.model = renderModel || null;
+		this.index = DI.build(customerView, categories);
+		this.funnel = opts.funnel || { step: function () {}, lead: function () {} };
+		this.experiment = opts.experiment || null;
+		this.api = opts.api;
+		this.filter = opts.doorType === 'Avantal' ? 'Aluminium' : 'All';
+		this.preferType = opts.doorType && opts.doorType !== 'Avantal' ? opts.doorType : null;
+		this.view = window.HD_DD_SwipeView.create(this);
+		this.reset();
+	}
+
+	SwipeApp.prototype.reset = function () {
+		this.wiz = HD_DD_Wizard.create(this.cv, SC);
+		this.chosen = null;       // the showcase design entry
+		this.memory = {};         // every choice made this run, so switching type can restore them
+		this.screen = 'design';   // 'design' | screen key | 'review' | 'form' | 'done'
+		this.showcaseAt = 0;
+		this.viewed = {};         // designs brought to the centre of the showcase
+	};
+
+	SwipeApp.prototype.assetBase = function () { return CFG.assetBase || (this.model && this.model._assetBase) || ''; };
+	SwipeApp.prototype.design = function () { return this.wiz.state().design; };
+	SwipeApp.prototype.type = function () { var d = this.design()['Door Type']; return d ? d.label : ''; };
+	SwipeApp.prototype.node = function () { return this.cv.byType[this.type()]; };
+	SwipeApp.prototype.screens = function () { return this.chosen ? FS.screens(this.node(), this.design(), SC) : []; };
+	SwipeApp.prototype.currentScreen = function () {
+		var list = this.screens();
+		return list[this.screenPos(list)] || null;
+	};
+	// Position of the current screen in a screens() list (screens() builds fresh objects, so
+	// match by key, never by identity). -1 when not on an option screen.
+	SwipeApp.prototype.screenPos = function (list) {
+		for (var i = 0; i < list.length; i++) { if (list[i].key === this.screen) { return i; } }
+		return -1;
+	};
+
+	SwipeApp.prototype.showcaseList = function () {
+		var f = this.filter;
+		return this.index.designs.filter(function (d) { return DI.matches(d, f); });
+	};
+
+	// The door a showcase card shows: the design as its first type, in the showcase colour.
+	SwipeApp.prototype.showcaseDesign = function (d) {
+		var type = DI.typesFor(d)[0];
+		var probe = { 'Door Type': { label: type }, 'Door Design': { label: d.types[type] } };
+		probe['Door Colour (External)'] = { label: SHOWCASE_COLOUR[d.family] };
+		return { type: type, design: probe };
+	};
+
+	SwipeApp.prototype.track = function (name) {
+		try { if (typeof window.clarity === 'function') { window.clarity('event', name); } } catch (e) { /* best-effort */ }
+	};
+	SwipeApp.prototype.tag = function (k, v) {
+		try { if (typeof window.clarity === 'function') { window.clarity('set', k, String(v)); } } catch (e) { /* best-effort */ }
+	};
+
+	// ---- Choosing ------------------------------------------------------------
+	SwipeApp.prototype.pickDesign = function (d) {
+		var types = DI.typesFor(d);
+		var type = (this.preferType && types.indexOf(this.preferType) !== -1) ? this.preferType : types[0];
+		var prev = this.chosen ? this.design() : null;
+		this.chosen = d;
+		this.funnel.step('design', d.name);
+		this.tag('hd_designs_viewed', Object.keys(this.viewed).length || 1);
+		this.setType(type, prev);
+		if (!this.design()['Door Colour (External)']) { this.selectLabel('Door Colour (External)', SHOWCASE_COLOUR[d.family]); }
+		this.go(this.screens()[0].key);
+	};
+
+	// Switch door type while keeping every earlier choice that still applies to the new type.
+	SwipeApp.prototype.setType = function (type, prev) {
+		var keep = {};
+		var mem = this.memory, src = prev || this.design();
+		Object.keys(mem).forEach(function (k) { keep[k] = mem[k]; });
+		Object.keys(src).forEach(function (k) { keep[k] = src[k]; });
+		this.wiz.selectType(type);
+		// Keep an aluminium cassette variant already chosen for this design; else the default.
+		var style = this.chosen.types[type];
+		var kept = keep['Door Design'] && keep['Door Design'].label;
+		if (kept && this.chosen.variants.some(function (v) { return v.label === kept; })) { style = kept; }
+		this.selectLabel('Door Design', style);
+		var attempted = { 'Door Type': true, 'Door Design': true };
+		for (var guard = 0; guard < 60; guard++) {
+			var step = this.wiz.state().steps.filter(function (s) { return !attempted[s.heading]; })[0];
+			if (!step) { break; }
+			attempted[step.heading] = true;
+			if (keep[step.heading]) { this.selectLabel(step.heading, keep[step.heading].label); }
+		}
+		this.settle();
+		var sc = this.currentScreen();
+		if (sc) { this.ensureDefaults(sc); }
+	};
+
+	// Aluminium: switch to another cassette colour of the same design, keeping everything else.
+	SwipeApp.prototype.setVariant = function (label) {
+		var prev = {};
+		var cur = this.design();
+		Object.keys(cur).forEach(function (k) { prev[k] = cur[k]; });
+		prev['Door Design'] = { label: label };
+		this.setType(this.type(), prev);
+	};
+
+	SwipeApp.prototype.selectLabel = function (heading, label) {
+		var step = this.wiz.state().steps.filter(function (s) { return s.heading === heading; })[0];
+		var list = step ? step.choices : (heading === 'Door Design' ? this.node().fields['Door Design'] : null);
+		var c = (list || []).filter(function (x) { return x.label === label; })[0];
+		if (c) { this.wiz.select(heading, c); return true; }
+		return false;
+	};
+
+	SwipeApp.prototype.select = function (heading, choice) {
+		this.memory[heading] = choice;
+		this.wiz.select(heading, choice);
+		this.settle();
+		// A choice can reveal new sub-choices (sidelit frame → glazed/solid); give them a value.
+		var sc = this.currentScreen();
+		if (sc) { this.ensureDefaults(sc); }
+	};
+
+	// After any change: drop furniture the finish can't take, and fill single-answer steps.
+	SwipeApp.prototype.settle = function () {
+		var d = this.design();
+		Shared.resetFurnitureIfIncompatible(this.model, this.type(), d);
+		var self = this;
+		FS.autoPicks(this.node(), d, SC).forEach(function (p) { self.wiz.select(p[0], p[1]); });
+	};
+
+	// Every carousel/toggle on a screen shows a real selection: fill any required step on it
+	// that has nothing picked yet with the choice the carousel starts centred on.
+	SwipeApp.prototype.ensureDefaults = function (screen) {
+		var self = this;
+		[screen.main].concat(screen.subs).forEach(function (step) {
+			if (!step || self.design()[step.heading]) { return; }
+			var list = step === screen.main ? self.choicesFor(step) : step.choices;
+			if (list.length) { self.wiz.select(step.heading, list[0]); }
+		});
+		this.settle();
+	};
+
+	// Choices a carousel shows. Handles/letterplates that don't come in the chosen finish are
+	// left out entirely (a swipe list has no room for greyed-out tiles).
+	SwipeApp.prototype.choicesFor = function (step) {
+		if (step.key !== 'handle' && step.key !== 'letterplate') { return step.choices; }
+		var self = this, d = this.design();
+		var ok = step.choices.filter(function (c) { return !Shared.disabledReason(self.model, self.type(), d, step.key, c.label); });
+		return ok.length ? ok : step.choices;
+	};
+
+	// ---- Navigation ----------------------------------------------------------
+	SwipeApp.prototype.go = function (key) {
+		this.screen = key;
+		var sc = this.currentScreen();
+		if (sc) { this.ensureDefaults(sc); }
+		this.render();
+		this.track('door_step_' + key);
+		if (key === 'review') { this.funnel.step('review'); }
+		if (key === 'form') { this.funnel.step('details'); }
+		try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+	};
+
+	SwipeApp.prototype.next = function () {
+		var list = this.screens();
+		var cur = this.currentScreen();
+		if (cur) {
+			var self = this;
+			FS.funnelEvents(cur, this.design()).forEach(function (ev) { self.funnel.step(ev[0], ev[1]); });
+		}
+		var i = this.screenPos(list);
+		this.go(i + 1 < list.length ? list[i + 1].key : 'review');
+	};
+
+	SwipeApp.prototype.back = function () {
+		if (this.screen === 'form') { return this.go('review'); }
+		var list = this.screens();
+		if (this.screen === 'review') { return this.go(list.length ? list[list.length - 1].key : 'design'); }
+		var i = this.screenPos(list);
+		this.go(i > 0 ? list[i - 1].key : 'design');
+	};
+
+	SwipeApp.prototype.nextLabel = function () {
+		var list = this.screens();
+		var i = this.screenPos(list);
+		return i + 1 < list.length ? 'Love it · next: ' + list[i + 1].short : 'Love it · see my door';
+	};
+
+	SwipeApp.prototype.progress = function () {
+		var list = this.screens();
+		var total = (list.length || 7) + 1;
+		if (this.screen === 'design') { return { current: 1, total: total }; }
+		var i = this.screenPos(list);
+		return { current: i === -1 ? total : i + 2, total: total };
+	};
+
+	SwipeApp.prototype.render = function () { this.view.render(); };
+
+	// ---- Saved design ("revisit your design" link) ---------------------------------
+	SwipeApp.prototype.loadSaved = function (token) {
+		var self = this;
+		this.view.loading();
+		this.api('design/' + encodeURIComponent(token), { method: 'GET' }).then(function (res) {
+			var saved = res.ok && res.body && res.body.design;
+			var t = saved && saved['Door Type'] && saved['Door Type'].label;
+			var s = saved && saved['Door Design'] && saved['Door Design'].label;
+			var d = s ? DI.designForLabel(self.index, s) : null;
+			if (!d || !d.types[t]) { self.render(); return; }
+			self.chosen = d;
+			self.setType(t, saved);
+			self.go('review');
+		}).catch(function () { self.render(); });
+	};
+
+	window.HD_DD_SwipeApp = SwipeApp;
+})();

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HD Door Designer — swipe flow QA harness</title>
+<!--
+  Visual QA for the SWIPE flow without WordPress.
+      python -m http.server 8000   (from the plugin root)
+      → http://localhost:8000/tools/swipe-test.html
+  Same data projection as preview-test.html (tools/harness-data.js). Funnel calls are logged
+  to the console by the hdAnalytics stub below; the enquiry form runs in preview mode.
+-->
+<link rel="stylesheet" href="../assets/css/hd-door-designer.css">
+<link rel="stylesheet" href="../assets/css/hd-swipe.css">
+<script>
+  window.hdAnalytics = {
+    step: function (f, s, o) { console.log('[hdAnalytics] step', f, s, JSON.stringify(o)); },
+    lead: function (f, o) { console.log('[hdAnalytics] lead', f, JSON.stringify(o || {})); }
+  };
+</script>
+<style>
+  /* Harness chrome only — the flow is styled solely by the plugin stylesheets above. */
+  body { font-family: system-ui, sans-serif; margin: 0; color: #222; background: #fff; }
+  #harness-status { color: #888; font-size: .8rem; text-align: center; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="mount">Loading…</div>
+<div id="harness-status"></div>
+
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<script src="../assets/js/wizard/step-config.js"></script>
+<script src="../assets/js/wizard/wizard-controller.js"></script>
+<script src="../assets/js/wizard/funnel.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/enquiry.js"></script>
+<script src="../assets/js/swipe/design-index.js"></script>
+<script src="../assets/js/swipe/flow-steps.js"></script>
+<script src="../assets/js/swipe/carousel.js"></script>
+<script src="../assets/js/swipe/door-card.js"></script>
+<script src="../assets/js/swipe/swipe-parts.js"></script>
+<script src="harness-data.js"></script>
+<script>
+  // The view + app read HD_DD_CONFIG at load, so set it before they load.
+  window.HD_DD_CONFIG = { version: 'harness' };
+</script>
+<script src="../assets/js/swipe/swipe-view.js"></script>
+<script src="../assets/js/swipe/swipe-app.js"></script>
+<script>
+(function () {
+  var mount = document.getElementById('mount');
+  var statusEl = document.getElementById('harness-status');
+  window.HD_DD_HarnessData.load().then(function (data) {
+    window.HD_DD_CONFIG.assetBase = data.model._assetBase;
+    statusEl.textContent = 'Swipe harness · assetBase ' + data.model._assetBase;
+    mount.innerHTML = '';
+    var funnel = window.HD_DD_Funnel.create('door-designer-v2', window.HD_DD_Funnel.ORDER_V2);
+    var doorType = new URLSearchParams(location.search).get('door_type') || '';
+    window.swipeApp = new window.HD_DD_SwipeApp(mount, data.customerView, data.model, data.categories, { funnel: funnel, doorType: doorType });
+    window.swipeApp.render();
+  }).catch(function (e) { mount.textContent = 'Failed to load data — serve over http. ' + e; });
+})();
+</script>
+</body>
+</html>

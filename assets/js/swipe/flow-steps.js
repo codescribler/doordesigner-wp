@@ -15,30 +15,30 @@
 	var DESIGN_SCREEN = {
 		key: 'design',
 		title: 'Find a door you love',
-		help: 'Swipe through our designs and tap “Choose this design” when one catches your eye. You’ll pick the colour next.'
+		help: 'Swipe to browse. Tap Choose when one catches your eye — colour comes next.'
 	};
 
 	// main: wizard step key ('__type__' = the door-type cards, drawn from the design index).
 	var SCREENS = [
 		{ key: 'type', main: '__type__', subs: ['hinge'], short: 'door type',
-			title: 'Single, double or stable?', help: 'Swipe to see your design as each kind of door, then choose which side the hinges go.' },
+			title: 'Single, double or stable?', help: 'Swipe to see it as each kind of door, then pick the hinge side.' },
 		{ key: 'colour', main: 'extColour', subs: ['intColour'], short: 'colour',
-			title: 'Pick your colour', help: 'Swipe to see your door in every colour. Most people keep the inside white.' },
+			title: 'Pick your colour', help: 'Swipe to see your door in every colour.' },
 		{ key: 'glazing', main: 'glazing', subs: [], short: 'glass',
-			title: 'Choose your glass', help: 'Swipe through the glass designs. Textured and frosted glass adds privacy.' },
+			title: 'Choose your glass', help: 'Swipe through the glass. Frosted and textured glass adds privacy.' },
 		{ key: 'handle', main: 'handle', subs: ['hardware'], short: 'handle',
-			title: 'Choose your handle', help: 'Pick a finish, then swipe through the handles that come in it.' },
+			title: 'Choose your handle', help: 'Pick a finish below, then swipe through the handles.' },
 		{ key: 'letterplate', main: 'letterplate', subs: ['letterplatePosition'], short: 'letterplate',
-			title: 'Add a letterplate?', help: 'A letterbox for your post. Swipe to compare, or keep “No Letterplate”.' },
+			title: 'Add a letterplate?', help: 'Swipe to compare letterboxes, or keep “No Letterplate”.' },
 		{ key: 'knocker', main: 'knocker', subs: [], short: 'knocker',
 			title: 'Add a knocker?', help: 'A finishing touch. Swipe to compare, or keep “No Knocker”.' },
 		{ key: 'sides', main: 'frame', subs: ['sidelightType', 'sidelightGlass'], short: 'side panels',
-			title: 'Side panels or a window above?', help: 'Glass panels beside or above the door bring in more light. “No Sidelights” is fine too.' }
+			title: 'Side panels or a window above?', help: 'Glass beside or above the door brings in light. Just the door is fine too.' }
 	];
 
 	// Aluminium comes as a single door only, so its first screen is just the hinge side.
 	var HINGE_SCREEN = { key: 'hinge', main: 'hinge', subs: [], short: 'hinge side',
-		title: 'Which side should it hinge?', help: 'Viewed from outside. The handle sits on the opposite side to the hinges.' };
+		title: 'Which side should it hinge?', help: 'Viewed from outside — the handle sits opposite the hinges.' };
 
 	// Wizard step key → door-designer-v2 funnel key, in the funnel's canonical order.
 	var FUNNEL_KEYS = [

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Phone frame — swipe QA</title>
+<!-- Views a harness at phone widths side by side: tools/phone.html?src=swipe-test.html -->
+<style>body{margin:0;padding:16px;background:#ddd;display:flex;gap:24px;font:12px system-ui}
+iframe{border:0;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);border-radius:18px}</style></head>
+<body><script>
+var src = new URLSearchParams(location.search).get('src') || 'swipe-test.html';
+[[390, 780], [360, 700]].forEach(function (s) {
+  var f = document.createElement('iframe'); f.width = s[0]; f.height = s[1]; f.src = src; document.body.appendChild(f);
+});
+</script></body></html>

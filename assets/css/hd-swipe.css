@@ -1,0 +1,171 @@
+/*
+ * HD Door Designer — swipe flow
+ * ------------------------------------------------------------------
+ * Scoped under .hd-sw (inside .hd-dd, so the classic tokens + box-sizing reset apply).
+ * Mobile-first: one column — header, title + helper, cover-flow carousel, caption,
+ * sub-choices, sticky action button. Wider screens just get more room.
+ *
+ * Sections
+ *   1. Shell + header
+ *   2. Titles, helper, caption
+ *   3. Carousel + cards
+ *   4. Dots, showcase strip, filter chips
+ *   5. Sub-choices (segmented, chips, disclosure)
+ *   6. Action button
+ *   7. Review stage
+ *   8. Motion (+ reduced motion)
+ *   9. Wider screens
+ */
+
+/* 1. Shell + header ---------------------------------------------------------- */
+.hd-sw {
+  --sw-h: min(48vh, 420px);
+  --sw-accent: var(--brand, #1d4f3f);
+  --sw-soft: #eef5f1;
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px;
+  /* clip, not hidden: `hidden` would make .hd-sw the scroll container and break the
+     sticky header + action button. */
+  overflow-x: clip;
+}
+.hd-sw-head {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0 8px;
+  background: var(--paper, #fff);
+}
+.hd-sw-back {
+  flex: 0 0 34px; height: 34px; border-radius: 50%;
+  border: 0; background: #f0f0ee; color: var(--ink, #161616);
+  font-size: 22px; line-height: 1; cursor: pointer;
+}
+.hd-sw-back[hidden] { display: none; }
+.hd-sw-progress { flex: 1; display: flex; gap: 4px; }
+.hd-sw-progress__seg { flex: 1; height: 4px; border-radius: 3px; background: #e3e3e0; transition: background .3s; }
+.hd-sw-progress__seg.is-on { background: var(--sw-accent); }
+.hd-sw-counter { font-size: 12px; color: var(--muted, #8a8e96); font-variant-numeric: tabular-nums; }
+
+/* 2. Titles, helper, caption ------------------------------------------------ */
+.hd-sw-title { font-size: 1.35rem; line-height: 1.2; margin: 6px 0 4px; font-weight: 700; }
+.hd-sw-help {
+  margin: 0 0 10px; padding: 8px 12px; border-radius: 10px;
+  background: var(--sw-soft); color: #33413b; font-size: .92rem;
+}
+.hd-sw-caption { text-align: center; margin: 6px 0 2px; }
+.hd-sw-caption__name { font-weight: 700; font-size: 1.1rem; }
+.hd-sw-caption__pos { font-size: .82rem; color: var(--muted, #8a8e96); }
+.hd-sw-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 3. Carousel + cards --------------------------------------------------------- */
+.hd-sw-holder { margin: 0 -16px; }
+.hd-sw-carousel { position: relative; }
+.hd-sw-carousel__track {
+  position: relative; height: var(--sw-h);
+  background: linear-gradient(#f7f6f3, #ebe9e4);
+  overflow: hidden; touch-action: pan-y; cursor: grab;
+  outline: none; user-select: none; -webkit-user-select: none;
+}
+.hd-sw-carousel__track:focus-visible { box-shadow: inset 0 0 0 3px var(--sw-accent); }
+.is-dragging .hd-sw-carousel__track { cursor: grabbing; }
+.hd-sw-card {
+  position: absolute; left: 50%; top: 4%;
+  width: calc(var(--sw-h) * .46); height: 92%;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .38s cubic-bezier(.2, .8, .2, 1), opacity .38s;
+  will-change: transform;
+}
+.hd-sw-card__door { width: 100%; height: auto; max-height: 100%; opacity: 0; transition: opacity .3s; }
+.hd-sw-card.is-ready .hd-sw-card__door { opacity: 1; }
+.hd-sw-card.is-centre .hd-sw-card__door { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .22)); }
+.hd-sw-card__zoom {
+  position: absolute; right: -14%; bottom: 8%;
+  width: 46%; height: auto; border-radius: 50%;
+  border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
+  opacity: 0; transform: scale(.8); transition: opacity .3s, transform .3s;
+}
+.hd-sw-card.is-centre .hd-sw-card__zoom { opacity: 1; transform: none; }
+.is-dragging .hd-sw-card { transition: none; }
+
+/* 4. Dots, showcase strip, filter chips --------------------------------------- */
+.hd-sw-carousel__dots { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 0 2px; }
+.hd-sw-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: #d4d4d0; cursor: pointer; transition: width .3s, background .3s; }
+.hd-sw-dot.is-seen { background: #a9b3ae; }
+.hd-sw-dot.is-on { width: 22px; background: var(--ink, #161616); }
+.hd-sw-dot.is-edge { width: 5px; height: 5px; }
+.hd-sw-strip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; scrollbar-width: none; }
+.hd-sw-strip::-webkit-scrollbar { display: none; }
+.hd-sw-strip__item {
+  flex: 0 0 40px; height: 80px; padding: 3px; border-radius: 8px;
+  border: 2px solid transparent; background: #f3f3f1; cursor: pointer; font-size: 9px;
+}
+.hd-sw-strip__item img { width: 100%; height: 100%; object-fit: contain; }
+.hd-sw-strip__item.is-on { border-color: var(--sw-accent); }
+.hd-sw-filters { margin: 0 0 10px; }
+
+/* 5. Sub-choices ---------------------------------------------------------------- */
+.hd-sw-subs { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 4px; }
+.hd-sw-sub { display: flex; flex-direction: column; gap: 6px; }
+.hd-sw-sub__title { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted, #8a8e96); font-weight: 600; }
+.hd-sw-seg { display: flex; background: #f0f0ee; border-radius: 10px; padding: 3px; }
+.hd-sw-seg__btn {
+  flex: 1; border: 0; background: transparent; border-radius: 8px;
+  padding: 9px 6px; font: inherit; font-weight: 600; color: #555; cursor: pointer; min-height: 40px;
+}
+.hd-sw-seg__btn.is-on { background: #fff; color: var(--ink, #161616); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+.hd-sw-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
+.hd-sw-chips::-webkit-scrollbar { display: none; }
+.hd-sw-chip {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid #dcdcd8; background: #fff; border-radius: 999px;
+  padding: 7px 12px; min-height: 40px; font: inherit; font-size: .88rem; cursor: pointer; white-space: nowrap;
+}
+.hd-sw-chip.is-on { background: var(--ink, #161616); color: #fff; border-color: var(--ink, #161616); }
+.hd-sw-chip__swatch { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.hd-sw-chip__img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+.hd-sw-disclose__btn {
+  display: flex; justify-content: space-between; align-items: center; width: 100%;
+  border: 0; background: none; padding: 4px 0; font: inherit; color: #444; cursor: pointer;
+}
+.hd-sw-disclose__link { color: var(--sw-accent); text-decoration: underline; font-weight: 600; }
+
+/* 6. Action button ---------------------------------------------------------------- */
+.hd-sw-cta {
+  position: sticky; bottom: 0; z-index: 20;
+  margin: 12px -16px 0; padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+  border: 0; border-radius: 0; width: calc(100% + 32px);
+  background: var(--sw-accent); color: #fff;
+  font: inherit; font-weight: 700; font-size: 1.02rem; cursor: pointer;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, .08);
+}
+.hd-sw-cta[hidden] { display: none; }
+.hd-sw-cta:active { filter: brightness(.92); }
+
+/* 7. Review stage ------------------------------------------------------------------ */
+.hd-sw-stage { background: linear-gradient(#f7f6f3, #ebe9e4); margin: 0 -16px 10px; padding: 16px; text-align: center; perspective: 900px; }
+.hd-sw-stage[hidden] { display: none; }
+.hd-sw-stage__door { width: min(46vw, 210px); height: auto; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .22)); transform-origin: left center; }
+.hd-sw--form .hd-sw-stage__door { width: min(30vw, 130px); }
+.hd-sw-review { margin-top: 6px; }
+
+/* 8. Motion ------------------------------------------------------------------------ */
+@keyframes hd-sw-enter { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes hd-sw-swing { 0% { transform: rotateY(-78deg); opacity: .2; } 60% { transform: rotateY(8deg); opacity: 1; } 100% { transform: none; } }
+.hd-sw-body.is-entering { animation: hd-sw-enter .32s cubic-bezier(.2, .8, .2, 1); }
+.hd-sw-stage.is-revealing .hd-sw-stage__door { animation: hd-sw-swing .9s cubic-bezier(.2, .8, .2, 1); }
+.is-nudging .hd-sw-card { transition-duration: .42s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hd-sw *, .hd-sw *::before, .hd-sw *::after { animation: none !important; transition: none !important; }
+}
+
+/* 9. Wider screens ------------------------------------------------------------------- */
+@media (min-width: 820px) {
+  .hd-sw { --sw-h: min(56vh, 480px); padding: 0 24px; }
+  .hd-sw-holder { margin: 0; }
+  .hd-sw-carousel__track { border-radius: 14px; }
+  .hd-sw-cta { position: static; margin: 16px 0 0; width: 100%; border-radius: 12px; padding: 16px 20px; }
+  .hd-sw-stage { margin: 0 0 12px; border-radius: 14px; }
+}
