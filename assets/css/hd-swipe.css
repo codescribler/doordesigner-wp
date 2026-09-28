@@ -81,8 +81,8 @@
 .hd-sw-card.is-ready .hd-sw-card__door { opacity: 1; }
 .hd-sw-card.is-centre .hd-sw-card__door { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .22)); }
 .hd-sw-card__zoom {
-  position: absolute; right: -14%; bottom: 8%;
-  width: 46%; height: auto; border-radius: 50%;
+  position: absolute; right: -30%; bottom: 4%;
+  width: 66%; height: auto; border-radius: 50%;
   border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
   opacity: 0; transform: scale(.8); transition: opacity .3s, transform .3s;
 }

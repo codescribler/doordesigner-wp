@@ -1,8 +1,9 @@
 // assets/js/swipe/door-card.js
 // One carousel card: the customer's own door with one option applied, composited from the
 // same image layers as the classic preview (HD_DD_Preview). For small parts — handle,
-// letterplate, knocker — the card adds a zoomed close-up cropped from that part's layer, so
-// the difference between two handles is visible on a phone.
+// letterplate, knocker — the card adds a round close-up redrawn at full resolution around that
+// part, so the difference between two handles is visible on a phone. Large parts (long pull
+// bars) are already visible on the door and get none.
 //
 //   HD_DD_DoorCard.paint(cardEl, { model, assetBase, type, design, closeUp: 'handle'|'letterplate'|'knocker'|null, omitSlots })
 //     -> Promise (resolves once drawn; the returned canvas is on cardEl.firstChild)
@@ -28,14 +29,19 @@
 		return { width: Math.ceil(w) || 160, height: Math.ceil(h) || 330 };
 	}
 
-	// The close-up crop box in stage units: the part's layer, padded and made square-ish.
+	// Parts bigger than this (stage units; a door is ~318 tall) are already easy to see on the
+	// door — long pull bars, for instance — so they get no close-up.
+	var MAX_CLOSEUP_PART = 55;
+
+	// The close-up box in stage units, in the door's DISPLAYED orientation: the part plus a small
+	// margin, square, so the part fills most of the circle. null when the part is missing or large.
 	function cropBox(layers, kind, flip, stage) {
 		var slots = CLOSEUP_SLOTS[kind];
 		if (!slots) { return null; }
 		var part = null;
 		for (var i = 0; i < layers.length; i++) { if (slots.indexOf(layers[i].slot) !== -1) { part = layers[i]; break; } }
-		if (!part) { return null; }
-		var size = Math.max(part.w, part.h) * 1.5 + 12;
+		if (!part || !part.w || !part.h || Math.max(part.w, part.h) > MAX_CLOSEUP_PART) { return null; }
+		var size = Math.max(part.w, part.h) * 1.12 + 3;
 		var cx = flip ? stage.width - part.cx : part.cx;
 		return { x: cx - size / 2, y: part.cy - size / 2, w: size, h: size };
 	}
@@ -54,21 +60,14 @@
 			cardEl.classList.add('is-ready');
 			if (!o.closeUp) { return canvas; }
 			var layers = RM.assemble(o.model, o.type, o.design);
-			var stage = stageOf(layers);
-			var box = cropBox(layers, o.closeUp, RM.shouldFlip(o.model, o.type, o.design), stage);
-			if (!box || !canvas.width) { return canvas; }
-			var k = canvas.width / stage.width;
+			var box = cropBox(layers, o.closeUp, RM.shouldFlip(o.model, o.type, o.design), stageOf(layers));
+			if (!box) { return canvas; }
+			// Redrawn from the source images at full resolution — sharper than cropping the card.
 			var zoom = document.createElement('canvas');
 			zoom.className = 'hd-sw-card__zoom';
-			zoom.width = 180; zoom.height = 180;
-			try {
-				var ctx = zoom.getContext('2d');
-				ctx.fillStyle = '#f3f3f1';
-				ctx.fillRect(0, 0, 180, 180);
-				ctx.drawImage(canvas, box.x * k, box.y * k, box.w * k, box.h * k, 0, 0, 180, 180);
-				cardEl.appendChild(zoom);
-			} catch (e) { /* tainted or empty canvas — the full door still shows */ }
-			return canvas;
+			cardEl.appendChild(zoom);
+			return window.HD_DD_Preview.create(zoom, { model: o.model, assetBase: o.assetBase })
+				.renderRegion(o.type, o.design, box, { size: 180 }).then(function () { return canvas; });
 		}).catch(function () { return canvas; });
 	}
 
