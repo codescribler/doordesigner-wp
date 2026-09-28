@@ -184,8 +184,12 @@ class HD_DD_Experiments {
 
 	/** Live decision for an experiment under the (filterable) win rule. */
 	public static function evaluate( array $exp ) {
-		$rule = (array) apply_filters( 'hd_dd_experiment_rule', HD_DD_Experiment_Stats::default_rule() );
-		return HD_DD_Experiment_Stats::evaluate( self::arms( $exp ), self::days_run( $exp ), $rule );
+		return HD_DD_Experiment_Stats::evaluate( self::arms( $exp ), self::days_run( $exp ), self::rule() );
+	}
+
+	/** The win rule: HD_DD_Experiment_Stats::default_rule() through `hd_dd_experiment_rule`. */
+	public static function rule() {
+		return array_merge( HD_DD_Experiment_Stats::default_rule(), (array) apply_filters( 'hd_dd_experiment_rule', HD_DD_Experiment_Stats::default_rule() ) );
 	}
 
 	/** Daily cron: store the decision; flag + email the first winner / no-difference once. */

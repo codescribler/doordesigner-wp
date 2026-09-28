@@ -65,6 +65,9 @@ class HD_DD_Assets {
 		// REST client: JSON headers, the nonce, and the stale-nonce self-heal.
 		wp_register_script( self::HANDLE . '-apiclient', HD_DD_URL . 'assets/js/api-client.js', array(), $ver_js, true );
 
+		// A/B test assignment + exposure beacon (HD_DD_Experiment); reads HD_DD_CONFIG.flow.
+		wp_register_script( self::HANDLE . '-experiment', HD_DD_URL . 'assets/js/experiment.js', array(), $ver_js, true );
+
 		// App bootstrap depends on the compositor + every wizard module.
 		wp_register_script(
 			self::HANDLE,
@@ -99,6 +102,8 @@ class HD_DD_Assets {
 				// Stamped on every funnel event (see wizard/funnel.js) so the manager
 				// dashboard can compare completion per release.
 				'version'        => HD_DD_VERSION,
+				// Which designer flow to boot: { default, experiment: null | { id, control, challenger, percent } }.
+				'flow'           => HD_DD_Experiments::front_config(),
 				'catalogueReady' => $this->catalogue->is_available(),
 				'renderReady'    => $this->catalogue->render_model_available(),
 				// Asset base for preview images: a setting override, else the model's own

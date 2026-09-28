@@ -40,6 +40,12 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Failure_Log */
 	public $failure_log;
 
+	/** @var HD_DD_Experiments */
+	public $experiments;
+
+	/** @var HD_DD_Experiments_Admin */
+	public $experiments_admin;
+
 	/**
 	 * Singleton accessor (also the plugins_loaded callback).
 	 *
@@ -58,6 +64,7 @@ final class HD_DD_Plugin {
 		// Apply pending DB migrations after a plugin update (activation hook only fires on
 		// activate). Cheap no-op once the stored schema version matches.
 		HD_DD_Repository::maybe_upgrade();
+		HD_DD_Experiments::maybe_upgrade();
 
 		$this->repository  = new HD_DD_Repository();
 		$this->catalogue   = new HD_DD_Catalogue();
@@ -68,6 +75,8 @@ final class HD_DD_Plugin {
 		$this->admin      = new HD_DD_Admin( $this->repository );
 		$this->updater    = new HD_DD_Updater();
 		$this->failure_log = new HD_DD_Failure_Log( $this->repository );
+		$this->experiments = new HD_DD_Experiments();
+		$this->experiments_admin = new HD_DD_Experiments_Admin();
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -77,6 +86,8 @@ final class HD_DD_Plugin {
 		$this->admin->register();
 		$this->updater->register();
 		$this->failure_log->register();
+		$this->experiments->register();
+		$this->experiments_admin->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */
@@ -87,6 +98,7 @@ final class HD_DD_Plugin {
 			'retention_days'  => 0, // 0 = keep indefinitely; surfaced in admin for GDPR.
 			'github_repo'     => '', // e.g. https://github.com/OWNER/hd-door-designer
 			'asset_base'      => '', // preview image host; empty = use the model's captured origin.
+			'default_flow'    => 'classic', // designer flow when no A/B test runs (see HD_DD_Experiments).
 		);
 		$saved = get_option( 'hd_dd_settings', array() );
 		return wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );

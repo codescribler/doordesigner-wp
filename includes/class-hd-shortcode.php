@@ -6,6 +6,9 @@
  *
  * Attributes:
  *   door_type="Single Door"   Pre-seed the starting door type (also accepts ?door_type= in the URL).
+ *   flow="swipe"              Force a designer flow (classic|swipe — any registered flow) for this
+ *                             embed, rendered as data-flow. Like ?flow= in the URL, a forced flow
+ *                             is never counted in an A/B test.
  *
  * @package HD_Door_Designer
  */
@@ -35,6 +38,7 @@ class HD_DD_Shortcode {
 		$atts = shortcode_atts(
 			array(
 				'door_type' => '',
+				'flow'      => '',
 			),
 			$atts,
 			self::TAG
@@ -46,6 +50,9 @@ class HD_DD_Shortcode {
 			$door_type = sanitize_text_field( wp_unslash( $_GET['door_type'] ) );
 		}
 
+		// Only registered flows; anything else means "no override".
+		$flow = HD_DD_Experiments::is_flow( $atts['flow'] ) ? $atts['flow'] : '';
+
 		// Safety net: ensure assets are loaded even when rendered outside the_content.
 		$this->assets->enqueue();
 
@@ -56,7 +63,8 @@ class HD_DD_Shortcode {
 		<div class="hd-dd"
 			id="<?php echo esc_attr( $mount_id ); ?>"
 			data-hd-door-designer
-			data-door-type="<?php echo esc_attr( $door_type ); ?>">
+			data-door-type="<?php echo esc_attr( $door_type ); ?>"
+			data-flow="<?php echo esc_attr( $flow ); ?>">
 			<noscript>
 				<p><?php esc_html_e( 'The door designer needs JavaScript enabled. Please contact us and we will be glad to help you design your door.', 'hd-door-designer' ); ?></p>
 			</noscript>

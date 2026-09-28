@@ -99,6 +99,7 @@ class HD_DD_Admin {
 			'retention_days'  => isset( $input['retention_days'] ) ? absint( $input['retention_days'] ) : $current['retention_days'],
 			'github_repo'     => isset( $input['github_repo'] ) ? esc_url_raw( trim( $input['github_repo'] ) ) : $current['github_repo'],
 			'asset_base'      => isset( $input['asset_base'] ) ? esc_url_raw( trim( $input['asset_base'] ) ) : $current['asset_base'],
+			'default_flow'    => ( isset( $input['default_flow'] ) && HD_DD_Experiments::is_flow( $input['default_flow'] ) ) ? $input['default_flow'] : $current['default_flow'],
 		);
 	}
 
@@ -135,6 +136,17 @@ class HD_DD_Admin {
 						<td>
 							<input name="<?php echo esc_attr( self::OPTION ); ?>[asset_base]" id="hd_asset_base" type="url" class="regular-text" placeholder="(use the catalogue's captured origin)" value="<?php echo esc_attr( $s['asset_base'] ); ?>" />
 							<p class="description"><?php esc_html_e( 'Where door preview images are served from. Leave blank to use the captured Endurance host (dev); set to your local mirror/CDN for production.', 'hd-door-designer' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="hd_default_flow"><?php esc_html_e( 'Default designer flow', 'hd-door-designer' ); ?></label></th>
+						<td>
+							<select name="<?php echo esc_attr( self::OPTION ); ?>[default_flow]" id="hd_default_flow">
+								<?php foreach ( HD_DD_Experiments::flows() as $flow_key => $flow_label ) : ?>
+									<option value="<?php echo esc_attr( $flow_key ); ?>" <?php selected( $s['default_flow'], $flow_key ); ?>><?php echo esc_html( $flow_label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php esc_html_e( 'What every visitor sees when no A/B test is running (see Experiments).', 'hd-door-designer' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -327,6 +339,9 @@ class HD_DD_Admin {
 							<tr><th><?php esc_html_e( 'Email', 'hd-door-designer' ); ?></th><td><a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a></td></tr>
 							<tr><th><?php esc_html_e( 'Telephone', 'hd-door-designer' ); ?></th><td><a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a></td></tr>
 							<tr><th><?php esc_html_e( 'Postcode', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_postcode ); ?></td></tr>
+							<?php if ( is_array( $payload ) && ! empty( $payload['experiment']['arm'] ) ) : ?>
+								<tr><th><?php esc_html_e( 'Designer flow (A/B test)', 'hd-door-designer' ); ?></th><td><?php echo esc_html( ( isset( $payload['experiment']['flow'] ) ? $payload['experiment']['flow'] . ' — ' : '' ) . $payload['experiment']['arm'] . ' · ' . $payload['experiment']['experimentId'] ); ?></td></tr>
+							<?php endif; ?>
 							<?php if ( '' !== $lock ) : ?>
 								<tr><th><?php esc_html_e( 'Suggested lock', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $lock ); ?></td></tr>
 							<?php endif; ?>
