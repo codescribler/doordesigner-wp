@@ -45,7 +45,7 @@ assert.deepStrictEqual(DI.typesFor(antares), ['Avantal']);
 
 // Reverse lookup (saved designs / deep links): an Endurance label back to its design.
 assert.strictEqual(DI.designForLabel(idx, 'Tate Georgian Stable').key, 'Tate Georgian');
-assert.strictEqual(DI.designForLabel(idx, 'Vega (Uni-Matt Black Cassette)').key, 'Vega');
+assert.strictEqual(DI.designForLabel(idx, 'Vega (Ulti-Matt Black Cassette)').key, 'Vega');
 assert.strictEqual(DI.designForLabel(idx, 'Nope'), null);
 
 console.log('design-index.test.js: all assertions passed');

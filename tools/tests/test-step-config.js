@@ -65,10 +65,14 @@ const slUnglazed = Object.assign({}, slBase, { 'Sidelight Type': { label: 'Ungla
 slKeys = SC.applicableSteps(sd, slUnglazed).map((s) => s.key);
 assert.ok(slKeys.indexOf('sidelightGlass') === -1, 'Unglazed sidelight hides the glass step');
 
-// Avantal hides internal colour + knocker (no such fields).
+// Avantal has no internal colour. Knockers follow Endurance per style (2026-09-28 live
+// designer): Sirius, Celeste and Rigel offer them; Antares and Vega don't.
 const av = view('Avantal');
 steps = SC.applicableSteps(av, { 'Door Type': { label: 'Avantal' }, 'Door Design': { label: 'Sirius' } }).map((s) => s.key);
-assert.ok(!steps.includes('intColour') && !steps.includes('knocker'), 'Avantal hides internal colour + knocker');
+assert.ok(!steps.includes('intColour'), 'Avantal hides internal colour');
+assert.ok(steps.includes('knocker'), 'Sirius offers a knocker');
+steps = SC.applicableSteps(av, { 'Door Type': { label: 'Avantal' }, 'Door Design': { label: 'Antares (Anthracite Grey Cassette)' } }).map((s) => s.key);
+assert.ok(!steps.includes('knocker'), 'Antares offers no knocker');
 
 // Hinge is asked NEAR THE BEGINNING (partner feedback: not buried at the very end).
 const order = SC.applicableSteps(sd, { 'Door Type': { label: 'Single Door' }, 'Door Design': { label: 'Abbott' } }).map((s) => s.key);

@@ -15,7 +15,7 @@
 	var Shared = window.HD_DD_Shared;
 
 	// The colour designs are shown in on the showcase (and the colour the door starts in).
-	var SHOWCASE_COLOUR = { composite: 'Anthracite Grey', aluminium: 'Anthracite Grey (Smooth)' };
+	var SHOWCASE_COLOUR = { composite: 'Anthracite Grey', aluminium: 'Signal Grey (Smooth)' };
 
 	function SwipeApp(root, customerView, renderModel, categories, opts) {
 		opts = opts || {};
