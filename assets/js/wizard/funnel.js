@@ -14,6 +14,16 @@
     letterplate: 12, letterplatePosition: 13, knocker: 14, review: 15, details: 16
   };
 
+  // The swipe flow reports as its own funnel ('door-designer-v2') with its own order:
+  // the manager treats a funnel's lowest-ordered step as "started" across the whole date
+  // range, so re-ordering steps inside the classic funnel would miscount both flows.
+  // Keys are lower-case because the analytics pipeline lower-cases step names anyway.
+  var ORDER_V2 = {
+    design: 1, type: 2, hinge: 3, colour: 4, intcolour: 5, glazing: 6, hardware: 7,
+    handle: 8, letterplate: 9, letterplateposition: 10, knocker: 11, frame: 12,
+    sidelighttype: 13, sidelightglass: 14, review: 15, details: 16
+  };
+
   // The site-wide analytics plugin defines window.hdAnalytics before our code runs
   // and queues early calls, so when present it is always safe to call. When absent
   // (plugin deactivated, QA harness) every call is a silent no-op.
@@ -30,24 +40,31 @@
     return (cfg && cfg.version) ? String(cfg.version) : '';
   }
 
-  function step(key, choice) {
-    var t = tracker();
-    if (!t) { return; }
-    var opts = { order: ORDER[key] };
-    if (choice) { opts.choice = choice; }
-    var ver = version();
-    if (ver) { opts.version = ver; }
-    try { t.step(FUNNEL, key, opts); } catch (e) { /* analytics is best-effort */ }
+  // A reporter bound to one funnel name + order map.
+  function create(name, order) {
+    function step(key, choice) {
+      var t = tracker();
+      if (!t || !order[key]) { return; }
+      var opts = { order: order[key] };
+      if (choice) { opts.choice = choice; }
+      var ver = version();
+      if (ver) { opts.version = ver; }
+      try { t.step(name, key, opts); } catch (e) { /* analytics is best-effort */ }
+    }
+
+    function lead() {
+      var t = tracker();
+      if (!t) { return; }
+      var ver = version();
+      try {
+        if (ver) { t.lead(name, { version: ver }); } else { t.lead(name); }
+      } catch (e) { /* analytics is best-effort */ }
+    }
+
+    return { name: name, step: step, lead: lead };
   }
 
-  function lead() {
-    var t = tracker();
-    if (!t) { return; }
-    var ver = version();
-    try {
-      if (ver) { t.lead(FUNNEL, { version: ver }); } else { t.lead(FUNNEL); }
-    } catch (e) { /* analytics is best-effort */ }
-  }
+  var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, step: step, lead: lead };
+  return { ORDER: ORDER, ORDER_V2: ORDER_V2, create: create, step: classic.step, lead: classic.lead };
 }));
