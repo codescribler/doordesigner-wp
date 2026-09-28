@@ -64,6 +64,24 @@ class HD_DD_Image_Proxy {
 		return $path;
 	}
 
+	/**
+	 * The requested path as a plain relative path. WordPress adds a backslash before quotes in
+	 * request data (so Endurance's "ChromeDoctors'Knockerv3.png" arrived as "…Doctors'Knocker…"
+	 * and failed validation); undo that, then URL-decode (%20, %28, and any double-encoding).
+	 * Pure + static for testing.
+	 *
+	 * @param string $raw
+	 * @return string
+	 */
+	public static function clean_request_path( $raw ) {
+		$raw = stripslashes( (string) $raw );
+		$raw = rawurldecode( $raw );             // handle %20 / %28 etc.
+		if ( false !== strpos( $raw, '%' ) ) {   // and any accidental double-encoding.
+			$raw = rawurldecode( $raw );
+		}
+		return $raw;
+	}
+
 	public function serve( WP_REST_Request $request ) {
 		$raw = (string) $request['path'];
 		if ( '' === $raw ) {
@@ -71,12 +89,7 @@ class HD_DD_Image_Proxy {
 			// from the matched route (everything after ".../img/").
 			$raw = (string) preg_replace( '#^.*/img/#', '', (string) $request->get_route() );
 		}
-		$raw = rawurldecode( $raw );             // handle %20 / %28 etc.
-		if ( false !== strpos( $raw, '%' ) ) {   // and any accidental double-encoding.
-			$raw = rawurldecode( $raw );
-		}
-
-		$path = self::validate_path( $raw );
+		$path = self::validate_path( self::clean_request_path( $raw ) );
 		if ( false === $path ) {
 			return new WP_REST_Response( array( 'error' => 'bad path', 'received' => $raw ), 400 );
 		}

@@ -20,6 +20,10 @@ check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/Handles/1200mm
 check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/DoorCassettes/K1/Thumbnails/White.png' ), 'valid png' );
 check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/DoorBlanks/Avantal/Thumbnails/AnTeak (with tick).jpg' ), 'valid parens' );
 check( false !== $V::validate_path( "Assets/CompositeDoors/Images/Knockers/ChromeDoctors'Knockerv3.png" ), 'valid apostrophe (Doctors knocker)' );
+$slashed = "Assets/CompositeDoors/Images/Knockers/ChromeDoctors\'Knockerv3.png"; // as WordPress hands it over
+check( false !== $V::validate_path( $V::clean_request_path( $slashed ) ), "WordPress-slashed apostrophe is unslashed" );
+check( "Assets/CompositeDoors/Images/Knockers/ChromeDoctors'Knockerv3.png" === $V::clean_request_path( 'Assets/CompositeDoors/Images/Knockers/ChromeDoctors%27Knockerv3.png' ), 'encoded apostrophe decodes' );
+check( 'Assets/CompositeDoors/Images/DoorBlanks/Door Mould 8/x.jpg' === $V::clean_request_path( 'Assets/CompositeDoors/Images/DoorBlanks/Door%2520Mould%208/x.jpg' ), 'double-encoded space decodes' );
 check( 'Assets/CompositeDoors/Images/Handles/x.png' === $V::validate_path( '/Assets/CompositeDoors/Images/Handles/x.png' ), 'leading slash tolerated + stripped' );
 
 // --- invalid: traversal / arbitrary files / wrong location / wrong type / encoded ---

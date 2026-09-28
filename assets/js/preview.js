@@ -62,7 +62,9 @@
 	Compositor.prototype.resolveUrl = function (rel) {
 		// Already absolute (mirrored to a full URL) or root-relative? leave it.
 		var base = (/^https?:\/\//.test(rel) || rel.charAt(0) === '/') ? rel : (this.assetBase ? (this.assetBase + '/' + rel) : rel);
-		return encodeURI(base); // filenames contain spaces / parentheses.
+		// encodeURI leaves ' alone; WordPress would then add a backslash before it (Endurance's
+		// "ChromeDoctors'Knockerv3.png"), so encode it too.
+		return encodeURI(base).replace(/'/g, '%27'); // filenames contain spaces / parentheses / quotes.
 	};
 
 	// Draw loaded layers in STAGE units — the caller sets the transform (scale / mirror / crop).
