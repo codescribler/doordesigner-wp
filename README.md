@@ -45,6 +45,7 @@ preserved exactly.
 ```
 [hd_door_designer]
 [hd_door_designer door_type="Single Door"]   // optional pre-seed
+[hd_door_designer flow="swipe"]              // force a designer flow (not counted in A/B tests)
 ```
 
 You can also pre-seed via URL: `…/door-designer/?door_type=Avantal`.
@@ -156,6 +157,53 @@ filled the anti-spam field and the server answered with a fake success:
 Flagged and failed rows carry a coloured badge in **Door Enquiries** and a notice on the
 detail view.
 
+## A/B experiments
+
+The designer has more than one flow (`classic`, `swipe`; add more with the `hd_dd_flows`
+filter). **Door Enquiries → Settings → Default designer flow** is what everyone sees
+when no test is running.
+
+**Start a test** under **Door Enquiries → Experiments**: pick the control (usually the
+current default), the challenger, and the % of new visitors who get the challenger
+(default 50). Only one test runs at a time. Each visitor is assigned in their browser
+and kept on the same flow for 90 days; a visitor is counted once when the designer
+opens, and converts once when they send an enquiry (flagged/honeypot enquiries count,
+failed ones don't). Leads from visitors with no recorded designer visit are shown as
+"unattributed" and not counted.
+
+**Testing a flow yourself is never counted:** `?flow=swipe` in the URL or a shortcode
+`flow="swipe"` forces that flow and skips the experiment entirely.
+
+**The emails.** A daily check emails the enquiry recipients once when:
+- **"Door designer A/B test: X is the clear winner"** — one flow has at least a 97.5%
+  chance of genuinely converting better, after at least 14 days and 15 leads in each
+  flow. The email gives each flow's visitors, leads and conversion rate, the chance the
+  winner is better, the "expected loss if you pick" each flow (in conversion-rate
+  points) and the days run.
+- **"Door designer A/B test: no clear difference"** — 26 weeks (182 days) passed without
+  a winner. That is a normal outcome: keep whichever flow you prefer.
+
+The test **keeps running** after either email until you act on the Experiments page
+(which always shows live numbers, whether or not the daily check has run):
+- **Make X the default** ends the test and shows X to every visitor from then on.
+- **Stop test** ends it and leaves the default unchanged.
+
+Finished tests stay in the page's history with their final numbers.
+
+**The win rule** lives in one place, `HD_DD_Experiment_Stats::default_rule()`, and can be
+adjusted with the `hd_dd_experiment_rule` filter. Its thresholds came from simulations of
+this site's traffic (≈18 designer starters and 4 leads a week): when there is no real
+difference, about an 8% chance per direction of wrongly calling a winner; when there is
+one, about a 1% chance of promoting the worse flow. With about 4 leads a week a doubling
+usually shows within about 2 months and a +50% lift in about 3 months; smaller lifts
+often never become clear. Expected loss is reported but never decides.
+
+Files: `includes/class-hd-experiments.php` (state, `POST /experiment/expose`, conversion
+listener, cron), `class-hd-experiment-stats.php` (the maths),
+`class-hd-experiments-admin.php` (the page), `class-hd-experiment-notifier.php` (emails),
+`assets/js/experiment.js` (browser assignment). Data: option `hd_dd_experiment`
+(the live test), `hd_dd_experiment_history`, table `wp_hd_dd_experiment_visitors`.
+
 ## Tests
 
 No framework — plain Node and PHP scripts that exit non-zero on failure:
@@ -163,8 +211,9 @@ No framework — plain Node and PHP scripts that exit non-zero on failure:
 ```
 node tests/js/api-client.test.js      # REST client: nonce self-heal
 node tests/js/funnel.test.js          # hdAnalytics reporter
+node tests/js/experiment.test.js      # A/B assignment, stickiness, overrides, exposure
 node tools/tests/test-*.js            # wizard, render model, step config…
-php tests/php/run.php                 # honeypot flagging, failure log, nonce endpoint, admin labels
+php tests/php/run.php                 # honeypot flagging, failure log, nonce endpoint, admin labels, experiments
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
 
