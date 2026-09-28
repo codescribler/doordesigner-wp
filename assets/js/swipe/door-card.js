@@ -4,7 +4,7 @@
 // letterplate, knocker — the card adds a zoomed close-up cropped from that part's layer, so
 // the difference between two handles is visible on a phone.
 //
-//   HD_DD_DoorCard.paint(cardEl, { model, assetBase, type, design, closeUp: 'handle'|'letterplate'|'knocker'|null })
+//   HD_DD_DoorCard.paint(cardEl, { model, assetBase, type, design, closeUp: 'handle'|'letterplate'|'knocker'|null, omitSlots })
 //     -> Promise (resolves once drawn; the returned canvas is on cardEl.firstChild)
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) { module.exports = factory(); }
@@ -49,7 +49,7 @@
 		if (!window.HD_DD_Preview || !o.model || !RM) { return Promise.resolve(canvas); }
 		var comp = window.HD_DD_Preview.create(canvas, { model: o.model, assetBase: o.assetBase });
 		var drawn;
-		try { drawn = comp.render(o.type, o.design) || Promise.resolve(); } catch (e) { drawn = Promise.resolve(); }
+		try { drawn = comp.render(o.type, o.design, { omitSlots: o.omitSlots || null }) || Promise.resolve(); } catch (e) { drawn = Promise.resolve(); }
 		return drawn.then(function () {
 			cardEl.classList.add('is-ready');
 			if (!o.closeUp) { return canvas; }

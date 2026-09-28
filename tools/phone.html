@@ -6,6 +6,6 @@ iframe{border:0;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);border-radi
 <body><script>
 var src = new URLSearchParams(location.search).get('src') || 'swipe-test.html';
 [[390, 780], [360, 700]].forEach(function (s) {
-  var f = document.createElement('iframe'); f.width = s[0]; f.height = s[1]; f.src = src; document.body.appendChild(f);
+  var f = document.createElement('iframe'); f.width = s[0]; f.height = s[1]; f.src = src + location.search.replace(/^\?/, (src.indexOf('?') === -1 ? '?' : '&')).replace(/[?&]src=[^&]*/, ''); document.body.appendChild(f);
 });
 </script></body></html>

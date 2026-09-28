@@ -127,7 +127,7 @@
 				label: function (i) { return list[i].name; },
 				renderCard: function (i, card) {
 					var s = app.showcaseDesign(list[i]);
-					window.HD_DD_DoorCard.paint(card, { model: app.model, assetBase: app.assetBase(), type: s.type, design: s.design });
+					window.HD_DD_DoorCard.paint(card, { model: app.model, assetBase: app.assetBase(), type: s.type, design: s.design, omitSlots: ['Handles', 'HandlesRight'] });
 				},
 				onChange: function (i) { app._showcaseTouched = true; update(i); }
 			});

@@ -54,7 +54,10 @@
   var mount = document.getElementById('mount');
   var statusEl = document.getElementById('harness-status');
   window.HD_DD_HarnessData.load().then(function (data) {
-    window.HD_DD_CONFIG.assetBase = data.model._assetBase;
+    // ?base=live loads images through the live site's image cache (fast, same files) instead
+    // of hotlinking Endurance's host, which can be slow for uncached images.
+    var live = new URLSearchParams(location.search).get('base') === 'live';
+    window.HD_DD_CONFIG.assetBase = live ? 'https://hertfordshiredoors.co.uk/wp-json/hd-door-designer/v1/img' : data.model._assetBase;
     statusEl.textContent = 'Swipe harness · assetBase ' + data.model._assetBase;
     mount.innerHTML = '';
     var funnel = window.HD_DD_Funnel.create('door-designer-v2', window.HD_DD_Funnel.ORDER_V2);

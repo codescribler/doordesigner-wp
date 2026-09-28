@@ -67,7 +67,21 @@
 		var type = DI.typesFor(d)[0];
 		var probe = { 'Door Type': { label: type }, 'Door Design': { label: d.types[type] } };
 		probe['Door Colour (External)'] = { label: SHOWCASE_COLOUR[d.family] };
+		// Glazed designs are shown glazed — without glass their apertures read as solid panels.
+		var glass = this.showcaseGlass(type, probe['Door Design'].label);
+		if (glass) { probe['Door Glass'] = { label: glass }; }
 		return { type: type, design: probe };
+	};
+
+	// A neutral, representative glass for the showcase: Satin when the design offers it, else
+	// the first real glass on its list. null for solid designs.
+	SwipeApp.prototype.showcaseGlass = function (type, styleLabel) {
+		var node = this.cv.byType[type];
+		var list = (node && node.glazingByStyle && node.glazingByStyle[styleLabel]) || [];
+		var real = list.filter(function (c) { return !/unglazed/i.test(c.label); });
+		if (!real.length) { return null; }
+		var satin = real.filter(function (c) { return c.label === 'Satin'; })[0];
+		return (satin || real[0]).label;
 	};
 
 	SwipeApp.prototype.track = function (name) {
@@ -87,6 +101,9 @@
 		this.tag('hd_designs_viewed', Object.keys(this.viewed).length || 1);
 		this.setType(type, prev);
 		if (!this.design()['Door Colour (External)']) { this.selectLabel('Door Colour (External)', SHOWCASE_COLOUR[d.family]); }
+		// Keep the glass the showcase showed, so the door doesn't change as they move on.
+		var glass = this.showcaseGlass(this.type(), this.design()['Door Design'].label);
+		if (glass && !this.design()['Door Glass']) { this.selectLabel('Door Glass', glass); }
 		this.go(this.screens()[0].key);
 	};
 

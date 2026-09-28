@@ -8,7 +8,7 @@
  * the local mirror for production).
  *
  * window.HD_DD_Preview.create(canvas, { model, assetBase }) -> instance
- *   instance.render(type, design) -> Promise
+ *   instance.render(type, design, { omitSlots }?) -> Promise
  */
 (function () {
 	'use strict';
@@ -26,17 +26,27 @@
 	}
 
 	var cache = {};
-	function loadImage(url) {
-		if (cache[url]) { return cache[url]; }
-		cache[url] = new Promise(function (resolve, reject) {
-			var img = new Image();
-			// No crossOrigin: hotlinked dev images (no CORS headers) must still display.
-			// Production serves a same-origin mirror, so the canvas isn't tainted there.
-			img.onload = function () { resolve(img); };
-			img.onerror = function () { reject(new Error('img ' + url)); };
-			img.src = url;
-		});
+	var SLOW_MS = 8000;
+	function download(url) {
+		if (!cache[url]) {
+			cache[url] = new Promise(function (resolve, reject) {
+				var img = new Image();
+				// No crossOrigin: hotlinked dev images (no CORS headers) must still display.
+				// Production serves a same-origin mirror, so the canvas isn't tainted there.
+				img.onload = function () { resolve(img); };
+				img.onerror = function () { delete cache[url]; reject(new Error('img ' + url)); };
+				img.src = url;
+			});
+		}
 		return cache[url];
+	}
+	// A layer that is slow upstream (the image cache fetching it from Endurance for the first
+	// time) must not hold the whole door back: after SLOW_MS this render skips it, while the
+	// download carries on so a later render of the door includes it.
+	function loadImage(url) {
+		return Promise.race([download(url), new Promise(function (resolve, reject) {
+			setTimeout(function () { reject(new Error('slow ' + url)); }, SLOW_MS);
+		})]);
 	}
 
 	function Compositor(canvas, opts) {
@@ -54,13 +64,17 @@
 		return encodeURI(base); // filenames contain spaces / parentheses.
 	};
 
-	Compositor.prototype.render = function (type, design) {
+	// opts.omitSlots: layer slots to leave out (e.g. ['Handles','HandlesRight'] for the
+	// swipe showcase, which shows the bare design before any furniture is chosen).
+	Compositor.prototype.render = function (type, design, opts) {
 		var self = this;
 		var token = ++this._token;
 		var T = this.model && this.model.types ? this.model.types[type] : null;
 		if (!T) { return Promise.resolve(); }
 
 		var layers = window.HD_DD_RenderModel.assemble(this.model, type, design);
+		var omit = (opts && opts.omitSlots) || null;
+		if (omit) { layers = layers.filter(function (l) { return omit.indexOf(l.slot) === -1; }); }
 		// Stage derived from the actual layers so sidelit doors (wider) size correctly.
 		var stage = deriveStage(layers, T.canvas);
 
@@ -75,10 +89,12 @@
 		this.canvas.height = Math.round(cssW * (stage.height / stage.width) * dpr);
 		var scale = this.canvas.width / stage.width;
 
+		var slow = [];
 		return Promise.all(layers.map(function (l) {
-			return loadImage(self.resolveUrl(l.url)).then(
+			var url = self.resolveUrl(l.url);
+			return loadImage(url).then(
 				function (img) { return { l: l, img: img }; },
-				function () { return null; } // tolerate a missing asset
+				function (e) { if (/^slow /.test(e && e.message)) { slow.push(url); } return null; } // tolerate a missing asset
 			);
 		})).then(function (res) {
 			if (token !== self._token) { return; } // superseded by a newer render
@@ -100,6 +116,12 @@
 				ctx.restore();
 			});
 			ctx.restore();
+			// Redraw once any layer skipped for being slow has arrived (unless superseded).
+			if (slow.length) {
+				Promise.all(slow.map(function (u) { return download(u).catch(function () { return null; }); })).then(function () {
+					if (token === self._token) { self.render(type, design, opts); }
+				});
+			}
 		});
 	};
 
