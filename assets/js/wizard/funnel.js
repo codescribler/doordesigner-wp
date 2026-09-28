@@ -24,10 +24,29 @@
     sidelighttype: 13, sidelightglass: 14, review: 15, details: 16
   };
 
+  // "Don't count me": ?notrack=1 switches every designer analytics call off in this browser
+  // and remembers it (localStorage), so the owner can use the live designer without skewing
+  // the stats; ?notrack=0 switches it back on. Covers hdAnalytics funnel events and leads,
+  // Clarity events and A/B-test counting (boot.js / the apps check muted()).
+  var MUTE_KEY = 'hd_dd_notrack';
+  function muted() {
+    if (typeof window === 'undefined' || !window.location) { return false; }
+    var m = String(window.location.search || '').match(/[?&]notrack=([^&#]*)/);
+    try {
+      if (m) {
+        if (m[1] === '0') { window.localStorage.removeItem(MUTE_KEY); return false; }
+        window.localStorage.setItem(MUTE_KEY, '1');
+        return true;
+      }
+      return window.localStorage.getItem(MUTE_KEY) === '1';
+    } catch (e) { return !!m && m[1] !== '0'; } // storage blocked: honour the URL only
+  }
+
   // The site-wide analytics plugin defines window.hdAnalytics before our code runs
   // and queues early calls, so when present it is always safe to call. When absent
-  // (plugin deactivated, QA harness) every call is a silent no-op.
+  // (plugin deactivated, QA harness) — or muted — every call is a silent no-op.
   function tracker() {
+    if (muted()) { return null; }
     return (typeof window !== 'undefined' && window.hdAnalytics) ? window.hdAnalytics : null;
   }
 
@@ -66,5 +85,5 @@
 
   var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, ORDER_V2: ORDER_V2, create: create, step: classic.step, lead: classic.lead };
+  return { ORDER: ORDER, ORDER_V2: ORDER_V2, create: create, step: classic.step, lead: classic.lead, muted: muted };
 }));

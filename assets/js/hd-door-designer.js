@@ -509,6 +509,7 @@
 	// Funnel tracking (Microsoft Clarity, if installed) — fire a custom event per view so
 	// you can see exactly which step loses people. Best-effort: a no-op if Clarity is absent.
 	App.prototype.track = function (name) {
+		if (Funnel.muted && Funnel.muted()) { return; } // ?notrack — the owner's own visits
 		try { if (typeof window.clarity === 'function') { window.clarity('event', name); } } catch (e) { /* analytics is best-effort */ }
 	};
 

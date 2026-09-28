@@ -25,6 +25,17 @@
 		return E.resolve(flowCfg, forced) || { flow: flowCfg['default'] || 'classic', counted: false };
 	}
 
+	// A small reminder that this browser is excluded from the stats (?notrack=0 turns it off).
+	function showMutedBadge() {
+		if (document.querySelector('.hd-dd-notrack')) { return; }
+		var b = document.createElement('div');
+		b.className = 'hd-dd-notrack';
+		b.textContent = 'Analytics off (you)';
+		b.title = 'Your visits are not counted. Add ?notrack=0 to the address to count them again.';
+		b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;background:#161616;color:#fff;font:12px/1.2 system-ui,sans-serif;padding:5px 9px;border-radius:99px;opacity:.75;pointer-events:none';
+		document.body.appendChild(b);
+	}
+
 	function start(root) {
 		var client = window.HD_DD_ApiClient ? window.HD_DD_ApiClient.create({ restUrl: CFG.restUrl || '', nonce: CFG.nonce }) : null;
 		var api = function (path, opts) { return client ? client.request(path, opts) : Promise.reject(new Error('no api client')); };
@@ -41,17 +52,20 @@
 				root.textContent = (CFG.i18n && CFG.i18n.notLoaded) || 'The door designer is being set up.';
 				return;
 			}
+			// ?notrack=1 (remembered): the owner using the live designer — no analytics, no A/B counting.
+			var muted = !!(window.HD_DD_Funnel && window.HD_DD_Funnel.muted && window.HD_DD_Funnel.muted());
 			var a = chooseFlow(root);
 			// The swipe flow draws every card from the render model; without it, fall back.
 			var flow = (a.flow === 'swipe' && rm && window.HD_DD_SwipeApp) ? 'swipe' : 'classic';
-			var assignment = (a.counted && flow === a.flow) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
-			try { if (typeof window.clarity === 'function') { window.clarity('set', 'hd_flow', flow); } } catch (e) { /* best-effort */ }
+			var assignment = (!muted && a.counted && flow === a.flow) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
+			if (!muted) { try { if (typeof window.clarity === 'function') { window.clarity('set', 'hd_flow', flow); } } catch (e) { /* best-effort */ } }
 			if (assignment && window.HD_DD_Experiment) { window.HD_DD_Experiment.expose(api, a); }
 
 			var saved = null;
 			try { saved = new URLSearchParams(window.location.search).get('design'); } catch (e) { saved = null; }
 			var doorType = root.getAttribute('data-door-type') || '';
 			root.innerHTML = '';
+			if (muted) { showMutedBadge(); }
 
 			if (flow === 'swipe') {
 				var sw = new window.HD_DD_SwipeApp(root, cv, rm, res[2], { api: api, funnel: funnelFor('swipe'), experiment: assignment, doorType: doorType });

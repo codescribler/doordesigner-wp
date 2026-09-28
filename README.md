@@ -180,6 +180,15 @@ detail view.
 - `tools/boot-test.html` — the real entry point with a stubbed WordPress and a running 50/50
   test; REST calls (exposure, enquiry) are logged to `window.__rest` instead of sent.
 
+### Keeping your own visits out of the stats
+
+Open the designer once with **`?notrack=1`** (e.g. `hertfordshiredoors.co.uk/door-designer/?notrack=1`)
+on each phone/browser you use. From then on that browser sends no designer analytics: no
+hdAnalytics funnel steps or leads, no Clarity events, and no A/B-test exposure or conversion
+(its enquiries still arrive as normal). A small "Analytics off (you)" tag shows while it's on.
+**`?notrack=0`** switches counting back on. Being logged in to WordPress already stops the
+site-wide analytics plugin counting you.
+
 ## A/B experiments
 
 The designer has more than one flow (`classic`, `swipe`; add more with the `hd_dd_flows`

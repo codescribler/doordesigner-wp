@@ -84,10 +84,13 @@
 		return (satin || real[0]).label;
 	};
 
+	function muted() { return !!(window.HD_DD_Funnel && window.HD_DD_Funnel.muted && window.HD_DD_Funnel.muted()); }
 	SwipeApp.prototype.track = function (name) {
+		if (muted()) { return; } // ?notrack — the owner's own visits
 		try { if (typeof window.clarity === 'function') { window.clarity('event', name); } } catch (e) { /* best-effort */ }
 	};
 	SwipeApp.prototype.tag = function (k, v) {
+		if (muted()) { return; }
 		try { if (typeof window.clarity === 'function') { window.clarity('set', k, String(v)); } } catch (e) { /* best-effort */ }
 	};
 
