@@ -14,6 +14,8 @@ class HD_DD_Activator {
 	public static function activate() {
 		require_once HD_DD_DIR . 'includes/class-hd-repository.php';
 		HD_DD_Repository::create_table();
+		HD_DD_Experiments::create_table();
+		update_option( HD_DD_Experiments::DB_OPTION, HD_DD_Experiments::DB_VERSION, false );
 
 		// Seed settings without clobbering anything an admin already set.
 		if ( false === get_option( 'hd_dd_settings', false ) ) {
@@ -35,6 +37,7 @@ class HD_DD_Activator {
 	}
 
 	public static function deactivate() {
+		wp_clear_scheduled_hook( 'hd_dd_experiment_evaluate' ); // HD_DD_Experiments::CRON; re-scheduled on init.
 		flush_rewrite_rules();
 	}
 }

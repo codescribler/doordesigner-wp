@@ -184,6 +184,12 @@ class HD_DD_Enquiry {
 		if ( $flagged ) {
 			$payload['flags'] = array( 'honeypot' );
 		}
+		// A/B test attribution {experimentId, visitorId, arm}: stored for wp-admin and read by
+		// the conversion listener on hd_dd_enquiry_submitted (see HD_DD_Experiments).
+		$experiment = ( isset( $params['experiment'] ) && class_exists( 'HD_DD_Experiments' ) ) ? HD_DD_Experiments::sanitize_ref( $params['experiment'] ) : null;
+		if ( $experiment ) {
+			$payload['experiment'] = $experiment;
+		}
 		$this->repository->update_payload( $saved['id'], $payload );
 
 		$recipient = HD_DD_Plugin::settings()['recipient_email'];

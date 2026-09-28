@@ -58,6 +58,8 @@ function hd_test_reset() {
 	$GLOBALS['hd_test_hooks']      = array();
 	$GLOBALS['hd_test_user_id']    = 0;
 	$GLOBALS['hd_test_cookie_uid'] = false;
+	$GLOBALS['hd_test_can']        = true;
+	$GLOBALS['hd_test_cron']       = array();
 	$_SERVER['REMOTE_ADDR']        = '203.0.113.5';
 	if ( is_file( HD_TEST_ERROR_LOG ) ) {
 		unlink( HD_TEST_ERROR_LOG );
@@ -190,6 +192,12 @@ function update_option( $k, $v, $autoload = null ) { $GLOBALS['hd_test_options']
 function add_option( $k, $v, $d = '', $autoload = 'yes' ) { if ( ! array_key_exists( $k, $GLOBALS['hd_test_options'] ) ) { $GLOBALS['hd_test_options'][ $k ] = $v; } return true; }
 function get_transient( $k ) { $t = $GLOBALS['hd_test_transients']; if ( ! isset( $t[ $k ] ) ) { return false; } if ( $t[ $k ]['expires'] && $t[ $k ]['expires'] < time() ) { return false; } return $t[ $k ]['value']; }
 function set_transient( $k, $v, $exp = 0 ) { $GLOBALS['hd_test_transients'][ $k ] = array( 'value' => $v, 'expires' => $exp ? time() + $exp : 0 ); return true; }
+function delete_option( $k ) { unset( $GLOBALS['hd_test_options'][ $k ] ); return true; }
+function admin_url( $path = '' ) { return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' ); }
+function current_user_can( $cap ) { return ! empty( $GLOBALS['hd_test_can'] ); }
+function wp_next_scheduled( $hook ) { return isset( $GLOBALS['hd_test_cron'][ $hook ] ) ? $GLOBALS['hd_test_cron'][ $hook ] : false; }
+function wp_schedule_event( $ts, $recurrence, $hook ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; return true; }
+function wp_clear_scheduled_hook( $hook ) { unset( $GLOBALS['hd_test_cron'][ $hook ] ); return 1; }
 function delete_transient( $k ) { unset( $GLOBALS['hd_test_transients'][ $k ] ); return true; }
 function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) { $GLOBALS['hd_test_mail'][] = compact( 'to', 'subject', 'message', 'headers', 'attachments' ); return true; }
 function wp_create_nonce( $action = -1 ) { return 'test-nonce-uid' . (int) $GLOBALS['hd_test_user_id']; }
