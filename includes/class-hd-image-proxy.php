@@ -57,7 +57,8 @@ class HD_DD_Image_Proxy {
 			return false;
 		}
 		// Only Endurance composite-door image assets; only image extensions (anchored end).
-		if ( ! preg_match( '#^Assets/CompositeDoors/Images/[A-Za-z0-9 _()\-./]+\.(?:jpe?g|png)$#i', $path ) ) {
+		// The apostrophe is for "ChromeDoctors'Knockerv3.png" (Endurance's own file name).
+		if ( ! preg_match( "#^Assets/CompositeDoors/Images/[A-Za-z0-9 _()'\-./]+\.(?:jpe?g|png)$#i", $path ) ) {
 			return false;
 		}
 		return $path;

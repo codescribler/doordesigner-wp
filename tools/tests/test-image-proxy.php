@@ -19,6 +19,7 @@ check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/DoorBlanks/Doo
 check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/Handles/1200mm with Heritage.jpg' ), 'valid jpg spaces 2' );
 check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/DoorCassettes/K1/Thumbnails/White.png' ), 'valid png' );
 check( false !== $V::validate_path( 'Assets/CompositeDoors/Images/DoorBlanks/Avantal/Thumbnails/AnTeak (with tick).jpg' ), 'valid parens' );
+check( false !== $V::validate_path( "Assets/CompositeDoors/Images/Knockers/ChromeDoctors'Knockerv3.png" ), 'valid apostrophe (Doctors knocker)' );
 check( 'Assets/CompositeDoors/Images/Handles/x.png' === $V::validate_path( '/Assets/CompositeDoors/Images/Handles/x.png' ), 'leading slash tolerated + stripped' );
 
 // --- invalid: traversal / arbitrary files / wrong location / wrong type / encoded ---
