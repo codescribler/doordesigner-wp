@@ -52,8 +52,6 @@
     };
   }
 
-  // Layers of one field's currently-selected SubOption (full composite for the
-  // "rich" fields; slab only for Door Design / Door Colour).
   // A layer's identity is its image AND where it sits. Comparing by URL alone dropped any
   // layer a choice reuses from the baseline at a DIFFERENT position — e.g. Bowmont's two small
   // top windows are the same K1 cassette image as Abbott's (the baseline), so they vanished.
@@ -62,6 +60,8 @@
   const keySet = (layers) => new Set(layers.map(layerKey));
   EXT.layerKey = layerKey;
 
+  // Layers of one field's currently-selected SubOption (full composite for the
+  // "rich" fields; slab only for Door Design / Door Colour).
   function fieldComposite(heading) {
     const f = field(heading);
     const sel = f ? selectedOf(f) : null;
