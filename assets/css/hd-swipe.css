@@ -107,6 +107,8 @@
 
 /* 5. Sub-choices ---------------------------------------------------------------- */
 .hd-sw-subs { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 4px; }
+.hd-sw-subs--top { margin: 0 0 10px; }
+.hd-sw-subs:empty { display: none; }
 .hd-sw-sub { display: flex; flex-direction: column; gap: 6px; }
 .hd-sw-sub__title { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted, #8a8e96); font-weight: 600; }
 .hd-sw-seg { display: flex; background: #f0f0ee; border-radius: 10px; padding: 3px; }

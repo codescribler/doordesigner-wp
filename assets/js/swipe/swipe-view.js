@@ -149,6 +149,10 @@
 		// ---- Option screens --------------------------------------------------------
 		function optionScreen(screen) {
 			heading(screen.title, screen.help);
+			// Choices that decide what the carousel offers (the hardware colour decides which
+			// handles exist) sit ABOVE it, so they're seen first and never hidden below the fold.
+			var top = el('div', 'hd-sw-subs hd-sw-subs--top');
+			body.appendChild(top);
 			var holder = el('div', 'hd-sw-holder');
 			body.appendChild(holder);
 			var cap = el('div');
@@ -186,26 +190,29 @@
 				onChange: function (i) {
 					if (isType) { app.setType(choices[i].label); } else { app.select(headingKey, choices[i]); }
 					updateCaption(i);
-					renderSubs(subs, app.currentScreen());
+					renderSubs(top, subs, app.currentScreen());
 				}
 			});
 			updateCaption(selectedIndex());
-			renderSubs(subs, screen);
+			renderSubs(top, subs, screen);
 			setCta(app.nextLabel() + ' →', function () { app.next(); });
 		}
 
 		// Sub-choices under the carousel. Changes that alter what the cards show (finish,
 		// letterplate position, hinge side) repaint the whole screen without the entry animation.
-		function renderSubs(box, screen) {
-			box.innerHTML = '';
+		var TOP_SUBS = { hardware: true };
+		function renderSubs(topBox, bottomBox, screen) {
+			topBox.innerHTML = '';
+			bottomBox.innerHTML = '';
 			if (!screen) { return; }
 			var d = app.design();
 			function repaint(step) { return function (c) { app.select(step.heading, c); v.render(true); }; }
 			screen.subs.forEach(function (s) {
+				var box = TOP_SUBS[s.key] ? topBox : bottomBox;
 				var cur = d[s.heading] ? d[s.heading].label : '';
 				if (s.key === 'hinge') { box.appendChild(P.segmented(/Master Leaf/.test(s.heading) ? 'Opens first' : 'Hinges on', s.choices, cur, repaint(s))); }
 				else if (s.key === 'letterplatePosition' || s.key === 'sidelightType') { box.appendChild(P.segmented(s.key === 'sidelightType' ? 'Side panels' : 'Letterplate sits', s.choices, cur, repaint(s))); }
-				else if (s.key === 'hardware') { box.appendChild(P.chips('Finish', s.choices, cur, repaint(s), function (c) { return { swatch: Shared.HARDWARE_HEX[c.label] || '#ccc' }; })); }
+				else if (s.key === 'hardware') { box.appendChild(P.chips('Hardware colour', s.choices, cur, repaint(s), function (c) { return { swatch: Shared.HARDWARE_HEX[c.label] || '#ccc' }; })); }
 				else if (s.key === 'sidelightGlass') {
 					box.appendChild(P.chips('Side panel glass', s.choices, cur, repaint(s), function (c) { return { img: P.glassThumb(app.assetBase(), app.model, c.id == null && d['Door Glass'] ? d['Door Glass'].label : c.label) }; }));
 				} else if (s.key === 'intColour') {
@@ -218,7 +225,7 @@
 			if (screen.key === 'colour' && app.chosen && app.chosen.variants.length > 1) {
 				var style = d['Door Design'] ? d['Door Design'].label : '';
 				var opts = app.chosen.variants.map(function (x) { return { label: x.label, display: x.cassette }; });
-				box.appendChild(P.chips('Glass surround', opts, style, function (c) { app.setVariant(c.label); v.render(true); }));
+				bottomBox.appendChild(P.chips('Glass surround', opts, style, function (c) { app.setVariant(c.label); v.render(true); }));
 			}
 		}
 

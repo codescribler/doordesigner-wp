@@ -27,7 +27,7 @@
 		{ key: 'glazing', main: 'glazing', subs: [], short: 'glass',
 			title: 'Choose your glass', help: 'Swipe through the glass. Frosted and textured glass adds privacy.' },
 		{ key: 'handle', main: 'handle', subs: ['hardware'], short: 'handle',
-			title: 'Choose your handle', help: 'Pick a finish below, then swipe through the handles.' },
+			title: 'Choose your handle', help: 'Pick your hardware colour, then swipe through the handles that come in it.' },
 		{ key: 'letterplate', main: 'letterplate', subs: ['letterplatePosition'], short: 'letterplate',
 			title: 'Add a letterplate?', help: 'Swipe to compare letterboxes, or keep “No Letterplate”.' },
 		{ key: 'knocker', main: 'knocker', subs: [], short: 'knocker',
