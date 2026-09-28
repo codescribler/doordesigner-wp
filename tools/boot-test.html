@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HD Door Designer — boot + A/B QA harness</title>
+<!--
+  Runs the REAL entry point (assets/js/boot.js) with a stubbed WordPress: HD_DD_CONFIG carries a
+  running 50/50 experiment, the REST catalogue is answered from the local data files, and every
+  REST call (experiment/expose, enquiry) is logged instead of sent.
+      http://localhost:8000/tools/boot-test.html            (assigned by the experiment)
+      http://localhost:8000/tools/boot-test.html?flow=swipe (forced — not counted)
+  window.__rest holds the logged REST calls; localStorage 'hd_dd_exp' holds the assignment.
+-->
+<link rel="stylesheet" href="../assets/css/hd-door-designer.css">
+<link rel="stylesheet" href="../assets/css/hd-swipe.css">
+<style>body { margin: 0; font-family: system-ui, sans-serif; }</style>
+<script src="harness-data.js"></script>
+<script>
+  window.__rest = [];
+  window.__analytics = [];
+  window.hdAnalytics = {
+    step: function (f, s, o) { window.__analytics.push(['step', f, s, o]); },
+    lead: function (f, o) { window.__analytics.push(['lead', f, o]); }
+  };
+  window.HD_DD_CONFIG = {
+    restUrl: '/fake-rest/', catalogueUrl: '/fake-rest/catalogue', renderModelUrl: '/fake-rest/render-model',
+    categoriesUrl: '../data/style-categories.json', nonce: 'x', version: '0.3.0-harness',
+    flow: { 'default': 'classic', experiment: { id: 'exp_20260928_abc123', control: 'classic', challenger: 'swipe', percent: 50 } },
+    i18n: {}
+  };
+  // Answer the two REST data calls from the local files, exactly as the PHP shapes them.
+  var realFetch = window.fetch.bind(window);
+  var dataP = null;
+  window.fetch = function (url, opts) {
+    if (String(url).indexOf('/fake-rest/') === 0) {
+      dataP = dataP || window.HD_DD_HarnessData.load();
+      return dataP.then(function (d) {
+        var body = /catalogue/.test(url) ? { catalogue: d.customerView } : { available: true, model: d.model };
+        return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
+      });
+    }
+    return realFetch(url, opts);
+  };
+</script>
+</head>
+<body>
+<div class="hd-dd" id="hd-dd-app" data-hd-door-designer data-door-type=""></div>
+
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<script src="../assets/js/wizard/step-config.js"></script>
+<script src="../assets/js/wizard/wizard-controller.js"></script>
+<script src="../assets/js/wizard/step-renderer.js"></script>
+<script src="../assets/js/wizard/review.js"></script>
+<script src="../assets/js/wizard/funnel.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script>
+  // Stub the REST client: log instead of sending; the enquiry "succeeds".
+  window.HD_DD_ApiClient = {
+    create: function () {
+      return { request: function (path, opts) {
+        window.__rest.push({ path: path, body: opts && opts.body ? JSON.parse(opts.body) : null });
+        return Promise.resolve({ ok: true, status: 200, body: path === 'enquiry' ? { ok: true, reference: 'HD-TEST', token: 't' } : { ok: true } });
+      } };
+    },
+    isNonceFailure: function () { return false; }
+  };
+</script>
+<script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/enquiry.js"></script>
+<script src="../assets/js/experiment.js"></script>
+<script src="../assets/js/hd-door-designer.js"></script>
+<script src="../assets/js/swipe/design-index.js"></script>
+<script src="../assets/js/swipe/flow-steps.js"></script>
+<script src="../assets/js/swipe/carousel.js"></script>
+<script src="../assets/js/swipe/door-card.js"></script>
+<script src="../assets/js/swipe/swipe-parts.js"></script>
+<script src="../assets/js/swipe/swipe-view.js"></script>
+<script src="../assets/js/swipe/swipe-app.js"></script>
+<script src="../assets/js/boot.js"></script>
+</body>
+</html>

@@ -157,6 +157,29 @@ filled the anti-spam field and the server answered with a fake success:
 Flagged and failed rows carry a coloured badge in **Door Enquiries** and a notice on the
 detail view.
 
+## The two designer flows
+
+- **Classic** (`assets/js/hd-door-designer.js` + `assets/js/wizard/`): door type → frame → style
+  → … one step at a time. Reports to the analytics funnel **`door-designer`**.
+- **Swipe** (`assets/js/swipe/`): browse every design first (a cover-flow showcase with filter
+  chips), then door type (+ hinge side), colour (+ inside colour), glass, handle (+ finish),
+  letterplate, knocker and side panels. Every screen is a swipeable carousel of the customer's
+  own door with that option applied, with a helper line and a "Love it · next: …" button.
+  Reports to its own funnel **`door-designer-v2`** (lower-case step keys; order in
+  `HD_DD_Funnel.ORDER_V2`), so the manager's per-funnel "started" and step order stay correct
+  for both. Choices go through the same wizard controller and step rules as classic, so the
+  enquiry payload is identical.
+
+`assets/js/boot.js` starts whichever flow a visitor gets (forced by `?flow=` / shortcode
+`flow=""`, else the running A/B test's arm, else the default flow). Shared by both:
+`design-shared.js` (finish/furniture rules), `enquiry.js` (form, submit, thank-you).
+
+**QA without WordPress** (`python -m http.server 8000` from the plugin root):
+- `tools/swipe-test.html` — the swipe flow; `tools/phone.html` shows it at 390 and 360px.
+- `tools/preview-test.html` — the classic flow.
+- `tools/boot-test.html` — the real entry point with a stubbed WordPress and a running 50/50
+  test; REST calls (exposure, enquiry) are logged to `window.__rest` instead of sent.
+
 ## A/B experiments
 
 The designer has more than one flow (`classic`, `swipe`; add more with the `hd_dd_flows`
@@ -212,6 +235,11 @@ No framework — plain Node and PHP scripts that exit non-zero on failure:
 node tests/js/api-client.test.js      # REST client: nonce self-heal
 node tests/js/funnel.test.js          # hdAnalytics reporter
 node tests/js/experiment.test.js      # A/B assignment, stickiness, overrides, exposure
+node tests/js/funnel-v2.test.js       # door-designer-v2 funnel order
+node tests/js/design-index.test.js    # swipe showcase: design → types, Avantal cassettes
+node tests/js/flow-steps.test.js      # swipe screens per door type + funnel events
+node tests/js/carousel.test.js        # cover-flow maths (settle, window, placement)
+node tests/js/design-shared.test.js   # finish/furniture rules shared by both flows
 node tools/tests/test-*.js            # wizard, render model, step config…
 php tests/php/run.php                 # honeypot flagging, failure log, nonce endpoint, admin labels, experiments
 php tools/tests/test-image-proxy.php  # image-proxy path validator

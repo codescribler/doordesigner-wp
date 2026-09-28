@@ -68,7 +68,11 @@ class HD_DD_Assets {
 		// A/B test assignment + exposure beacon (HD_DD_Experiment); reads HD_DD_CONFIG.flow.
 		wp_register_script( self::HANDLE . '-experiment', HD_DD_URL . 'assets/js/experiment.js', array(), $ver_js, true );
 
-		// App bootstrap depends on the compositor + every wizard module.
+		// Shared by both flows: furniture/finish rules and the enquiry form.
+		wp_register_script( self::HANDLE . '-shared', HD_DD_URL . 'assets/js/design-shared.js', array( self::HANDLE . '-rendermodel' ), $ver_js, true );
+		wp_register_script( self::HANDLE . '-enquiry', HD_DD_URL . 'assets/js/enquiry.js', array( self::HANDLE . '-apiclient' ), $ver_js, true );
+
+		// Classic flow: depends on the compositor + every wizard module.
 		wp_register_script(
 			self::HANDLE,
 			HD_DD_URL . 'assets/js/hd-door-designer.js',
@@ -79,16 +83,52 @@ class HD_DD_Assets {
 				self::HANDLE . '-review',
 				self::HANDLE . '-funnel',
 				self::HANDLE . '-apiclient',
+				self::HANDLE . '-shared',
+				self::HANDLE . '-enquiry',
 			),
 			$ver_js,
 			true
 		);
 
-		wp_enqueue_style( self::HANDLE );
-		wp_enqueue_script( self::HANDLE );
+		// Swipe flow modules (assets/js/swipe/). Both flows always load so an A/B arm, the
+		// ?flow= override or a shortcode flow="" can start either without a second request.
+		$swipe = array(
+			'designindex' => array( 'design-index.js', array() ),
+			'flowsteps'   => array( 'flow-steps.js', array() ),
+			'carousel'    => array( 'carousel.js', array() ),
+			'doorcard'    => array( 'door-card.js', array( self::HANDLE . '-preview' ) ),
+			'swipeparts'  => array( 'swipe-parts.js', array() ),
+		);
+		foreach ( $swipe as $key => $def ) {
+			wp_register_script( self::HANDLE . '-' . $key, HD_DD_URL . 'assets/js/swipe/' . $def[0], $def[1], $ver_js, true );
+		}
+		wp_register_script(
+			self::HANDLE . '-swipeview',
+			HD_DD_URL . 'assets/js/swipe/swipe-view.js',
+			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-shared', self::HANDLE . '-enquiry' ),
+			$ver_js,
+			true
+		);
+		wp_register_script( self::HANDLE . '-swipeapp', HD_DD_URL . 'assets/js/swipe/swipe-app.js', array( self::HANDLE . '-swipeview', self::HANDLE . '-wizard' ), $ver_js, true );
 
+		// Entry point: picks the flow (forced / A/B arm / default) and starts it.
+		wp_register_script(
+			self::HANDLE . '-boot',
+			HD_DD_URL . 'assets/js/boot.js',
+			array( self::HANDLE, self::HANDLE . '-swipeapp', self::HANDLE . '-experiment', self::HANDLE . '-funnel', self::HANDLE . '-apiclient' ),
+			$ver_js,
+			true
+		);
+		wp_register_style( self::HANDLE . '-swipe', HD_DD_URL . 'assets/css/hd-swipe.css', array( self::HANDLE ), $this->asset_version( 'assets/css/hd-swipe.css' ) );
+
+		wp_enqueue_style( self::HANDLE );
+		wp_enqueue_style( self::HANDLE . '-swipe' );
+		wp_enqueue_script( self::HANDLE . '-boot' );
+
+		// Localised onto the render model — the first script in every flow's dependency chain —
+		// so HD_DD_CONFIG exists before any module that reads it at load time.
 		wp_localize_script(
-			self::HANDLE,
+			self::HANDLE . '-rendermodel',
 			'HD_DD_CONFIG',
 			array(
 				'restUrl'        => esc_url_raw( rest_url( HD_DD_REST_NS . '/' ) ),

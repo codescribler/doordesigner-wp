@@ -1,7 +1,7 @@
 # Swipe designer flow + A/B experiments — Design
 
 **Date:** 2026-09-28
-**Status:** Draft for review
+**Status:** Implemented on `feat/swipe-flow-experiments` (2026-09-28); Daniel skipped the spec review and asked for implementation directly
 **Repo:** `codescribler/doordesigner-wp` (this plugin). No manager-app changes.
 
 ## Goal
@@ -137,8 +137,9 @@ Clarity: per-step `door_step_*` events continue; the flow arm is set as tag `hd_
   no personal data, and is only used for counting.
 - **Overrides**: shortcode `flow="swipe|classic"` and `?flow=` force a flow and are
   **excluded** from experiment counting (so Daniel's testing never skews results).
-- When an experiment runs, both flows' assets are enqueued (~30 KB extra); only the
-  assigned flow boots.
+- Both flows' assets are always enqueued (so `?flow=`, a shortcode `flow=""` or an A/B arm
+  can start either); only the chosen flow boots. `HD_DD_CONFIG` is localised onto the
+  render-model script, the first in every flow's dependency chain.
 
 ### Counting (server side, in this plugin)
 
@@ -201,7 +202,22 @@ enquiry notifications).
 
 ## Win rule
 
-(See research summary below.)
+From simulations of this site's traffic (≈18 starters / 4 leads a week, 21% completion; and
+an "opened" baseline of ~10% on ~37 a week), checked daily, 3,000 runs per scenario:
+
+- **Winner** when P(one arm beats the other) ≥ **97.5%** (Beta(1,1) priors, Evan Miller's exact
+  closed form) **and** each arm has ≥ **15** converting visitors **and** ≥ **14 days** have run.
+- **No clear difference** after **182 days** (26 weeks).
+- Expected loss is reported (email + admin) but never decides — alone it always declares
+  something; with the guards it changed nothing.
+
+Measured error rates: with no real difference, ≈8% chance per direction of a false winner
+(a naive 95% daily check with no guards: 28% per direction); with a real difference, ≈1% chance
+of promoting the worse flow. Typical time to a decision: a doubling ≈2 months, +50% ≈2.5–3
+months (15–24% undecided at 6 months), +25% usually never. Sources: Evan Miller (Bayesian
+formulas; "How Not To Run an A/B Test"), VWO SmartStats whitepaper (Stucchio), Dynamic Yield
+Probability to Be Best, Johari et al. (always-valid inference). Thresholds live in
+`HD_DD_Experiment_Stats::default_rule()`, filterable via `hd_dd_experiment_rule`.
 
 ## Error handling
 
