@@ -71,13 +71,45 @@
 			b.addEventListener('click', function () { onPick(c); });
 			row.appendChild(b);
 		});
-		wrap.appendChild(row);
+		wrap.appendChild(scroller(row));
 		// Bring the selected chip into view without scrolling the page.
 		setTimeout(function () {
 			var on = row.querySelector('.is-on');
 			if (on) { row.scrollLeft = Math.max(0, on.offsetLeft - row.clientWidth / 2 + on.clientWidth / 2); }
 		}, 0);
 		return wrap;
+	}
+
+	// ‹ › buttons at the ends of a horizontally scrolling row. Each shows only while there is
+	// more to see that way — scrolling a chip row with a mouse is awkward, and the last chips
+	// can sit almost out of sight.
+	function scroller(row) {
+		var box = el('div', 'hd-sw-scroller');
+		var prev = el('button', 'hd-sw-scroller__btn hd-sw-scroller__btn--prev', '‹');
+		var next = el('button', 'hd-sw-scroller__btn hd-sw-scroller__btn--next', '›');
+		prev.type = next.type = 'button';
+		prev.setAttribute('aria-label', 'Previous options');
+		next.setAttribute('aria-label', 'More options');
+		function update() {
+			var max = row.scrollWidth - row.clientWidth;
+			prev.hidden = row.scrollLeft <= 2;
+			next.hidden = row.scrollLeft >= max - 2;
+			box.classList.toggle('has-prev', !prev.hidden);
+			box.classList.toggle('has-next', !next.hidden);
+		}
+		function by(dir) {
+			var amount = Math.max(120, row.clientWidth * 0.7) * dir;
+			row.scrollLeft += amount; // a direct jump: smooth scrollBy can stall and leave the row put
+			update();
+		}
+		prev.addEventListener('click', function () { by(-1); });
+		next.addEventListener('click', function () { by(1); });
+		row.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update);
+		box.appendChild(prev); box.appendChild(row); box.appendChild(next);
+		setTimeout(update, 0);
+		setTimeout(update, 60); // after the selected chip has been scrolled into view
+		return box;
 	}
 
 	// "Inside: White · change" — collapsed until tapped.
@@ -138,6 +170,6 @@
 
 	return {
 		el: el, short: short, TYPE_DESC: TYPE_DESC, segmented: segmented, chips: chips, disclosure: disclosure,
-		reviewList: reviewList, blankThumb: blankThumb, glassThumb: glassThumb, colourThumb: colourThumb
+		reviewList: reviewList, scroller: scroller, blankThumb: blankThumb, glassThumb: glassThumb, colourThumb: colourThumb
 	};
 }));

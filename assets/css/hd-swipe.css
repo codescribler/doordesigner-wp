@@ -119,6 +119,20 @@
 .hd-sw-seg__btn.is-on { background: #fff; color: var(--ink, #161616); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
 .hd-sw-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
 .hd-sw-chips::-webkit-scrollbar { display: none; }
+.hd-sw-scroller { position: relative; }
+.hd-sw-scroller__btn {
+  position: absolute; top: 50%; z-index: 2; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid #dcdcd8;
+  background: #fff; color: var(--ink, #161616); font-size: 20px; line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15); cursor: pointer; padding: 0 0 2px;
+}
+.hd-sw-scroller__btn[hidden] { display: none; }
+.hd-sw-scroller__btn--prev { left: -4px; }
+.hd-sw-scroller__btn--next { right: -4px; }
+/* Fade the chips under each visible button so it reads as "there's more this way". */
+.hd-sw-scroller.has-prev .hd-sw-chips { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 44px); mask-image: linear-gradient(90deg, transparent 0, #000 44px); }
+.hd-sw-scroller.has-next .hd-sw-chips { -webkit-mask-image: linear-gradient(270deg, transparent 0, #000 44px); mask-image: linear-gradient(270deg, transparent 0, #000 44px); }
+.hd-sw-scroller.has-prev.has-next .hd-sw-chips { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%); }
 .hd-sw-chip {
   flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
   border: 1px solid #dcdcd8; background: #fff; border-radius: 999px;

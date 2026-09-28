@@ -100,7 +100,7 @@
 				b.addEventListener('click', function () { app.filter = f; app.showcaseAt = 0; v.render(); });
 				filters.appendChild(b);
 			});
-			body.appendChild(filters);
+			body.appendChild(P.scroller(filters));
 
 			var list = app.showcaseList();
 			if (app.chosen && list.indexOf(app.chosen) !== -1 && !app._showcaseTouched) { app.showcaseAt = list.indexOf(app.chosen); }
