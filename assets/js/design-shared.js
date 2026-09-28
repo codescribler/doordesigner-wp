@@ -127,6 +127,45 @@
 		});
 	}
 
+	// What kind of handle/letterplate a label is, so a replacement can stay like-for-like.
+	function furnitureKind(label) {
+		var l = String(label || '').toLowerCase();
+		if (/^no /.test(l)) { return 'none'; }
+		if (/pull/.test(l)) { return 'pull'; }
+		if (/lever/.test(l)) { return 'lever'; }
+		if (/noble|regal|monkey|knob/.test(l)) { return 'traditional'; }
+		return 'other';
+	}
+
+	// After the hardware finish changes, which handle/letterplate should be selected?
+	//   choices:  the step's full choice list ([{label,id}], in Endurance's order)
+	//   current:  the label selected now ('' if the finish change dropped it)
+	//   dropped:  the label the finish change just removed ('' if none)
+	//   mine:     the label the customer last picked THEMSELVES ('' if never)
+	//   auto:     the label we substituted last time ('' if none)
+	// Returns the label to select, or '' to leave things as they are. Rules: the customer's own
+	// pick wins whenever the finish offers it (so going back to Chrome brings the lever back);
+	// a dropped item is replaced like-for-like (lever → lever, never lever → pull bar); only
+	// then the first standard option.
+	function pickFurniture(model, type, design, stepKey, choices, current, dropped, mine, auto) {
+		var ok = function (label) {
+			return !!label && choices.some(function (c) { return c.label === label; }) &&
+				!disabledReason(model, type, design, stepKey, label);
+		};
+		var usable = choices.filter(function (c) { return ok(c.label); });
+		if (mine && ok(mine) && (!current || current === auto) && current !== mine) { return mine; }
+		// Nothing was removed: leave the step's own default alone.
+		if (current || !dropped || !usable.length) { return ''; }
+		var kindOf = function (k) { return usable.filter(function (c) { return furnitureKind(c.label) === k; })[0]; };
+		var same = kindOf(furnitureKind(dropped));
+		if (same) { return same.label; }
+		var standard = stepKey === 'handle' ? 'Lever/Lever' : 'Letterplate';
+		if (ok(standard)) { return standard; }
+		// Still nothing like it: the most ordinary option — a lever handle / a letterplate.
+		var plain = kindOf(stepKey === 'handle' ? 'lever' : 'other');
+		return (plain || usable[0]).label;
+	}
+
 	// Borrow a handle's image from any door type that captured it (handle products are
 	// identical across types). Thumbnails only.
 	function handleImageFromAnyType(model, label) {
@@ -145,6 +184,6 @@
 		HARDWARE_HEX: HARDWARE_HEX, enrichCustomerView: enrichCustomerView, formatColourList: formatColourList,
 		cleanDesign: cleanDesign, furnitureAvailableColours: furnitureAvailableColours, furnitureFinishes: furnitureFinishes,
 		disabledReason: disabledReason, resetFurnitureIfIncompatible: resetFurnitureIfIncompatible,
-		handleImageFromAnyType: handleImageFromAnyType
+		handleImageFromAnyType: handleImageFromAnyType, furnitureKind: furnitureKind, pickFurniture: pickFurniture
 	};
 }));

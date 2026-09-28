@@ -36,6 +36,8 @@
 		this.wiz = HD_DD_Wizard.create(this.cv, SC);
 		this.chosen = null;       // the showcase design entry
 		this.memory = {};         // every choice made this run, so switching type can restore them
+		this.auto = {};           // furniture we substituted after a finish change (not the customer's pick)
+		this.wanted = {};         // furniture that was on the door before a finish change removed it
 		this.screen = 'design';   // 'design' | screen key | 'review' | 'form' | 'done'
 		this.showcaseAt = 0;
 		this.viewed = {};         // designs brought to the centre of the showcase
@@ -153,6 +155,7 @@
 
 	SwipeApp.prototype.select = function (heading, choice) {
 		this.memory[heading] = choice;
+		delete this.wanted[heading]; delete this.auto[heading];
 		this.wiz.select(heading, choice);
 		this.settle();
 		// A choice can reveal new sub-choices (sidelit frame → glazed/solid); give them a value.
@@ -162,10 +165,37 @@
 
 	// After any change: drop furniture the finish can't take, and fill single-answer steps.
 	SwipeApp.prototype.settle = function () {
-		var d = this.design();
-		Shared.resetFurnitureIfIncompatible(this.model, this.type(), d);
 		var self = this;
-		FS.autoPicks(this.node(), d, SC).forEach(function (p) { self.wiz.select(p[0], p[1]); });
+		var d = this.design();
+		var before = { Handle: d['Handle'] ? d['Handle'].label : '', Letterplate: d['Letterplate'] ? d['Letterplate'].label : '' };
+		Shared.resetFurnitureIfIncompatible(this.model, this.type(), d);
+		this.keepFurniture(before);
+		FS.autoPicks(this.node(), this.design(), SC).forEach(function (p) { self.wiz.select(p[0], p[1]); });
+	};
+
+	// A hardware-finish change can remove the chosen handle/letterplate (it isn't made in that
+	// finish). Replace it like-for-like — never a lever with a pull bar — and bring the
+	// customer's own pick back as soon as a finish offers it again (Shared.pickFurniture).
+	SwipeApp.prototype.keepFurniture = function (before) {
+		var self = this;
+		[['Handle', 'handle'], ['Letterplate', 'letterplate']].forEach(function (pair) {
+			var heading = pair[0];
+			var step = self.wiz.state().steps.filter(function (s) { return s.key === pair[1]; })[0];
+			if (!step) { return; }
+			var d = self.design();
+			var cur = d[heading] ? d[heading].label : '';
+			var dropped = (before[heading] && !cur) ? before[heading] : '';
+			// What to bring back: the customer's own pick, else what was on the door before we
+			// first had to swap it (a default they happily kept counts too).
+			if (dropped && !self.memory[heading] && !self.wanted[heading]) { self.wanted[heading] = dropped; }
+			var mine = self.memory[heading] ? self.memory[heading].label : (self.wanted[heading] || '');
+			var pick = Shared.pickFurniture(self.model, self.type(), d, pair[1], step.choices, cur, dropped, mine, self.auto[heading] || '');
+			if (!pick) { return; }
+			var c = step.choices.filter(function (x) { return x.label === pick; })[0];
+			if (!c) { return; }
+			self.wiz.select(heading, c);
+			if (pick === mine) { delete self.auto[heading]; delete self.wanted[heading]; } else { self.auto[heading] = pick; }
+		});
 	};
 
 	// Every carousel/toggle on a screen shows a real selection: fill any required step on it
