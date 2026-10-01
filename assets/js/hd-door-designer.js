@@ -476,7 +476,7 @@
 	App.prototype.renderTypeChooser = function () {
 		var self = this;
 		this.body.innerHTML = '';
-		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door and get a free, no-obligation quote — it takes about two minutes.'));
+		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door, save it and get a price — it takes about two minutes.'));
 		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.chooseType || 'What kind of door?'));
 		var row = el('div', 'hd-dd__carousel hd-dd__typegrid');
 		(this.customerView.types || []).forEach(function (label) {

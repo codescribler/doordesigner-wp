@@ -104,4 +104,16 @@ check( 1 === $fired, 'hd_dd_enquiry_submitted fires once (A/B conversions keep c
 check( 2 === count( $GLOBALS['hd_test_mail'] ), 'owner notification and customer email both sent' );
 check( '3' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the design_name column is added on update' );
 
+// --- 7) Hardening: odd input types and over-long phone numbers -------------------------
+hd_test_reset();
+$res = hd_test_save( array( 'designName' => array( 'x' ) ) );
+check( ! is_wp_error( $res ) && 201 === $res->get_status(), 'an array designName still saves' );
+check( 'Ketu in Anthracite Grey' === hd_test_last_row()['design_name'], 'an array designName gets the default name' );
+check( false === strpos( hd_test_error_log(), 'Array to string' ), 'no Array to string notice for designName' );
+
+hd_test_reset();
+$res = hd_test_save( array( 'telephone' => str_repeat( '0123456789 ', 10 ) ) );
+check( ! is_wp_error( $res ) && 201 === $res->get_status(), 'a very long phone number still saves' );
+check( strlen( hd_test_last_row()['customer_phone'] ) <= 40, 'stored phone is at most 40 characters' );
+
 hd_test_done( 'enquiry-save.test.php' );

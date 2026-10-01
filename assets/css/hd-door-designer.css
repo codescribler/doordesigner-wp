@@ -496,13 +496,6 @@ a.hd-dd__trust-rating:hover { text-decoration: underline; }
   border-radius: var(--radius);
 }
 
-/* Reassurance copy: above the fields and below the submit button. */
-.hd-dd__form-reassure {
-  margin: 6px 16px 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
 .hd-dd__form-trust {
   margin: 10px 0 0;
   color: var(--muted);
@@ -554,16 +547,6 @@ a.hd-dd__trust-rating:hover { text-decoration: underline; }
   font-size: 12px;
   min-height: 1em;
   margin-top: 3px;
-}
-
-.hd-dd__consent {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  font-size: 13px;
-  color: var(--muted);
-  margin: 12px 0;
-  line-height: 1.4;
 }
 
 .hd-dd__form-status {

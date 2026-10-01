@@ -9,8 +9,8 @@ require __DIR__ . '/wp-stubs.php';
 // --- 1) Defaults reach HD_DD_Plugin::settings() --------------------------------------
 hd_test_reset();
 $s = HD_DD_Plugin::settings();
-check( '4.9' === $s['proof_rating'], 'default rating is 4.9' );
-check( '321' === $s['proof_count'], 'default review count is 321' );
+check( '10' === $s['proof_rating'], 'default rating is 10' );
+check( '79' === $s['proof_count'], 'default review count is 79' );
 check( '' === $s['proof_url'] && '' === $s['proof_quotes'], 'no link and no quotes by default' );
 
 // --- 2) sanitize(): rating ------------------------------------------------------------
@@ -18,12 +18,24 @@ $cur = HD_DD_Trust_Settings::defaults();
 $in  = function ( array $over ) use ( $cur ) {
 	return HD_DD_Trust_Settings::sanitize( array_merge( $cur, $over ), $cur );
 };
-check( '4.8' === $in( array( 'proof_rating' => '4.8' ) )['proof_rating'], 'rating kept' );
-check( '4.9' === $in( array( 'proof_rating' => '4,9' ) )['proof_rating'], 'comma decimal accepted' );
-check( '5.0' === $in( array( 'proof_rating' => '5' ) )['proof_rating'], 'whole number formatted to one decimal' );
-check( '' === $in( array( 'proof_rating' => '11' ) )['proof_rating'], 'rating above 5 is dropped' );
-check( '' === $in( array( 'proof_rating' => 'great' ) )['proof_rating'], 'non-numeric rating is dropped' );
-check( '' === $in( array( 'proof_rating' => '' ) )['proof_rating'], 'rating can be cleared' );
+$rating_cases = array(
+	'9.8'   => '9.8',
+	'9,8'   => '9.8',
+	'10'    => '10',
+	'5'     => '5',
+	'9.67'  => '9.67',
+	'9.999' => '9.99',
+	'9.80'  => '9.8',
+	'11'    => '',
+	'0.004' => '',
+	'-3'    => '',
+	'great' => '',
+	''      => '',
+);
+foreach ( $rating_cases as $raw => $want ) {
+	$got = $in( array( 'proof_rating' => (string) $raw ) )['proof_rating'];
+	check( $want === $got, "rating '$raw' becomes '$want' (got '$got')" );
+}
 
 // --- 3) sanitize(): count, link ---------------------------------------------------------
 check( '1204' === $in( array( 'proof_count' => '1,204 reviews' ) )['proof_count'], 'count keeps digits only' );
@@ -50,11 +62,11 @@ check( array() === HD_DD_Trust_Settings::parse_quotes( '' ), 'no quotes from an 
 // --- 6) front_config(): the rating line needs BOTH rating and count ------------------------
 hd_test_reset();
 $cfg = HD_DD_Trust_Settings::front_config();
-check( '4.9' === $cfg['rating'] && '321' === $cfg['count'] && array() === $cfg['quotes'], 'defaults reach the browser config' );
-update_option( 'hd_dd_settings', array( 'proof_rating' => '4.9', 'proof_count' => '' ) );
+check( '10' === $cfg['rating'] && '79' === $cfg['count'] && array() === $cfg['quotes'], 'defaults reach the browser config' );
+update_option( 'hd_dd_settings', array( 'proof_rating' => '10', 'proof_count' => '' ) );
 $cfg = HD_DD_Trust_Settings::front_config();
 check( '' === $cfg['rating'] && '' === $cfg['count'], 'no count → no rating line at all' );
-update_option( 'hd_dd_settings', array( 'proof_rating' => '4.9', 'proof_count' => '1204', 'proof_quotes' => 'Great | Al, Ware' ) );
+update_option( 'hd_dd_settings', array( 'proof_rating' => '10', 'proof_count' => '1204', 'proof_quotes' => 'Great | Al, Ware' ) );
 $cfg = HD_DD_Trust_Settings::front_config();
 check( '1,204' === $cfg['count'], 'count is formatted with a thousands separator' );
 check( 'Great' === $cfg['quotes'][0]['text'], 'quotes reach the browser config parsed' );

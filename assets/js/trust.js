@@ -33,12 +33,16 @@
 	function ratingLine(trust) {
 		if (!trust || !trust.rating || !trust.count) { return null; }
 		var url = /^https?:\/\//i.test(trust.url || '') ? trust.url : '';
-		return { text: '★ ' + trust.rating + ' on Checkatrade · ' + trust.count + ' reviews', url: url };
+		return { text: '★ ' + trust.rating + '/10 on Checkatrade · ' + trust.count + ' reviews', url: url };
 	}
 
 	function pickQuote(trust, rand) {
-		var quotes = trust && trust.quotes;
-		if (!quotes || !quotes.length) { return null; }
+		var all = (trust && trust.quotes) || [];
+		var quotes = [];
+		for (var k = 0; k < all.length; k++) {
+			if (all[k] && typeof all[k] === 'object' && all[k].text) { quotes.push(all[k]); }
+		}
+		if (!quotes.length) { return null; }
 		var i = Math.floor((rand || Math.random)() * quotes.length);
 		return quotes[Math.min(quotes.length - 1, Math.max(0, i))];
 	}

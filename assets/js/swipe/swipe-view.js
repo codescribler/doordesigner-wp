@@ -257,9 +257,9 @@
 			heading('Your door', 'Here’s your design. Tap Edit to change anything.');
 			body.appendChild(P.reviewList(reviewRows(), function (key) { app.go(key); }));
 			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
-			window.HD_DD_Trust.render(body, CFG.trust);
+			if (window.HD_DD_Trust) { window.HD_DD_Trust.render(body, CFG.trust); }
 			if (!formOpen) {
-				setCta(window.HD_DD_Trust.COPY.cta + ' →', function () { app.go('form'); });
+				setCta((window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : 'Save my design & get my price') + ' →', function () { app.go('form'); });
 				return null;
 			}
 			var box = el('div', 'hd-dd__savebox');

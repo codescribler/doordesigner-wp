@@ -189,7 +189,7 @@ class HD_DD_Assets {
 			'intro'        => __( 'Design your door, save it and get a price — it takes about two minutes.', 'hd-door-designer' ),
 			'formTitle'    => __( 'Where shall we send your link and price?', 'hd-door-designer' ),
 			'submit'       => __( 'Save my design & get my price', 'hd-door-designer' ),
-			'trust'        => __( 'No spam, ever — your details are only used to prepare your price.', 'hd-door-designer' ),
+			'trust'        => __( 'No spam, ever.', 'hd-door-designer' ),
 			'enquire'      => __( 'Enquire about this door', 'hd-door-designer' ),
 			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),

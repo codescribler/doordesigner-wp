@@ -245,7 +245,11 @@ class HD_DD_Admin {
 								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
 									<a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a><br>
-									<a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a>
+									<?php if ( '' === $row->customer_phone ) : ?>
+										<?php esc_html_e( '(not given)', 'hd-door-designer' ); ?>
+									<?php else : ?>
+										<a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a>
+									<?php endif; ?>
 								</td>
 								<td>
 									<?php if ( is_array( $payload ) && ! empty( $payload['image'] ) ) : ?>
@@ -342,7 +346,7 @@ class HD_DD_Admin {
 							<?php endif; ?>
 							<tr><th><?php esc_html_e( 'Customer', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_name ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'Email', 'hd-door-designer' ); ?></th><td><a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a></td></tr>
-							<tr><th><?php esc_html_e( 'Telephone', 'hd-door-designer' ); ?></th><td><a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a></td></tr>
+							<tr><th><?php esc_html_e( 'Telephone', 'hd-door-designer' ); ?></th><td><?php if ( '' === $row->customer_phone ) : esc_html_e( '(not given)', 'hd-door-designer' ); else : ?><a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a><?php endif; ?></td></tr>
 							<tr><th><?php esc_html_e( 'Postcode', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_postcode ); ?></td></tr>
 							<?php if ( is_array( $payload ) && ! empty( $payload['experiment']['arm'] ) ) : ?>
 								<tr><th><?php esc_html_e( 'Designer flow (A/B test)', 'hd-door-designer' ); ?></th><td><?php echo esc_html( ( isset( $payload['experiment']['flow'] ) ? $payload['experiment']['flow'] . ' — ' : '' ) . $payload['experiment']['arm'] . ' · ' . $payload['experiment']['experimentId'] ); ?></td></tr>

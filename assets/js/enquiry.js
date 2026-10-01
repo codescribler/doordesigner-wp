@@ -53,7 +53,7 @@
 	// Display order. Phone is last and optional; there is no consent tick (see the line under
 	// the button). designName is the customer's own label for this door.
 	var FIELDS = [
-		{ name: 'designName', label: 'Name this design', type: 'text', autocomplete: 'off', required: true, maxLength: 80 },
+		{ name: 'designName', label: 'Design name', type: 'text', autocomplete: 'off', required: true, maxLength: 80 },
 		{ name: 'name', label: 'Your name', type: 'text', autocomplete: 'name', required: true },
 		{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email', required: true },
 		{ name: 'postcode', label: 'Post code', type: 'text', autocomplete: 'postal-code', required: true },
@@ -153,7 +153,7 @@
 			form.appendChild(el('div', 'hd-dd__form-consentline',
 				I18N.consentLine || 'By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.'));
 			form.appendChild(el('div', 'hd-dd__form-trust',
-				I18N.trust || 'No spam, ever — your details are only used to prepare your price.'));
+				I18N.trust || 'No spam, ever.'));
 			var statusEl = el('div', 'hd-dd__form-status');
 			statusEl.setAttribute('role', 'status');
 			statusEl.setAttribute('aria-live', 'polite');

@@ -118,6 +118,7 @@ Endurance's vocabulary, so the quote-creator (or Claude) can rebuild the door:
 ```json
 {
   "reference": "HD-2026-000123",
+  "designName": "Front door option 1",
   "submittedAt": "2026-06-26T10:00:00Z",
   "customer": { "name": "…", "telephone": "…", "email": "…", "postcode": "…" },
   "design": {
@@ -132,6 +133,9 @@ Labels are resolved **server-side from the catalogue by id**, so they match the
 downstream portal exactly (including odd casing / trailing spaces). `suggestedLock`
 is derived from the handle and is **non-binding** — the lock is decided at quoting.
 
+`designName` is the customer's own name for the design. `customer.telephone` is an empty
+string when no phone was given.
+
 ## Nothing is ever silently dropped
 
 Hard-won rules — a real enquiry was lost in September 2026 when browser autofill
@@ -143,7 +147,7 @@ filled the anti-spam field and the server answered with a fake success:
   thank-you and gets the acknowledgement email. Treat flagged rows as real unless the
   details look fake.
 - **Failed submissions are recorded and emailed.** Any POST to `/enquiry` that does not
-  end in a stored enquiry (consent missing, validation error, database error, or a nonce
+  end in a stored enquiry (validation error, database error, or a nonce
   failure the browser could not heal) is stored as a `status = failed` row (reference
   `HD-F-…`, no reload token) with whatever the customer typed, written to the PHP error
   log, and emailed to the enquiry recipients as `Door designer: submission FAILED — …`.
@@ -242,7 +246,7 @@ The Review step ends with "Save my design & get my price". A save is an enquiry:
 stored, emailed to the recipients and counted as a lead, and the customer is emailed a
 link back to the design. Required: a name for the design, name, email, postcode.
 
-**Door Enquiries → Settings → Review step** holds the Checkatrade rating, review count,
+**Door Enquiries → Settings → Review step** holds the Checkatrade rating (out of 10), review count,
 profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
 rating or count empty to hide the rating line; with no quotes, no quote is shown.
 

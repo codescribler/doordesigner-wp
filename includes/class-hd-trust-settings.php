@@ -17,8 +17,8 @@ class HD_DD_Trust_Settings {
 	/** @return array Setting key => default. */
 	public static function defaults() {
 		return array(
-			'proof_rating' => '4.9',
-			'proof_count'  => '321',
+			'proof_rating' => '10',
+			'proof_count'  => '79',
 			'proof_url'    => '',
 			'proof_quotes' => '',
 		);
@@ -41,8 +41,15 @@ class HD_DD_Trust_Settings {
 			}
 			$raw = (string) $input[ $key ];
 			if ( 'proof_rating' === $key ) {
-				$n           = str_replace( ',', '.', trim( $raw ) );
-				$out[ $key ] = ( is_numeric( $n ) && (float) $n > 0 && (float) $n <= 5 ) ? number_format( (float) $n, 1, '.', '' ) : '';
+				$n = str_replace( ',', '.', trim( $raw ) );
+				$v = '';
+				if ( is_numeric( $n ) && (float) $n > 0 && (float) $n <= 10 ) {
+					$cut = floor( round( (float) $n * 100, 6 ) ) / 100; // Truncate to 2dp (round() only tames float noise).
+					if ( $cut > 0 ) {
+						$v = rtrim( rtrim( number_format( $cut, 2, '.', '' ), '0' ), '.' );
+					}
+				}
+				$out[ $key ] = $v;
 			} elseif ( 'proof_count' === $key ) {
 				$n           = (int) preg_replace( '/\D+/', '', $raw );
 				$out[ $key ] = $n > 0 ? (string) $n : '';
@@ -80,7 +87,7 @@ class HD_DD_Trust_Settings {
 			$pos   = strrpos( $line, '|' );
 			$quote = false === $pos ? $line : substr( $line, 0, $pos );
 			$by    = false === $pos ? '' : substr( $line, $pos + 1 );
-			$quote = preg_replace( '/^[\s"\'“”‘’]+|[\s"\'“”‘’]+$/u', '', $quote );
+			$quote = (string) preg_replace( '/^[\s"\'“”‘’]+|[\s"\'“”‘’]+$/u', '', $quote );
 			if ( '' === $quote ) {
 				continue;
 			}
@@ -121,7 +128,7 @@ class HD_DD_Trust_Settings {
 		<p class="description"><?php esc_html_e( 'Shown above the "Save my design & get my price" button. Only use your real rating and real customer words.', 'hd-door-designer' ); ?></p>
 		<table class="form-table" role="presentation">
 			<tr>
-				<th scope="row"><label for="hd_proof_rating"><?php esc_html_e( 'Checkatrade rating', 'hd-door-designer' ); ?></label></th>
+				<th scope="row"><label for="hd_proof_rating"><?php esc_html_e( 'Checkatrade rating (out of 10)', 'hd-door-designer' ); ?></label></th>
 				<td>
 					<input name="<?php echo esc_attr( $option ); ?>[proof_rating]" id="hd_proof_rating" type="text" class="small-text" value="<?php echo esc_attr( $s['proof_rating'] ); ?>" />
 					<?php esc_html_e( 'from', 'hd-door-designer' ); ?>

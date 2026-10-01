@@ -19,15 +19,15 @@ function find(n, cls) {
 }
 function text(n) { return n.textContent + n.children.map(text).join(''); }
 
-var full = { rating: '4.9', count: '321', url: 'https://www.checkatrade.com/trades/x', quotes: [{ text: 'Tidy job', by: 'Jo, Hitchin' }, { text: 'Lovely door', by: '' }] };
+var full = { rating: '10', count: '79', url: 'https://www.checkatrade.com/trades/x', quotes: [{ text: 'Tidy job', by: 'Jo, Hitchin' }, { text: 'Lovely door', by: '' }] };
 
 // Rating line needs both a rating and a count.
-assert.deepStrictEqual(Trust.ratingLine(full), { text: '★ 4.9 on Checkatrade · 321 reviews', url: 'https://www.checkatrade.com/trades/x' });
-assert.strictEqual(Trust.ratingLine({ rating: '4.9', count: '' }), null);
-assert.strictEqual(Trust.ratingLine({ rating: '', count: '321' }), null);
+assert.deepStrictEqual(Trust.ratingLine(full), { text: '★ 10/10 on Checkatrade · 79 reviews', url: 'https://www.checkatrade.com/trades/x' });
+assert.strictEqual(Trust.ratingLine({ rating: '10', count: '' }), null);
+assert.strictEqual(Trust.ratingLine({ rating: '', count: '79' }), null);
 assert.strictEqual(Trust.ratingLine(undefined), null);
 // Only http(s) links are used.
-assert.strictEqual(Trust.ratingLine({ rating: '4.9', count: '321', url: 'javascript:alert(1)' }).url, '');
+assert.strictEqual(Trust.ratingLine({ rating: '10', count: '79', url: 'javascript:alert(1)' }).url, '');
 
 // One quote, chosen by the random source; never out of range.
 assert.strictEqual(Trust.pickQuote(full, function () { return 0; }).text, 'Tidy job');
@@ -35,6 +35,8 @@ assert.strictEqual(Trust.pickQuote(full, function () { return 0.99; }).text, 'Lo
 assert.strictEqual(Trust.pickQuote(full, function () { return 1; }).text, 'Lovely door');
 assert.strictEqual(Trust.pickQuote({ quotes: [] }), null);
 assert.strictEqual(Trust.pickQuote(undefined), null);
+assert.strictEqual(Trust.pickQuote({ quotes: [null, { text: '' }, { text: 'Good', by: '' }] }, function () { return 0; }).text, 'Good');
+assert.strictEqual(Trust.pickQuote({ quotes: [null, { text: '' }] }), null);
 
 // Full render: linked rating, quote with attribution, heading, three benefits.
 var c = node('div');
@@ -55,7 +57,7 @@ assert.strictEqual(find(c, 'hd-dd__trust-quote').children.length, 1);
 
 // No link → the rating is plain text, not a link.
 c = node('div');
-Trust.render(c, { rating: '4.9', count: '321', url: '', quotes: [] });
+Trust.render(c, { rating: '10', count: '79', url: '', quotes: [] });
 assert.strictEqual(find(c, 'hd-dd__trust-rating').tag, 'div');
 assert.strictEqual(find(c, 'hd-dd__trust-quote'), null);
 

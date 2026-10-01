@@ -16,8 +16,9 @@ function files(dir, ext) {
 }
 
 var BANNED = [
-  /\bno\s+(sales\s+|cold\s+)?calls?\b/i,
+  /\bno\s+(phone\s+|sales\s+|cold\s+)?calls?\b/i,
   /\b(won[’']?t|will not|never|don[’']?t)\s+(call|phone|ring)\b/i,
+  /\bwon[’']?t\s+(ever\s+)?(be\s+)?(call|calling|phone|phoning|ring|ringing)\b/i,
   /\bonly\s+(call|phone|ring)\s+(you|if)\b/i
 ];
 var sources = files('assets/js', '.js').concat(files('includes', '.php'));
@@ -37,8 +38,10 @@ var swipe = read('assets/js/swipe/swipe-view.js');
 var enquiry = read('assets/js/enquiry.js');
 [review, swipe].forEach(function (src) {
   assert.ok(src.indexOf('Get my free quote') === -1, 'old CTA removed');
-  assert.ok(src.indexOf('HD_DD_Trust') !== -1, 'Review step draws the trust block');
 });
+assert.ok(review.indexOf('ctx.renderTrust(') !== -1, 'wizard Review step draws the trust block');
+assert.ok(swipe.indexOf('HD_DD_Trust.render(') !== -1, 'swipe Review step draws the trust block');
+assert.ok(enquiry.indexOf('only used to prepare') === -1, 'no line contradicting the consent line');
 assert.ok(enquiry.indexOf('By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.') !== -1, 'consent line verbatim');
 assert.ok(enquiry.indexOf("'consent'") === -1 && enquiry.indexOf('hd-dd__consent') === -1, 'no consent tick left in the form');
 assert.strictEqual(require('../../assets/js/trust.js').COPY.benefits[2], 'No pressure and no obligation. You decide what happens next.');

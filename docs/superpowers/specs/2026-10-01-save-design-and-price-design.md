@@ -59,7 +59,7 @@ This is the release that tests the contention. It ships alone.
 [ door preview ]
 Your door                         (rows with Edit, as now)
 ------------------------------------------------------
-★ 4.9 on Checkatrade · 321 reviews
+★ 10/10 on Checkatrade · 79 reviews
 "Short real customer quote" — Name, Town
 ------------------------------------------------------
 Save this design and get your price
@@ -111,13 +111,13 @@ New settings (wp-admin → Door Designer → Settings → "Review step"):
 
 | Setting | Default | Behaviour |
 |---|---|---|
-| Rating | `4.9` | Rating line hidden if rating or count is empty |
-| Review count | `321` | |
+| Rating | `10` | Rating line hidden if rating or count is empty |
+| Review count | `79` | |
 | Profile link | empty | Rating line links to it when set |
 | Customer quotes | empty | One per line: `Quote text \| Name, Town`. Block hidden until at least one exists |
 
-The defaults are the figures the site rebuild already uses; Daniel confirms them against
-Checkatrade before release. When there are several quotes, one is picked at random per
+The defaults are the figures on the public Checkatrade profile on 2026-10-01 (10/10 from
+79 reviews; Checkatrade scores are out of 10). The profile link is empty by default. When there are several quotes, one is picked at random per
 page load.
 
 ### Server changes

@@ -152,15 +152,15 @@ class HD_DD_Enquiry {
 		// --- Persist + notify ----------------------------------------------
 		$saved = $this->repository->insert(
 			array(
-				'name'      => $name,
-				'email'     => $email,
-				'telephone' => $telephone,
-				'postcode'  => $postcode,
+				'name'        => $name,
+				'email'       => $email,
+				'telephone'   => $telephone,
+				'postcode'    => $postcode,
 				'design_name' => $design_name,
-				'design'    => $design,
-				'status'    => $flagged ? 'flagged' : 'new',
-				'payload'   => array(), // filled below once we have the reference.
-				'source_ip' => $this->client_ip(),
+				'design'      => $design,
+				'status'      => $flagged ? 'flagged' : 'new',
+				'payload'     => array(), // filled below once we have the reference.
+				'source_ip'   => $this->client_ip(),
 			)
 		);
 
@@ -297,7 +297,7 @@ class HD_DD_Enquiry {
 	 * 80 characters. Blank falls back to a name built from the door, so every save has one.
 	 */
 	private function clean_design_name( $raw, array $design ) {
-		$name = sanitize_text_field( wp_unslash( (string) $raw ) );
+		$name = sanitize_text_field( wp_unslash( is_scalar( $raw ) ? (string) $raw : '' ) );
 		if ( '' === $name ) {
 			$name = self::default_design_name( $design );
 		}
@@ -421,7 +421,8 @@ class HD_DD_Enquiry {
 	// -------------------------------------------------------------------
 	private function sanitize_phone( $raw ) {
 		$raw = wp_unslash( (string) $raw );
-		return trim( preg_replace( '/[^0-9\+\(\)\s\-]/', '', $raw ) );
+		$clean = trim( preg_replace( '/[^0-9\+\(\)\s\-]/', '', $raw ) );
+		return trim( substr( $clean, 0, 40 ) );
 	}
 
 	private function sanitize_postcode( $raw ) {
