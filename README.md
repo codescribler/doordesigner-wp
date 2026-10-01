@@ -250,10 +250,11 @@ link back to the design. Required: a name for the design, name, email, postcode.
 profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
 rating or count empty to hide the rating line; with no quotes, no quote is shown.
 
-The same button also appears **above the door picture** when the customer arrives on the
-step ("Your door is ready", the button, then the rating and "Free, no obligation"). It opens
-the same form, counts as the same funnel step, and disappears once the form is open. Each
-press sends a Clarity event, `door_save_top` or `door_save_bottom`, so the two can be compared.
+**Swipe flow only:** the same button also appears **above the door picture** when the
+customer arrives on the step ("Your door is ready", the button, then the rating and "Free,
+no obligation"). It opens the same form, counts as the same funnel step, and disappears once
+the form is open. Each press sends a Clarity event, `door_save_top` or `door_save_bottom`, so
+the two can be compared. The classic flow is the A/B control and does not have it.
 
 Files: `includes/class-hd-trust-settings.php`, `assets/js/trust.js`, `assets/js/enquiry.js`.
 Design: `docs/superpowers/specs/2026-10-01-save-design-and-price-design.md`.

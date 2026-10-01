@@ -185,3 +185,28 @@
   .hd-sw-cta { position: static; margin: 16px 0 0; width: 100%; border-radius: 12px; padding: 16px 20px; }
   .hd-sw-stage { margin: 0 0 12px; border-radius: 14px; }
 }
+
+/* 10. Review save bar — a second save button above the door picture ---------------------
+   Drawn by HD_DD_Trust.renderSaveBar into .hd-dd__savebar-slot on the Review screen only.
+   Same action and label as the action button at the foot; it scrolls away with the page
+   rather than sticking. Swipe flow only: the classic flow is the A/B control and is left
+   as it is. */
+.hd-dd__savebar-slot[hidden] { display: none; }
+.hd-dd__savebar { padding: 12px 0 14px; text-align: center; }
+.hd-dd__savebar-heading { margin: 0 0 8px; font-size: 17px; font-weight: 700; line-height: 1.25; }
+.hd-dd__savebar-btn {
+  display: block; width: 100%; min-height: 52px; padding: 14px 16px;
+  border: 0; border-radius: 12px; background: var(--sw-accent); color: #fff;
+  font: inherit; font-weight: 700; font-size: 1.02rem; line-height: 1.2; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+  /* One gentle pulse shortly after arrival, then still (off under reduced motion, see 8). */
+  animation: hd-sw-savepulse 1.2s ease-out 1.1s 1;
+}
+.hd-dd__savebar-btn:hover { filter: brightness(1.12); }
+.hd-dd__savebar-btn:active { filter: brightness(.92); }
+.hd-dd__savebar-btn:focus-visible { outline: 3px solid #7fb5a2; outline-offset: 2px; }
+.hd-dd__savebar-note { margin-top: 8px; color: #5a5f68; font-size: 12.5px; line-height: 1.4; }
+@keyframes hd-sw-savepulse {
+  0%   { box-shadow: 0 6px 18px rgba(0, 0, 0, .16), 0 0 0 0 rgba(29, 79, 63, .45); }
+  100% { box-shadow: 0 6px 18px rgba(0, 0, 0, .16), 0 0 0 16px rgba(29, 79, 63, 0); }
+}

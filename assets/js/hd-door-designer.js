@@ -325,11 +325,6 @@
 		this.head = head;
 		this.layoutEl = layout;
 
-		// Review only: a save button above the door picture (see renderSaveBar).
-		this.saveBar = el('div', 'hd-dd__savebar-slot');
-		this.saveBar.hidden = true;
-		layout.appendChild(this.saveBar);
-
 		var stage = el('div', 'hd-dd__stage');
 		// Hero image — shown before a door type is chosen (when the canvas is empty), so
 		// the first screen looks like a real door rather than a blank box.
@@ -395,7 +390,6 @@
 		if (!design['Door Type']) {
 			this._lastKey = null; this._atForm = false; this._frameGroup = null;
 			this.setPhase('type');
-			this.renderSaveBar(false);
 			if (this.heroImg && CFG.heroImage) { this.heroImg.hidden = false; }
 			this.canvas.hidden = true;
 			this.renderTypeChooser();
@@ -424,7 +418,6 @@
 			// The enquiry form renders in the body (not a separate block) so the door
 			// preview stays visible right up to the moment of submission.
 			this.setPhase(this._atForm ? 'form' : 'review');
-			this.renderSaveBar(!this._atForm);
 			// The save form opens IN PLACE under the review list (no separate screen), so the
 			// door, the spec and the reassurance all stay in view while the details are typed.
 			HD_DD_Review.render(this.body, this.reviewCtx(st));
@@ -433,7 +426,6 @@
 		} else {
 			this._atForm = false;
 			this.setPhase('step');
-			this.renderSaveBar(false);
 			HD_DD_StepRenderer.renderStep(this.body, step, this.stepCtx(st, step));
 			this.continueBtn.hidden = false;
 			// Guided gate: Continue unlocks once the step is satisfied (or is optional).
@@ -555,21 +547,6 @@
 		};
 	};
 
-	// The save bar above the door picture: shown on Review, gone everywhere else and once the
-	// form is open. Left alone while it is already up, so its one-off entrance does not replay.
-	App.prototype.renderSaveBar = function (show) {
-		var self = this;
-		show = show && !!window.HD_DD_Trust;
-		if (show && !this.saveBar.hidden) { return; }
-		this.saveBar.innerHTML = '';
-		this.saveBar.hidden = !show;
-		if (!show) { return; }
-		window.HD_DD_Trust.renderSaveBar(this.saveBar, CFG.trust, function () { self.track('door_save_top'); self.openSaveForm(); });
-	};
-
-	// Either save button: open the form in place under the review list and scroll to it.
-	App.prototype.openSaveForm = function () { this._atForm = true; this._scrollToForm = true; this.render(); };
-
 	App.prototype.reviewCtx = function (st) {
 		var self = this;
 		return {
@@ -580,7 +557,7 @@
 			showCta: !this._atForm,
 			ctaLabel: window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : null,
 			renderTrust: function (c) { if (window.HD_DD_Trust) { window.HD_DD_Trust.render(c, CFG.trust); } },
-			onSubmitClick: function () { self.track('door_save_bottom'); self.openSaveForm(); }
+			onSubmitClick: function () { self._atForm = true; self._scrollToForm = true; self.render(); }
 		};
 	};
 
