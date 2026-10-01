@@ -418,7 +418,10 @@
 			// The enquiry form renders in the body (not a separate block) so the door
 			// preview stays visible right up to the moment of submission.
 			this.setPhase(this._atForm ? 'form' : 'review');
-			if (this._atForm) { this.renderForm(); } else { HD_DD_Review.render(this.body, this.reviewCtx(st)); }
+			// The save form opens IN PLACE under the review list (no separate screen), so the
+			// door, the spec and the reassurance all stay in view while the details are typed.
+			HD_DD_Review.render(this.body, this.reviewCtx(st));
+			if (this._atForm) { this.renderForm(); }
 			this.continueBtn.hidden = true;
 		} else {
 			this._atForm = false;
@@ -551,7 +554,10 @@
 			design: st.design,
 			typeLabel: st.design['Door Type'] ? displayLabel(st.design['Door Type'].label) : '',
 			onEdit: function (key) { self.wiz.jumpTo(key); self.render(); },
-			onSubmitClick: function () { self._atForm = true; self.render(); try { self.root.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ } }
+			showCta: !this._atForm,
+			ctaLabel: window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : null,
+			renderTrust: function (c) { if (window.HD_DD_Trust) { window.HD_DD_Trust.render(c, CFG.trust); } },
+			onSubmitClick: function () { self._atForm = true; self._scrollToForm = true; self.render(); }
 		};
 	};
 
@@ -749,7 +755,17 @@
 		return this._enquiry;
 	};
 
-	App.prototype.renderForm = function () { this.enquiryCtl().renderForm(this.body); };
+	App.prototype.renderForm = function () {
+		var box = document.createElement('div');
+		box.className = 'hd-dd__savebox';
+		this.body.appendChild(box);
+		this.enquiryCtl().renderForm(box);
+		// Only on the tap that opened it — not on later re-renders while the form is open.
+		if (this._scrollToForm) {
+			this._scrollToForm = false;
+			try { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ }
+		}
+	};
 
 	// The post-submission screen — a self-contained, centred terminal screen (no sticky preview).
 	App.prototype.renderSuccess = function (result) {

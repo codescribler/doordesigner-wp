@@ -52,6 +52,7 @@
 <script src="../assets/js/wizard/funnel.js"></script>
 <script src="../assets/js/api-client.js"></script>
 <script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/trust.js"></script>
 <script src="../assets/js/enquiry.js"></script>
 <script src="harness-data.js"></script>
 <!-- classic app (exposes window.HD_DD_App; boot.js normally starts it — here we mount manually) -->
@@ -65,7 +66,7 @@
     var model = data.model, categories = data.categories;
     var customerView = data.customerView;
     // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host.
-    window.HD_DD_CONFIG = { assetBase: model._assetBase, heroImage: 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' };
+    window.HD_DD_CONFIG = { assetBase: model._assetBase, heroImage: 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg', trust: { rating: '4.9', count: '321', url: '', quotes: [{ text: 'Harness sample quote, not a real review.', by: 'Sample, Harness' }] } };
     statusEl.textContent = 'Loaded ' + customerView.types.length + ' door types · assetBase ' + model._assetBase;
     mount.innerHTML = '';
     new window.HD_DD_App(mount, customerView, model, categories).render();

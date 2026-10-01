@@ -228,7 +228,10 @@
 		this.track('door_step_' + key);
 		if (key === 'review') { this.funnel.step('review'); }
 		if (key === 'form') { this.funnel.step('details'); }
-		try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+		// Opening the save form scrolls to the form itself (see the view), not back to the top.
+		if (key !== 'form') {
+			try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+		}
 	};
 
 	SwipeApp.prototype.next = function () {

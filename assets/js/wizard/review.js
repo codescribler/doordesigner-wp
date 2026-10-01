@@ -35,15 +35,18 @@
     });
     container.appendChild(list);
 
-    container.appendChild(el('div', 'hd-dd__review-note',
-      'Free, no-obligation quote — no payment now. We usually reply within one working day.'));
-
     container.appendChild(el('div', 'hd-dd__disclaimer',
       'We make every effort to show your door as accurately as possible, but this preview is an impression — it should not be taken as a perfect representation of the finished product.'));
 
-    var cta = el('button', 'hd-dd__cta', 'Get my free quote'); cta.type = 'button';
-    cta.addEventListener('click', ctx.onSubmitClick);
-    container.appendChild(cta);
+    // Social proof + what saving gets you (HD_DD_Trust, supplied by the app).
+    if (ctx.renderTrust) { ctx.renderTrust(container); }
+
+    // Hidden once the save form is open beneath the list.
+    if (ctx.showCta !== false) {
+      var cta = el('button', 'hd-dd__cta', ctx.ctaLabel || 'Save my design & get my price'); cta.type = 'button';
+      cta.addEventListener('click', ctx.onSubmitClick);
+      container.appendChild(cta);
+    }
   }
   return { render: render };
 }));

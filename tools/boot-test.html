@@ -27,6 +27,7 @@
     restUrl: '/fake-rest/', catalogueUrl: '/fake-rest/catalogue', renderModelUrl: '/fake-rest/render-model',
     categoriesUrl: '../data/style-categories.json', nonce: 'x', version: '0.3.0-harness',
     flow: { 'default': 'classic', experiment: { id: 'exp_20260928_abc123', control: 'classic', challenger: 'swipe', percent: 50 } },
+    trust: { rating: '4.9', count: '321', url: '', quotes: [{ text: 'Harness sample quote, not a real review.', by: 'Sample, Harness' }] },
     i18n: {}
   };
   // Answer the two REST data calls from the local files, exactly as the PHP shapes them.
@@ -68,6 +69,7 @@
   };
 </script>
 <script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/trust.js"></script>
 <script src="../assets/js/enquiry.js"></script>
 <script src="../assets/js/experiment.js"></script>
 <script src="../assets/js/hd-door-designer.js"></script>

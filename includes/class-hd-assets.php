@@ -72,6 +72,9 @@ class HD_DD_Assets {
 		wp_register_script( self::HANDLE . '-shared', HD_DD_URL . 'assets/js/design-shared.js', array( self::HANDLE . '-rendermodel' ), $ver_js, true );
 		wp_register_script( self::HANDLE . '-enquiry', HD_DD_URL . 'assets/js/enquiry.js', array( self::HANDLE . '-apiclient' ), $ver_js, true );
 
+		// Review-step social proof + benefits block, used by both flows.
+		wp_register_script( self::HANDLE . '-trust', HD_DD_URL . 'assets/js/trust.js', array(), $ver_js, true );
+
 		// Classic flow: depends on the compositor + every wizard module.
 		wp_register_script(
 			self::HANDLE,
@@ -85,6 +88,7 @@ class HD_DD_Assets {
 				self::HANDLE . '-apiclient',
 				self::HANDLE . '-shared',
 				self::HANDLE . '-enquiry',
+				self::HANDLE . '-trust',
 			),
 			$ver_js,
 			true
@@ -105,7 +109,7 @@ class HD_DD_Assets {
 		wp_register_script(
 			self::HANDLE . '-swipeview',
 			HD_DD_URL . 'assets/js/swipe/swipe-view.js',
-			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-shared', self::HANDLE . '-enquiry' ),
+			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-shared', self::HANDLE . '-enquiry', self::HANDLE . '-trust' ),
 			$ver_js,
 			true
 		);

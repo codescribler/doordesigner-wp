@@ -251,12 +251,22 @@
 			if (compositor) { try { compositor.render(app.type(), app.design()); } catch (e) { /* missing asset */ } }
 		}
 
-		function review() {
-			heading('Your door', 'Here’s your design. Tap Edit to change anything, or get your free, no-obligation quote.');
+		// The review list, the trust block, and — once "Save my design" is tapped — the save
+		// form opened in place beneath them. Returns the form's box (or null) for scrolling.
+		function review(formOpen) {
+			heading('Your door', 'Here’s your design. Tap Edit to change anything.');
 			body.appendChild(P.reviewList(reviewRows(), function (key) { app.go(key); }));
-			body.appendChild(el('div', 'hd-dd__review-note', 'Free, no-obligation quote. No payment now. We usually reply within one working day.'));
 			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
-			setCta('Get my free quote →', function () { app.go('form'); });
+			window.HD_DD_Trust.render(body, CFG.trust);
+			if (!formOpen) {
+				setCta(window.HD_DD_Trust.COPY.cta + ' →', function () { app.go('form'); });
+				return null;
+			}
+			var box = el('div', 'hd-dd__savebox');
+			body.appendChild(box);
+			enquiryCtl().renderForm(box);
+			setCta(null);
+			return box;
 		}
 
 		v.loading = function () { if (!shell) { build(); } body.textContent = I18N.loadingDesign || 'Loading your saved design…'; };
@@ -266,13 +276,14 @@
 			if (carousel) { carousel.destroy(); carousel = null; }
 			body.innerHTML = '';
 			var scr = app.screen;
+			var formBox = null;
 			shell.className = 'hd-dd hd-sw hd-sw--' + (scr === 'design' || scr === 'review' || scr === 'form' || scr === 'done' ? scr : 'option');
 			back.hidden = scr === 'design' || scr === 'done';
 			renderProgress();
 			stage.hidden = !(scr === 'review' || scr === 'form');
 			if (scr === 'design') { showcase(); }
-			else if (scr === 'review') { paintStage(); review(); }
-			else if (scr === 'form') { paintStage(); enquiryCtl().renderForm(body); setCta(null); }
+			else if (scr === 'review') { paintStage(); review(false); }
+			else if (scr === 'form') { paintStage(); formBox = review(true); }
 			else if (scr === 'done') {
 				setCta(null);
 				enquiryCtl().renderSuccess(body, app.lastResult, function () { enquiryCtl().reset(); app.reset(); v.render(); });
@@ -285,6 +296,7 @@
 				void body.offsetWidth; // restart the entry animation
 				body.classList.add('is-entering');
 				if (scr === 'review') { stage.classList.remove('is-revealing'); void stage.offsetWidth; stage.classList.add('is-revealing'); }
+				if (formBox) { try { formBox.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ } }
 			}
 		};
 

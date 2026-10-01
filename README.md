@@ -249,8 +249,11 @@ node tests/js/design-index.test.js    # swipe showcase: design → types, Avanta
 node tests/js/flow-steps.test.js      # swipe screens per door type + funnel events
 node tests/js/carousel.test.js        # cover-flow maths (settle, window, placement)
 node tests/js/design-shared.test.js   # finish/furniture rules shared by both flows
+node tests/js/trust.test.js           # Review-step rating / quote / benefits block
+node tests/js/enquiry-form.test.js    # save form: fields, default design name, POST body
+node tests/js/copy-rule.test.js       # no customer-facing text promises we won't phone
 node tools/tests/test-*.js            # wizard, render model, step config…
-php tests/php/run.php                 # honeypot flagging, failure log, nonce endpoint, admin labels, experiments
+php tests/php/run.php                 # saving (optional phone, design name), emails, review settings, honeypot, failure log, nonce, admin labels, experiments
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
 
