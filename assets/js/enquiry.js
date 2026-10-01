@@ -256,5 +256,34 @@
 		return { renderForm: renderForm, renderSuccess: renderSuccess, reset: reset };
 	}
 
-	return { create: create, snapshot: snapshot, cleanDesign: cleanDesign, FIELDS: FIELDS, defaultDesignName: defaultDesignName, buildData: buildData };
+	// How far below the top of the viewport the form must land to clear whatever is stuck
+	// there (the progress header; on phones the door preview too). "stuck" is a list of
+	// { top, height, left, right } for sticky elements (top = their CSS "top" in px); only
+	// those that horizontally overlap the form count — on desktop the preview sits beside it.
+	function stickyOffset(stuck, box) {
+		var offset = 0;
+		(stuck || []).forEach(function (s) {
+			if (!s.height || s.right <= box.left || s.left >= box.right) { return; }
+			offset = Math.max(offset, s.top + s.height);
+		});
+		return offset;
+	}
+
+	// Smooth-scroll the save form to just below the sticky chrome so its first fields show.
+	function scrollToForm(box, root) {
+		try {
+			var b = box.getBoundingClientRect();
+			var stuck = [];
+			Array.prototype.forEach.call(root.querySelectorAll('*'), function (n) {
+				var cs = window.getComputedStyle(n);
+				if (cs.position !== 'sticky' || cs.top === 'auto') { return; }
+				var r = n.getBoundingClientRect();
+				stuck.push({ top: parseFloat(cs.top) || 0, height: r.height, left: r.left, right: r.right });
+			});
+			box.style.scrollMarginTop = Math.round(stickyOffset(stuck, { left: b.left, right: b.right }) + 8) + 'px';
+			box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		} catch (e) { /* older browsers: the form is still on the page */ }
+	}
+
+	return { create: create, stickyOffset: stickyOffset, scrollToForm: scrollToForm, snapshot: snapshot, cleanDesign: cleanDesign, FIELDS: FIELDS, defaultDesignName: defaultDesignName, buildData: buildData };
 }));

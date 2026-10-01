@@ -30,4 +30,17 @@ assert.strictEqual(body.design._styleCategory, undefined);
 assert.strictEqual(body.design['Door Design'].id, 12);
 assert.strictEqual(body.pageUrl, 'https://example.test/door-designer/');
 
+// Scroll offset: the form must clear sticky chrome that sits ABOVE it, and ignore chrome beside it.
+var formBox = { left: 16, right: 374 };
+assert.strictEqual(Enquiry.stickyOffset([], formBox), 0);
+assert.strictEqual(Enquiry.stickyOffset(undefined, formBox), 0);
+// Swipe on a phone: one 52px header.
+assert.strictEqual(Enquiry.stickyOffset([{ top: 0, height: 52, left: 0, right: 390 }], formBox), 52);
+// Classic on a phone: header (41px) with the door preview stuck beneath it (227px tall at top 41).
+assert.strictEqual(Enquiry.stickyOffset([{ top: 0, height: 41, left: 0, right: 390 }, { top: 41, height: 227, left: 0, right: 390 }], formBox), 268);
+// Classic on desktop: the preview is beside the form (no horizontal overlap), so only the header counts.
+assert.strictEqual(Enquiry.stickyOffset([{ top: 0, height: 41, left: 0, right: 1200 }, { top: 41, height: 600, left: 0, right: 560 }], { left: 600, right: 1160 }), 41);
+// A collapsed (zero-height) sticky element counts for nothing.
+assert.strictEqual(Enquiry.stickyOffset([{ top: 0, height: 0, left: 0, right: 390 }], formBox), 0);
+
 console.log('enquiry-form.test.js: all assertions passed');

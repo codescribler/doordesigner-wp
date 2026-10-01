@@ -56,6 +56,10 @@
 <script src="../assets/js/enquiry.js"></script>
 <script src="harness-data.js"></script>
 <!-- classic app (exposes window.HD_DD_App; boot.js normally starts it — here we mount manually) -->
+<script>
+  // The App captures HD_DD_CONFIG when hd-door-designer.js loads, so the sample trust config must exist before it.
+  window.HD_DD_CONFIG = { trust: { rating: '4.9', count: '321', url: '', quotes: [{ text: 'Harness sample quote, not a real review.', by: 'Sample, Harness' }] } };
+</script>
 <script src="../assets/js/hd-door-designer.js"></script>
 <script>
 (function () {
@@ -65,8 +69,10 @@
   window.HD_DD_HarnessData.load().then(function (data) {
     var model = data.model, categories = data.categories;
     var customerView = data.customerView;
-    // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host.
-    window.HD_DD_CONFIG = { assetBase: model._assetBase, heroImage: 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg', trust: { rating: '4.9', count: '321', url: '', quotes: [{ text: 'Harness sample quote, not a real review.', by: 'Sample, Harness' }] } };
+    // The App reads assetBase from window.HD_DD_CONFIG — point it at the captured host (assign onto
+    // the object set above, so its trust sample survives).
+    window.HD_DD_CONFIG.assetBase = model._assetBase;
+    window.HD_DD_CONFIG.heroImage = 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg';
     statusEl.textContent = 'Loaded ' + customerView.types.length + ' door types · assetBase ' + model._assetBase;
     mount.innerHTML = '';
     new window.HD_DD_App(mount, customerView, model, categories).render();

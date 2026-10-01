@@ -763,7 +763,7 @@
 		// Only on the tap that opened it — not on later re-renders while the form is open.
 		if (this._scrollToForm) {
 			this._scrollToForm = false;
-			try { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ }
+			window.HD_DD_Enquiry.scrollToForm(box, this.root);
 		}
 	};
 

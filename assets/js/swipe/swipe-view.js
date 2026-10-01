@@ -296,7 +296,7 @@
 				void body.offsetWidth; // restart the entry animation
 				body.classList.add('is-entering');
 				if (scr === 'review') { stage.classList.remove('is-revealing'); void stage.offsetWidth; stage.classList.add('is-revealing'); }
-				if (formBox) { try { formBox.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ } }
+				if (formBox) { window.HD_DD_Enquiry.scrollToForm(formBox, app.root); }
 			}
 		};
 
