@@ -236,6 +236,19 @@ listener, cron), `class-hd-experiment-stats.php` (the maths),
 `assets/js/experiment.js` (browser assignment). Data: option `hd_dd_experiment`
 (the live test), `hd_dd_experiment_history`, table `wp_hd_dd_experiment_visitors`.
 
+## Review step: save your design and get a price
+
+The Review step ends with "Save my design & get my price". A save is an enquiry: it is
+stored, emailed to the recipients and counted as a lead, and the customer is emailed a
+link back to the design. Required: a name for the design, name, email, postcode.
+
+**Door Enquiries → Settings → Review step** holds the Checkatrade rating, review count,
+profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
+rating or count empty to hide the rating line; with no quotes, no quote is shown.
+
+Files: `includes/class-hd-trust-settings.php`, `assets/js/trust.js`, `assets/js/enquiry.js`.
+Design: `docs/superpowers/specs/2026-10-01-save-design-and-price-design.md`.
+
 ## Tests
 
 No framework — plain Node and PHP scripts that exit non-zero on failure:
@@ -277,7 +290,10 @@ Updates surface in wp-admin via [`YahnisElsts/plugin-update-checker`](https://gi
 
 The plugin stores customer contact details (name, phone, email, postcode) plus the
 design. Notes:
-- A consent checkbox is required on the form.
+- There is no consent tick. The save form states, under the button, that saving asks us
+  for a price and that we will use the details to send it and may get in touch. Phone is
+  optional. Customer-facing copy must never promise that we won't phone
+  (`tests/js/copy-rule.test.js` enforces this).
 - The recipient email is configurable (**Settings**).
 - A retention-days setting is exposed for a purge policy (auto-purge can be wired later).
 - Uninstalling the plugin (Delete, not deactivate) drops the table and removes all stored PII.

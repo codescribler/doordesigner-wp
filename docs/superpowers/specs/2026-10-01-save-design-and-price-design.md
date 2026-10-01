@@ -1,7 +1,7 @@
 # Save your design and get a price — Design
 
 **Date:** 2026-10-01
-**Status:** Design agreed in conversation; written spec awaiting Daniel's review
+**Status:** Release 1 implemented on `feat/save-design-and-price` (v0.3.0); Releases 2 and 3 not started
 **Repo:** `codescribler/doordesigner-wp` (this plugin). No manager-app changes.
 
 ## Goal
