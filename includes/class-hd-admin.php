@@ -93,7 +93,8 @@ class HD_DD_Admin {
 
 	public function sanitize_settings( $input ) {
 		$current = HD_DD_Plugin::settings();
-		return array(
+		$trust   = HD_DD_Trust_Settings::sanitize( is_array( $input ) ? $input : array(), $current );
+		return $trust + array(
 			'recipient_email' => $this->sanitize_email_list( isset( $input['recipient_email'] ) ? $input['recipient_email'] : '', $current['recipient_email'] ),
 			'page_id'         => isset( $input['page_id'] ) ? absint( $input['page_id'] ) : $current['page_id'],
 			'retention_days'  => isset( $input['retention_days'] ) ? absint( $input['retention_days'] ) : $current['retention_days'],
@@ -157,6 +158,7 @@ class HD_DD_Admin {
 						</td>
 					</tr>
 				</table>
+				<?php HD_DD_Trust_Settings::render_fields( $s, self::OPTION ); ?>
 				<?php submit_button(); ?>
 			</form>
 

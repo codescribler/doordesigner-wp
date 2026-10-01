@@ -99,7 +99,7 @@ final class HD_DD_Plugin {
 			'github_repo'     => '', // e.g. https://github.com/OWNER/hd-door-designer
 			'asset_base'      => '', // preview image host; empty = use the model's captured origin.
 			'default_flow'    => 'classic', // designer flow when no A/B test runs (see HD_DD_Experiments).
-		);
+		) + HD_DD_Trust_Settings::defaults(); // Review-step social proof.
 		$saved = get_option( 'hd_dd_settings', array() );
 		return wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );
 	}

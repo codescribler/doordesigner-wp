@@ -152,6 +152,8 @@ class HD_DD_Assets {
 				// Hero image for the opening screen (before a door type is chosen). Override
 				// with the `hd_dd_hero_image` filter or set it empty to show nothing.
 				'heroImage'      => esc_url_raw( apply_filters( 'hd_dd_hero_image', 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' ) ),
+				// Review-step social proof: { rating, count, url, quotes: [{ text, by }] } (assets/js/trust.js).
+				'trust'          => HD_DD_Trust_Settings::front_config(),
 				'i18n'           => $this->i18n_strings(),
 			)
 		);
