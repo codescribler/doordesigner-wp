@@ -6,6 +6,7 @@
 // (tests/js/copy-rule.test.js scans every line of this file, comments included).
 //
 //   HD_DD_Trust.render(container, HD_DD_CONFIG.trust);
+//   HD_DD_Trust.renderSaveBar(container, HD_DD_CONFIG.trust, onClick);  // above the door picture
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) { module.exports = factory(); }
 	else { root.HD_DD_Trust = factory(); }
@@ -19,7 +20,9 @@
 			'We’ll work out a price for this exact door and send it to you',
 			'No pressure and no obligation. You decide what happens next.'
 		],
-		cta: 'Save my design & get my price'
+		cta: 'Save my design & get my price',
+		barHeading: 'Your door is ready',
+		barNote: 'Free, no obligation'
 	};
 
 	function el(tag, cls, txt) {
@@ -74,5 +77,22 @@
 		return box;
 	}
 
-	return { COPY: COPY, ratingLine: ratingLine, pickQuote: pickQuote, render: render };
+	// The save bar that sits above the door picture when the customer arrives on Review: the
+	// same action and the same words as the button at the foot of the step, offered before
+	// they scroll, with the rating and the reassurance on the line directly beneath it.
+	function renderSaveBar(container, trust, onClick) {
+		var bar = el('div', 'hd-dd__savebar');
+		bar.appendChild(el('div', 'hd-dd__savebar-heading', COPY.barHeading));
+		var btn = el('button', 'hd-dd__savebar-btn', COPY.cta);
+		btn.type = 'button';
+		btn.addEventListener('click', onClick);
+		bar.appendChild(btn);
+		var rated = ratingLine(trust);
+		bar.appendChild(el('div', 'hd-dd__savebar-note',
+			(rated ? '★ ' + trust.rating + '/10 on Checkatrade · ' : '') + COPY.barNote));
+		container.appendChild(bar);
+		return bar;
+	}
+
+	return { COPY: COPY, ratingLine: ratingLine, pickQuote: pickQuote, render: render, renderSaveBar: renderSaveBar };
 }));

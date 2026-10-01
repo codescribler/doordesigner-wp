@@ -16,7 +16,7 @@
 
 	function create(app) {
 		var v = {};
-		var shell = null, back, progressEl, counter, stage, stageCanvas, body, cta;
+		var shell = null, back, progressEl, counter, saveBar, stage, stageCanvas, body, cta;
 		var carousel = null, compositor = null, enquiry = null;
 
 		function build() {
@@ -30,13 +30,16 @@
 			progressEl = el('div', 'hd-sw-progress');
 			counter = el('span', 'hd-sw-counter');
 			head.appendChild(back); head.appendChild(progressEl); head.appendChild(counter);
+			// Review only: a save button above the door picture (HD_DD_Trust.renderSaveBar).
+			saveBar = el('div', 'hd-dd__savebar-slot');
+			saveBar.hidden = true;
 			stage = el('div', 'hd-sw-stage');
 			stageCanvas = el('canvas', 'hd-sw-stage__door');
 			stage.appendChild(stageCanvas);
 			body = el('div', 'hd-sw-body');
 			cta = el('button', 'hd-sw-cta');
 			cta.type = 'button';
-			shell.appendChild(head); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
+			shell.appendChild(head); shell.appendChild(saveBar); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
 			app.root.appendChild(shell);
 			if (window.HD_DD_Preview && app.model) {
 				compositor = window.HD_DD_Preview.create(stageCanvas, { model: app.model, assetBase: app.assetBase() });
@@ -247,6 +250,17 @@
 			return rows;
 		}
 
+		// The save bar above the door picture: shown on Review, gone once the form is open.
+		// Left alone while it is already up, so its one-off entrance does not replay.
+		function renderSaveBar(show) {
+			show = show && !!window.HD_DD_Trust;
+			if (show && !saveBar.hidden) { return; }
+			saveBar.innerHTML = '';
+			saveBar.hidden = !show;
+			if (!show) { return; }
+			window.HD_DD_Trust.renderSaveBar(saveBar, CFG.trust, function () { app.track('door_save_top'); app.go('form'); });
+		}
+
 		function paintStage() {
 			if (compositor) { try { compositor.render(app.type(), app.design()); } catch (e) { /* missing asset */ } }
 		}
@@ -259,7 +273,7 @@
 			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
 			if (window.HD_DD_Trust) { window.HD_DD_Trust.render(body, CFG.trust); }
 			if (!formOpen) {
-				setCta((window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : 'Save my design & get my price') + ' →', function () { app.go('form'); });
+				setCta((window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : 'Save my design & get my price') + ' →', function () { app.track('door_save_bottom'); app.go('form'); });
 				return null;
 			}
 			var box = el('div', 'hd-dd__savebox');
@@ -281,6 +295,7 @@
 			back.hidden = scr === 'design' || scr === 'done';
 			renderProgress();
 			stage.hidden = !(scr === 'review' || scr === 'form');
+			renderSaveBar(scr === 'review');
 			if (scr === 'design') { showcase(); }
 			else if (scr === 'review') { paintStage(); review(false); }
 			else if (scr === 'form') { paintStage(); formBox = review(true); }

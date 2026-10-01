@@ -6,6 +6,7 @@ function node(tag) {
   return {
     tag: tag, className: '', textContent: '', children: [], attrs: {},
     appendChild: function (c) { this.children.push(c); return c; },
+    addEventListener: function (type, fn) { this.listeners = this.listeners || {}; this.listeners[type] = fn; },
     setAttribute: function (k, v) { this.attrs[k] = v; }
   };
 }
@@ -68,6 +69,29 @@ assert.strictEqual(find(c, 'hd-dd__trust-quote'), null);
   assert.strictEqual(find(box, 'hd-dd__trust-rating'), null);
   assert.strictEqual(find(box, 'hd-dd__trust-quote'), null);
   assert.strictEqual(find(box, 'hd-dd__trust-benefits').children.length, 3);
+});
+
+// ---- Save bar above the door picture (a second, earlier save button) --------------------
+var pressed = 0;
+c = node('div');
+var bar = Trust.renderSaveBar(c, full, function () { pressed++; });
+assert.strictEqual(c.children.length, 1);
+assert.strictEqual(bar.className, 'hd-dd__savebar');
+assert.strictEqual(find(c, 'hd-dd__savebar-heading').textContent, 'Your door is ready');
+var topBtn = find(c, 'hd-dd__savebar-btn');
+// Same words as the button at the foot of the step: one action, one label.
+assert.strictEqual(topBtn.textContent, Trust.COPY.cta);
+assert.strictEqual(topBtn.tag, 'button');
+assert.strictEqual(topBtn.type, 'button');
+topBtn.listeners.click();
+assert.strictEqual(pressed, 1);
+// Proof and reassurance sit right under the button.
+assert.strictEqual(find(c, 'hd-dd__savebar-note').textContent, '★ 10/10 on Checkatrade · Free, no obligation');
+// No rating configured (or no config at all): the reassurance stands alone.
+[undefined, {}, { rating: '10', count: '' }].forEach(function (t) {
+  var box = node('div');
+  Trust.renderSaveBar(box, t, function () {});
+  assert.strictEqual(find(box, 'hd-dd__savebar-note').textContent, 'Free, no obligation');
 });
 
 assert.strictEqual(Trust.COPY.cta, 'Save my design & get my price');
