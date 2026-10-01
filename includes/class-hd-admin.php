@@ -240,7 +240,7 @@ class HD_DD_Admin {
 							?>
 							<tr>
 								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
-								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
+								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php if ( ! empty( $row->design_name ) ) : ?><br><small><?php echo esc_html( $row->design_name ); ?></small><?php endif; ?><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
@@ -337,6 +337,9 @@ class HD_DD_Admin {
 					<table class="widefat striped">
 						<tbody>
 							<tr><th style="width:200px;"><?php esc_html_e( 'Received', 'hd-door-designer' ); ?></th><td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td></tr>
+							<?php if ( ! empty( $row->design_name ) ) : ?>
+								<tr><th><?php esc_html_e( 'Design name', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->design_name ); ?></td></tr>
+							<?php endif; ?>
 							<tr><th><?php esc_html_e( 'Customer', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->customer_name ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'Email', 'hd-door-designer' ); ?></th><td><a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a></td></tr>
 							<tr><th><?php esc_html_e( 'Telephone', 'hd-door-designer' ); ?></th><td><a href="tel:<?php echo esc_attr( $row->customer_phone ); ?>"><?php echo esc_html( $row->customer_phone ); ?></a></td></tr>

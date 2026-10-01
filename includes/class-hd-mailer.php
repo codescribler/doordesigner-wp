@@ -78,8 +78,12 @@ class HD_DD_Mailer {
 		$from     = $host ? 'Hertfordshire Doors <noreply@' . $host . '>' : 'Hertfordshire Doors';
 		$settings = HD_DD_Plugin::settings();
 
-		/* translators: %s: enquiry reference */
-		$subject = sprintf( __( 'Your Hertfordshire Doors design (%s)', 'hd-door-designer' ), $reference );
+		$design_name = isset( $payload['designName'] ) ? (string) $payload['designName'] : '';
+		$subject     = '' !== $design_name
+			/* translators: 1: the customer's name for the design, 2: enquiry reference */
+			? sprintf( __( 'Your saved door design: %1$s (%2$s)', 'hd-door-designer' ), $design_name, $reference )
+			/* translators: %s: enquiry reference */
+			: sprintf( __( 'Your saved door design (%s)', 'hd-door-designer' ), $reference );
 
 		$body = self::customer_ack_html( $payload, $reload_url, $name, $reference );
 
@@ -127,12 +131,14 @@ class HD_DD_Mailer {
 		$revisit = $reload_url
 			? '<tr><td style="padding:20px 28px 0;">'
 				. '<a href="' . esc_url( $reload_url ) . '" style="display:inline-block;background:#161616;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:6px;">'
-				. esc_html__( 'Revisit or tweak this design', 'hd-door-designer' ) . '</a>'
+				. esc_html__( 'Open my design', 'hd-door-designer' ) . '</a>'
 				. '</td></tr>'
 			: '';
 
-		$intro = esc_html__( 'Thanks for designing your door with Hertfordshire Doors. We have received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.', 'hd-door-designer' );
+		$intro = esc_html__( 'Your design is saved. Use the button below to come back to it any time. We will work out a price for this exact door and send it to you, usually within one working day.', 'hd-door-designer' );
 		$price = esc_html__( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
+
+		$design_title = ( isset( $payload['designName'] ) && '' !== $payload['designName'] ) ? esc_html( $payload['designName'] ) : esc_html__( 'Your design', 'hd-door-designer' );
 
 		return '<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;">'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">'
@@ -145,7 +151,7 @@ class HD_DD_Mailer {
 			. '<table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>'
 			. $image_cell
 			. '<td valign="top">'
-			. '<div style="font-size:13px;font-weight:700;color:#161616;margin-bottom:6px;">' . esc_html__( 'Your design', 'hd-door-designer' ) . ' <span style="color:#8a8e96;font-weight:400;">' . esc_html( $reference ) . '</span></div>'
+			. '<div style="font-size:13px;font-weight:700;color:#161616;margin-bottom:6px;">' . $design_title . ' <span style="color:#8a8e96;font-weight:400;">' . esc_html( $reference ) . '</span></div>'
 			. '<table role="presentation" cellpadding="0" cellspacing="0">' . $rows . '</table>'
 			. '</td>'
 			. '</tr></table>'
@@ -170,11 +176,14 @@ class HD_DD_Mailer {
 		}
 		$lines[] = '';
 		$lines[] = __( 'REFERENCE: ', 'hd-door-designer' ) . ( isset( $payload['reference'] ) ? $payload['reference'] : '' );
+		if ( ! empty( $payload['designName'] ) ) {
+			$lines[] = __( 'DESIGN:    ', 'hd-door-designer' ) . $payload['designName'];
+		}
 		$lines[] = __( 'RECEIVED:  ', 'hd-door-designer' ) . ( isset( $payload['submittedAt'] ) ? $payload['submittedAt'] : '' );
 		$lines[] = '';
 		$lines[] = __( '— CUSTOMER —', 'hd-door-designer' );
 		$lines[] = sprintf( "%-12s %s", __( 'Name:', 'hd-door-designer' ), isset( $c['name'] ) ? $c['name'] : '' );
-		$lines[] = sprintf( "%-12s %s", __( 'Telephone:', 'hd-door-designer' ), isset( $c['telephone'] ) ? $c['telephone'] : '' );
+		$lines[] = sprintf( "%-12s %s", __( 'Telephone:', 'hd-door-designer' ), ( isset( $c['telephone'] ) && '' !== $c['telephone'] ) ? $c['telephone'] : __( '(not given)', 'hd-door-designer' ) );
 		$lines[] = sprintf( "%-12s %s", __( 'Email:', 'hd-door-designer' ), isset( $c['email'] ) ? $c['email'] : '' );
 		$lines[] = sprintf( "%-12s %s", __( 'Postcode:', 'hd-door-designer' ), isset( $c['postcode'] ) ? $c['postcode'] : '' );
 		$lines[] = '';
