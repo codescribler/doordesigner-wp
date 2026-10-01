@@ -94,7 +94,6 @@ class HD_DD_Failure_Log {
 				'userAgent' => sanitize_text_field( (string) $request->get_header( 'User-Agent' ) ),
 				'attempt'   => sanitize_text_field( (string) $request->get_header( 'X-HD-DD-Attempt' ) ),
 				'hadImage'  => ! empty( $params['image'] ),
-				'consent'   => ! empty( $params['consent'] ),
 				'honeypot'  => ! empty( $params['hd_hp'] ),
 			),
 		);
@@ -184,7 +183,6 @@ class HD_DD_Failure_Log {
 		$lines[] = sprintf( '%-16s %s', 'Browser:', $r['userAgent'] );
 		$lines[] = sprintf( '%-16s %s', 'Attempt:', $r['attempt'] );
 		$lines[] = sprintf( '%-16s %s', 'Image attached:', $r['hadImage'] ? 'yes' : 'no' );
-		$lines[] = sprintf( '%-16s %s', 'Consent ticked:', $r['consent'] ? 'yes' : 'no' );
 		$lines[] = sprintf( '%-16s %s', 'Honeypot filled:', $r['honeypot'] ? 'yes' : 'no' );
 		$lines[] = '';
 		$lines[] = '```json';

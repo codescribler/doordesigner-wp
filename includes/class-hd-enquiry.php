@@ -119,11 +119,6 @@ class HD_DD_Enquiry {
 		// emailed like any other enquiry, and is simply FLAGGED for a second look.
 		$flagged = ! empty( $params['hd_hp'] );
 
-		// --- Consent (GDPR) -------------------------------------------------
-		if ( empty( $params['consent'] ) ) {
-			return new WP_Error( 'hd_dd_no_consent', __( 'Please agree to be contacted about your enquiry.', 'hd-door-designer' ), array( 'status' => 422 ) );
-		}
-
 		// --- Customer fields ------------------------------------------------
 		$name      = isset( $params['name'] ) ? sanitize_text_field( wp_unslash( $params['name'] ) ) : '';
 		$email     = isset( $params['email'] ) ? sanitize_email( wp_unslash( $params['email'] ) ) : '';
@@ -136,9 +131,6 @@ class HD_DD_Enquiry {
 		}
 		if ( ! is_email( $email ) ) {
 			$errors['email'] = __( 'Please enter a valid email address.', 'hd-door-designer' );
-		}
-		if ( '' === $telephone ) {
-			$errors['telephone'] = __( 'Please enter a contact number.', 'hd-door-designer' );
 		}
 		if ( ! $this->is_valid_uk_postcode( $postcode ) ) {
 			$errors['postcode'] = __( 'Please enter a valid UK postcode.', 'hd-door-designer' );
@@ -155,6 +147,8 @@ class HD_DD_Enquiry {
 			return new WP_Error( 'hd_dd_no_design', __( 'No door design was received. Please start again.', 'hd-door-designer' ), array( 'status' => 422 ) );
 		}
 
+		$design_name = $this->clean_design_name( isset( $params['designName'] ) ? $params['designName'] : '', $design );
+
 		// --- Persist + notify ----------------------------------------------
 		$saved = $this->repository->insert(
 			array(
@@ -162,6 +156,7 @@ class HD_DD_Enquiry {
 				'email'     => $email,
 				'telephone' => $telephone,
 				'postcode'  => $postcode,
+				'design_name' => $design_name,
 				'design'    => $design,
 				'status'    => $flagged ? 'flagged' : 'new',
 				'payload'   => array(), // filled below once we have the reference.
@@ -177,7 +172,7 @@ class HD_DD_Enquiry {
 		// spec, so the request for quote carries the image too.
 		$image = $this->store_design_image( $saved['reference'], isset( $params['image'] ) ? (string) $params['image'] : '' );
 
-		$payload = $this->build_payload( $saved['reference'], compact( 'name', 'email', 'telephone', 'postcode' ), $design );
+		$payload = $this->build_payload( $saved['reference'], compact( 'name', 'email', 'telephone', 'postcode' ), $design, $design_name );
 		if ( $image ) {
 			$payload['image'] = $image['url'];
 		}
@@ -208,7 +203,7 @@ class HD_DD_Enquiry {
 				'ok'        => true,
 				'reference' => $saved['reference'],
 				'token'     => $saved['token'], // lets the thank-you screen offer an instant "revisit your design" link.
-				'message'   => __( 'Thank you — your design has been sent. We will be in touch shortly.', 'hd-door-designer' ),
+				'message'   => __( 'Thank you — your design is saved. We will send your price shortly.', 'hd-door-designer' ),
 			),
 			201
 		);
@@ -298,6 +293,37 @@ class HD_DD_Enquiry {
 	}
 
 	/**
+	 * The customer's own name for this design ("Front door option 1"), plain text, at most
+	 * 80 characters. Blank falls back to a name built from the door, so every save has one.
+	 */
+	private function clean_design_name( $raw, array $design ) {
+		$name = sanitize_text_field( wp_unslash( (string) $raw ) );
+		if ( '' === $name ) {
+			$name = self::default_design_name( $design );
+		}
+		return function_exists( 'mb_substr' ) ? mb_substr( $name, 0, 80 ) : substr( $name, 0, 80 );
+	}
+
+	/** "Ketu in Anthracite Grey" — the same default assets/js/enquiry.js pre-fills. */
+	public static function default_design_name( array $design ) {
+		$pick = function ( array $headings ) use ( $design ) {
+			foreach ( $headings as $heading ) {
+				if ( isset( $design[ $heading ]['label'] ) && '' !== trim( (string) $design[ $heading ]['label'] ) ) {
+					return trim( (string) $design[ $heading ]['label'] );
+				}
+			}
+			return '';
+		};
+		$style  = $pick( array( 'Door Design', 'Door Style' ) );
+		$colour = $pick( array( 'Door Colour (External)', 'Door Colour' ) );
+		if ( '' === $style ) {
+			return __( 'My door', 'hd-door-designer' );
+		}
+		/* translators: 1: door design, 2: outside colour */
+		return '' === $colour ? $style : sprintf( __( '%1$s in %2$s', 'hd-door-designer' ), $style, $colour );
+	}
+
+	/**
 	 * Build the "revisit your design" link (designer page + ?design=token). Prefers the
 	 * page the customer was actually on (client-supplied) but ONLY if it's on this site —
 	 * so a forged pageUrl can never put an off-site link in the email. Falls back to the
@@ -319,7 +345,7 @@ class HD_DD_Enquiry {
 	}
 
 	/** Assemble the canonical enquiry payload (the shape the quote-creator consumes). */
-	private function build_payload( $reference, array $customer, array $design ) {
+	private function build_payload( $reference, array $customer, array $design, $design_name = '' ) {
 		$handle_label = '';
 		if ( isset( $design['Handle']['label'] ) ) {
 			$handle_label = $design['Handle']['label'];
@@ -327,6 +353,7 @@ class HD_DD_Enquiry {
 
 		return array(
 			'reference'   => $reference,
+			'designName'  => $design_name,
 			'submittedAt' => gmdate( 'c' ),
 			'customer'    => array(
 				'name'      => $customer['name'],

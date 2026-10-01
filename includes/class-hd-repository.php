@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 class HD_DD_Repository {
 
-	const DB_VERSION = '2';
+	const DB_VERSION = '3';
 
 	/** @return string Fully-prefixed table name. */
 	public static function table() {
@@ -56,6 +56,7 @@ class HD_DD_Repository {
 			customer_email VARCHAR(190) NOT NULL DEFAULT '',
 			customer_phone VARCHAR(40) NOT NULL DEFAULT '',
 			customer_postcode VARCHAR(16) NOT NULL DEFAULT '',
+			design_name VARCHAR(120) NOT NULL DEFAULT '',
 			design LONGTEXT NULL,
 			payload LONGTEXT NULL,
 			source_ip VARCHAR(45) NOT NULL DEFAULT '',
@@ -94,11 +95,12 @@ class HD_DD_Repository {
 				'customer_email'    => $data['email'],
 				'customer_phone'    => $data['telephone'],
 				'customer_postcode' => $data['postcode'],
+				'design_name'       => isset( $data['design_name'] ) ? (string) $data['design_name'] : '',
 				'design'            => wp_json_encode( $data['design'] ),
 				'payload'           => wp_json_encode( $data['payload'] ),
 				'source_ip'         => $data['source_ip'],
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 
 		if ( false === $ok ) {
