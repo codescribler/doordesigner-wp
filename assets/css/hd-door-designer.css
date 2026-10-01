@@ -383,6 +383,53 @@
   line-height: 1.4;
 }
 
+/* Review step: social proof + what saving gets you (assets/js/trust.js). */
+.hd-dd__trust {
+  margin: 20px 16px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.hd-dd__trust-rating {
+  display: block;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+a.hd-dd__trust-rating:hover { text-decoration: underline; }
+.hd-dd__trust-quote { margin: 8px 0 0; }
+.hd-dd__trust-quote blockquote {
+  margin: 0;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.45;
+}
+.hd-dd__trust-quote figcaption {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.hd-dd__trust-heading {
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.hd-dd__trust-benefits {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* The save form, opened in place under the Review list. */
+.hd-dd__savebox { margin-top: 8px; }
+.hd-dd__form-consentline {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
 /* Preview-accuracy disclaimer — sets expectations that the rendered door is an
    impression, not an exact representation. */
 .hd-dd__disclaimer {
