@@ -68,11 +68,13 @@ class HD_DD_Assets {
 		// A/B test assignment + exposure beacon (HD_DD_Experiment); reads HD_DD_CONFIG.flow.
 		wp_register_script( self::HANDLE . '-experiment', HD_DD_URL . 'assets/js/experiment.js', array(), $ver_js, true );
 
-		// Shared by both flows: furniture/finish rules and the enquiry form.
+		// Furniture/finish rules shared by both flows, and the swipe flow's save form.
 		wp_register_script( self::HANDLE . '-shared', HD_DD_URL . 'assets/js/design-shared.js', array( self::HANDLE . '-rendermodel' ), $ver_js, true );
 		wp_register_script( self::HANDLE . '-enquiry', HD_DD_URL . 'assets/js/enquiry.js', array( self::HANDLE . '-apiclient' ), $ver_js, true );
+		// The original quote form, kept for the classic flow (the A/B control).
+		wp_register_script( self::HANDLE . '-quoteenquiry', HD_DD_URL . 'assets/js/enquiry-quote.js', array( self::HANDLE . '-apiclient' ), $ver_js, true );
 
-		// Review-step social proof + benefits block, used by both flows.
+		// Review-step social proof, benefits block and top save bar (swipe flow).
 		wp_register_script( self::HANDLE . '-trust', HD_DD_URL . 'assets/js/trust.js', array(), $ver_js, true );
 
 		// Classic flow: depends on the compositor + every wizard module.
@@ -87,8 +89,7 @@ class HD_DD_Assets {
 				self::HANDLE . '-funnel',
 				self::HANDLE . '-apiclient',
 				self::HANDLE . '-shared',
-				self::HANDLE . '-enquiry',
-				self::HANDLE . '-trust',
+				self::HANDLE . '-quoteenquiry',
 			),
 			$ver_js,
 			true
@@ -186,10 +187,17 @@ class HD_DD_Assets {
 			'skip'         => __( 'Skip', 'hd-door-designer' ),
 			'back'         => __( 'Back', 'hd-door-designer' ),
 			'chooseType'   => __( 'What kind of door?', 'hd-door-designer' ),
-			'intro'        => __( 'Design your door, save it and get a price — it takes about two minutes.', 'hd-door-designer' ),
-			'formTitle'    => __( 'Where shall we send your link and price?', 'hd-door-designer' ),
-			'submit'       => __( 'Save my design & get my price', 'hd-door-designer' ),
-			'trust'        => __( 'No spam, ever.', 'hd-door-designer' ),
+			// Classic flow (the A/B control): the original quote form's wording, as in v0.2.64.
+			'intro'        => __( 'Design your door and get a free, no-obligation quote — it takes about two minutes.', 'hd-door-designer' ),
+			'formTitle'    => __( 'Get your free quote', 'hd-door-designer' ),
+			'reassure'     => __( 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.', 'hd-door-designer' ),
+			'submit'       => __( 'Send my free quote request', 'hd-door-designer' ),
+			'trust'        => __( 'No spam, ever — your details are only used to prepare your quote.', 'hd-door-designer' ),
+			'consent'      => __( 'I agree to Hertfordshire Doors contacting me about this enquiry.', 'hd-door-designer' ),
+			// Swipe flow: the save form (assets/js/enquiry.js).
+			'saveFormTitle' => __( 'Where shall we send your link and price?', 'hd-door-designer' ),
+			'saveSubmit'   => __( 'Save my design & get my price', 'hd-door-designer' ),
+			'saveTrust'    => __( 'No spam, ever.', 'hd-door-designer' ),
 			'enquire'      => __( 'Enquire about this door', 'hd-door-designer' ),
 			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),

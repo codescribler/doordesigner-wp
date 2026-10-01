@@ -31,15 +31,12 @@ sources.forEach(function (rel) {
   });
 });
 
-// The agreed wording is in place, and the old quote wording is gone from the Review step.
+// Swipe flow (the new one): the agreed save wording is in place and the old quote wording is gone.
+// (The classic flow is the A/B control and keeps the original — see control-arm.test.js.)
 function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
-var review = read('assets/js/wizard/review.js');
 var swipe = read('assets/js/swipe/swipe-view.js');
 var enquiry = read('assets/js/enquiry.js');
-[review, swipe].forEach(function (src) {
-  assert.ok(src.indexOf('Get my free quote') === -1, 'old CTA removed');
-});
-assert.ok(review.indexOf('ctx.renderTrust(') !== -1, 'wizard Review step draws the trust block');
+assert.ok(swipe.indexOf('Get my free quote') === -1, 'old CTA removed from the swipe flow');
 assert.ok(swipe.indexOf('HD_DD_Trust.render(') !== -1, 'swipe Review step draws the trust block');
 assert.ok(enquiry.indexOf('only used to prepare') === -1, 'no line contradicting the consent line');
 assert.ok(enquiry.indexOf('By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.') !== -1, 'consent line verbatim');

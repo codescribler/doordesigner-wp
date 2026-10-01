@@ -63,9 +63,11 @@ class HD_DD_Mailer {
 	 *
 	 * @param array  $payload    The enquiry payload (reference, customer, design).
 	 * @param string $reload_url The "revisit your design" link (may be empty).
+	 * @param bool   $quote_form True for the classic flow's original quote form (the A/B
+	 *                           control): it keeps the original subject, intro and button.
 	 * @return bool wp_mail result.
 	 */
-	public static function send_customer_ack( array $payload, $reload_url ) {
+	public static function send_customer_ack( array $payload, $reload_url, $quote_form = false ) {
 		$to = isset( $payload['customer']['email'] ) ? sanitize_email( $payload['customer']['email'] ) : '';
 		if ( ! is_email( $to ) ) {
 			return false;
@@ -78,14 +80,18 @@ class HD_DD_Mailer {
 		$from     = $host ? 'Hertfordshire Doors <noreply@' . $host . '>' : 'Hertfordshire Doors';
 		$settings = HD_DD_Plugin::settings();
 
-		$design_name = isset( $payload['designName'] ) ? (string) $payload['designName'] : '';
+		$design_name = ( ! $quote_form && isset( $payload['designName'] ) ) ? (string) $payload['designName'] : '';
 		$subject     = '' !== $design_name
 			/* translators: 1: the customer's name for the design, 2: enquiry reference */
 			? sprintf( __( 'Your saved door design: %1$s (%2$s)', 'hd-door-designer' ), $design_name, $reference )
 			/* translators: %s: enquiry reference */
 			: sprintf( __( 'Your saved door design (%s)', 'hd-door-designer' ), $reference );
+		if ( $quote_form ) {
+			/* translators: %s: enquiry reference */
+			$subject = sprintf( __( 'Your Hertfordshire Doors design (%s)', 'hd-door-designer' ), $reference );
+		}
 
-		$body = self::customer_ack_html( $payload, $reload_url, $name, $reference );
+		$body = self::customer_ack_html( $payload, $reload_url, $name, $reference, $quote_form );
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8', 'From: ' . $from );
 		if ( ! empty( $settings['recipient_email'] ) ) {
@@ -104,7 +110,7 @@ class HD_DD_Mailer {
 	 * left with the spec to the right (table-based for email-client compatibility, inline
 	 * styles only). Degrades to spec-only when no preview image was captured.
 	 */
-	private static function customer_ack_html( array $payload, $reload_url, $name, $reference ) {
+	private static function customer_ack_html( array $payload, $reload_url, $name, $reference, $quote_form = false ) {
 		$image_url = isset( $payload['image'] ) ? esc_url( $payload['image'] ) : '';
 
 		// Spec rows (heading : value).
@@ -131,14 +137,16 @@ class HD_DD_Mailer {
 		$revisit = $reload_url
 			? '<tr><td style="padding:20px 28px 0;">'
 				. '<a href="' . esc_url( $reload_url ) . '" style="display:inline-block;background:#161616;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:6px;">'
-				. esc_html__( 'Open my design', 'hd-door-designer' ) . '</a>'
+				. ( $quote_form ? esc_html__( 'Revisit or tweak this design', 'hd-door-designer' ) : esc_html__( 'Open my design', 'hd-door-designer' ) ) . '</a>'
 				. '</td></tr>'
 			: '';
 
-		$intro = esc_html__( 'Your design is saved. Use the button below to come back to it any time. We will work out a price for this exact door and send it to you, usually within one working day.', 'hd-door-designer' );
+		$intro = $quote_form
+			? esc_html__( 'Thanks for designing your door with Hertfordshire Doors. We have received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.', 'hd-door-designer' )
+			: esc_html__( 'Your design is saved. Use the button below to come back to it any time. We will work out a price for this exact door and send it to you, usually within one working day.', 'hd-door-designer' );
 		$price = esc_html__( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
 
-		$design_title = ( isset( $payload['designName'] ) && '' !== $payload['designName'] ) ? esc_html( $payload['designName'] ) : esc_html__( 'Your design', 'hd-door-designer' );
+		$design_title = ( ! $quote_form && isset( $payload['designName'] ) && '' !== $payload['designName'] ) ? esc_html( $payload['designName'] ) : esc_html__( 'Your design', 'hd-door-designer' );
 
 		return '<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;">'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">'

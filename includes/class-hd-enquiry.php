@@ -119,6 +119,15 @@ class HD_DD_Enquiry {
 		// emailed like any other enquiry, and is simply FLAGGED for a second look.
 		$flagged = ! empty( $params['hd_hp'] );
 
+		// The classic flow is the A/B control and still posts the ORIGINAL quote form
+		// (assets/js/enquiry-quote.js sends form=quote). It keeps the original rules: a
+		// consent tick and a telephone number are required. The swipe flow's save form
+		// needs neither.
+		$quote_form = isset( $params['form'] ) && 'quote' === $params['form'];
+		if ( $quote_form && empty( $params['consent'] ) ) {
+			return new WP_Error( 'hd_dd_no_consent', __( 'Please agree to be contacted about your enquiry.', 'hd-door-designer' ), array( 'status' => 422 ) );
+		}
+
 		// --- Customer fields ------------------------------------------------
 		$name      = isset( $params['name'] ) ? sanitize_text_field( wp_unslash( $params['name'] ) ) : '';
 		$email     = isset( $params['email'] ) ? sanitize_email( wp_unslash( $params['email'] ) ) : '';
@@ -131,6 +140,9 @@ class HD_DD_Enquiry {
 		}
 		if ( ! is_email( $email ) ) {
 			$errors['email'] = __( 'Please enter a valid email address.', 'hd-door-designer' );
+		}
+		if ( $quote_form && '' === $telephone ) {
+			$errors['telephone'] = __( 'Please enter a contact number.', 'hd-door-designer' );
 		}
 		if ( ! $this->is_valid_uk_postcode( $postcode ) ) {
 			$errors['postcode'] = __( 'Please enter a valid UK postcode.', 'hd-door-designer' );
@@ -193,7 +205,7 @@ class HD_DD_Enquiry {
 		// Best-effort acknowledgment to the customer with a link to revisit their design.
 		// A mail failure here must never affect the saved enquiry, so it's after the persist.
 		$reload_url = $this->build_reload_url( isset( $params['pageUrl'] ) ? (string) $params['pageUrl'] : '', $saved['token'] );
-		HD_DD_Mailer::send_customer_ack( $payload, $reload_url );
+		HD_DD_Mailer::send_customer_ack( $payload, $reload_url, $quote_form );
 
 		/** Fires after an enquiry is stored + emailed — hook point for CRM/sheet integrations. */
 		do_action( 'hd_dd_enquiry_submitted', $payload, $saved['id'] );
@@ -203,7 +215,9 @@ class HD_DD_Enquiry {
 				'ok'        => true,
 				'reference' => $saved['reference'],
 				'token'     => $saved['token'], // lets the thank-you screen offer an instant "revisit your design" link.
-				'message'   => __( 'Thank you — your design is saved. We will send your price shortly.', 'hd-door-designer' ),
+				'message'   => $quote_form
+					? __( 'Thank you — your design has been sent. We will be in touch shortly.', 'hd-door-designer' )
+					: __( 'Thank you — your design is saved. We will send your price shortly.', 'hd-door-designer' ),
 			),
 			201
 		);

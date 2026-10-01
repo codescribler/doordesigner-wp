@@ -418,10 +418,7 @@
 			// The enquiry form renders in the body (not a separate block) so the door
 			// preview stays visible right up to the moment of submission.
 			this.setPhase(this._atForm ? 'form' : 'review');
-			// The save form opens IN PLACE under the review list (no separate screen), so the
-			// door, the spec and the reassurance all stay in view while the details are typed.
-			HD_DD_Review.render(this.body, this.reviewCtx(st));
-			if (this._atForm) { this.renderForm(); }
+			if (this._atForm) { this.renderForm(); } else { HD_DD_Review.render(this.body, this.reviewCtx(st)); }
 			this.continueBtn.hidden = true;
 		} else {
 			this._atForm = false;
@@ -476,7 +473,7 @@
 	App.prototype.renderTypeChooser = function () {
 		var self = this;
 		this.body.innerHTML = '';
-		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door, save it and get a price — it takes about two minutes.'));
+		this.body.appendChild(el('div', 'hd-dd__intro', I18N.intro || 'Design your door and get a free, no-obligation quote — it takes about two minutes.'));
 		this.body.appendChild(el('div', 'hd-dd__steptitle', I18N.chooseType || 'What kind of door?'));
 		var row = el('div', 'hd-dd__carousel hd-dd__typegrid');
 		(this.customerView.types || []).forEach(function (label) {
@@ -554,10 +551,7 @@
 			design: st.design,
 			typeLabel: st.design['Door Type'] ? displayLabel(st.design['Door Type'].label) : '',
 			onEdit: function (key) { self.wiz.jumpTo(key); self.render(); },
-			showCta: !this._atForm,
-			ctaLabel: window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : null,
-			renderTrust: function (c) { if (window.HD_DD_Trust) { window.HD_DD_Trust.render(c, CFG.trust); } },
-			onSubmitClick: function () { self._atForm = true; self._scrollToForm = true; self.render(); }
+			onSubmitClick: function () { self._atForm = true; self.render(); try { self.root.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* older browsers */ } }
 		};
 	};
 
@@ -739,11 +733,11 @@
 		return (map && map[label]) || null;
 	};
 
-	// ---- Enquiry (form, submit, thank-you) — shared with the swipe flow via HD_DD_Enquiry ----
+	// ---- Enquiry (form, submit, thank-you) — the original quote form (HD_DD_QuoteEnquiry) ----
 	App.prototype.enquiryCtl = function () {
 		var self = this;
 		if (!this._enquiry) {
-			this._enquiry = window.HD_DD_Enquiry.create({
+			this._enquiry = window.HD_DD_QuoteEnquiry.create({
 				api: api, cfg: CFG, i18n: I18N, funnel: Funnel,
 				getDesign: function () { return self.wiz.state().design; },
 				getCanvas: function () { return self.canvas; },
@@ -755,17 +749,7 @@
 		return this._enquiry;
 	};
 
-	App.prototype.renderForm = function () {
-		var box = document.createElement('div');
-		box.className = 'hd-dd__savebox';
-		this.body.appendChild(box);
-		this.enquiryCtl().renderForm(box);
-		// Only on the tap that opened it — not on later re-renders while the form is open.
-		if (this._scrollToForm) {
-			this._scrollToForm = false;
-			window.HD_DD_Enquiry.scrollToForm(box, this.root);
-		}
-	};
+	App.prototype.renderForm = function () { this.enquiryCtl().renderForm(this.body); };
 
 	// The post-submission screen — a self-contained, centred terminal screen (no sticky preview).
 	App.prototype.renderSuccess = function (result) {

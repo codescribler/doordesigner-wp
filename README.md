@@ -242,19 +242,26 @@ listener, cron), `class-hd-experiment-stats.php` (the maths),
 
 ## Review step: save your design and get a price
 
-The Review step ends with "Save my design & get my price". A save is an enquiry: it is
-stored, emailed to the recipients and counted as a lead, and the customer is emailed a
-link back to the design. Required: a name for the design, name, email, postcode.
+**This is the swipe flow only.** The classic flow is the control in the Classic vs Swipe
+A/B test, so it keeps the original Review step ("Get my free quote") and the original quote
+form (`assets/js/enquiry-quote.js`: name, telephone, email, postcode and a consent tick, all
+required; it posts `form=quote` so the server applies those original rules and sends the
+original customer email). `tests/js/control-arm.test.js` guards this: while an A/B test is
+running, new Review-step work goes into the swipe flow, not the classic one.
+
+In the swipe flow the Review step ends with "Save my design & get my price". A save is an
+enquiry: it is stored, emailed to the recipients and counted as a lead, and the customer is
+emailed a link back to the design. Required: a name for the design, name, email, postcode.
 
 **Door Enquiries → Settings → Review step** holds the Checkatrade rating (out of 10), review count,
 profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
 rating or count empty to hide the rating line; with no quotes, no quote is shown.
 
-**Swipe flow only:** the same button also appears **above the door picture** when the
+The same button also appears **above the door picture** when the
 customer arrives on the step ("Your door is ready", the button, then the rating and "Free,
 no obligation"). It opens the same form, counts as the same funnel step, and disappears once
 the form is open. Each press sends a Clarity event, `door_save_top` or `door_save_bottom`, so
-the two can be compared. The classic flow is the A/B control and does not have it.
+the two can be compared.
 
 Files: `includes/class-hd-trust-settings.php`, `assets/js/trust.js`, `assets/js/enquiry.js`.
 Design: `docs/superpowers/specs/2026-10-01-save-design-and-price-design.md`.
@@ -275,6 +282,7 @@ node tests/js/design-shared.test.js   # finish/furniture rules shared by both fl
 node tests/js/trust.test.js           # Review-step rating / quote / benefits block
 node tests/js/enquiry-form.test.js    # save form: fields, default design name, POST body
 node tests/js/copy-rule.test.js       # no customer-facing text promises we won't phone
+node tests/js/control-arm.test.js     # the classic flow (A/B control) stays the original designer
 node tools/tests/test-*.js            # wizard, render model, step config…
 php tests/php/run.php                 # saving (optional phone, design name), emails, review settings, honeypot, failure log, nonce, admin labels, experiments
 php tools/tests/test-image-proxy.php  # image-proxy path validator
@@ -300,7 +308,8 @@ Updates surface in wp-admin via [`YahnisElsts/plugin-update-checker`](https://gi
 
 The plugin stores customer contact details (name, phone, email, postcode) plus the
 design. Notes:
-- There is no consent tick. The save form states, under the button, that saving asks us
+- The classic flow's quote form has a required consent tick, as it always has. The swipe
+  flow's save form has no tick: it states, under the button, that saving asks us
   for a price and that we will use the details to send it and may get in touch. Phone is
   optional. Customer-facing copy must never promise that we won't phone
   (`tests/js/copy-rule.test.js` enforces this).
