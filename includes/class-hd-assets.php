@@ -182,17 +182,16 @@ class HD_DD_Assets {
 			'skip'         => __( 'Skip', 'hd-door-designer' ),
 			'back'         => __( 'Back', 'hd-door-designer' ),
 			'chooseType'   => __( 'What kind of door?', 'hd-door-designer' ),
-			'intro'        => __( 'Design your door and get a free, no-obligation quote — it takes about two minutes.', 'hd-door-designer' ),
-			'formTitle'    => __( 'Get your free quote', 'hd-door-designer' ),
-			'reassure'     => __( 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.', 'hd-door-designer' ),
-			'submit'       => __( 'Send my free quote request', 'hd-door-designer' ),
-			'trust'        => __( 'No spam, ever — your details are only used to prepare your quote.', 'hd-door-designer' ),
+			'intro'        => __( 'Design your door, save it and get a price — it takes about two minutes.', 'hd-door-designer' ),
+			'formTitle'    => __( 'Where shall we send your link and price?', 'hd-door-designer' ),
+			'submit'       => __( 'Save my design & get my price', 'hd-door-designer' ),
+			'trust'        => __( 'No spam, ever — your details are only used to prepare your price.', 'hd-door-designer' ),
 			'enquire'      => __( 'Enquire about this door', 'hd-door-designer' ),
 			'previewOnly'  => __( 'Preview mode — enquiry not sent.', 'hd-door-designer' ),
 			'notLoaded'    => __( 'The door designer is being set up. Please check back shortly.', 'hd-door-designer' ),
 			'genericError' => __( 'Something went wrong. Please try again.', 'hd-door-designer' ),
 			'sessionExpired' => __( 'Your session had expired. Please reload the page and send your design again.', 'hd-door-designer' ),
-			'consent'      => __( 'I agree to Hertfordshire Doors contacting me about this enquiry.', 'hd-door-designer' ),
+			'consentLine'  => __( 'By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.', 'hd-door-designer' ),
 		);
 	}
 }

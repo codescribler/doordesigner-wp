@@ -1,6 +1,7 @@
 // assets/js/enquiry.js
-// The enquiry form, submit, thank-you screen and door snapshot — shared by the classic wizard
-// and the swipe flow so the part that actually produces leads is identical in both.
+// The "save my design & get my price" form, submit, thank-you screen and door snapshot —
+// shared by the classic wizard and the swipe flow so the part that actually produces leads
+// is identical in both. A save is an enquiry: it is stored, emailed to us, and counts as a lead.
 //
 //   var enq = HD_DD_Enquiry.create({
 //     api, cfg, i18n,
@@ -49,19 +50,62 @@
 		} catch (e) { return null; }
 	}
 
+	// Display order. Phone is last and optional; there is no consent tick (see the line under
+	// the button). designName is the customer's own label for this door.
+	var FIELDS = [
+		{ name: 'designName', label: 'Name this design', type: 'text', autocomplete: 'off', required: true, maxLength: 80 },
+		{ name: 'name', label: 'Your name', type: 'text', autocomplete: 'name', required: true },
+		{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email', required: true },
+		{ name: 'postcode', label: 'Post code', type: 'text', autocomplete: 'postal-code', required: true },
+		{ name: 'telephone', label: 'Phone (optional)', type: 'tel', autocomplete: 'tel', required: false }
+	];
+
+	// "Ketu in Anthracite Grey" — the same default HD_DD_Enquiry::default_design_name() uses.
+	function defaultDesignName(design) {
+		function pick(headings) {
+			for (var i = 0; i < headings.length; i++) {
+				var c = design && design[headings[i]];
+				var label = c && c.label != null ? String(c.label).trim() : '';
+				if (label) { return label; }
+			}
+			return '';
+		}
+		var style = pick(['Door Design', 'Door Style']);
+		var colour = pick(['Door Colour (External)', 'Door Colour']);
+		if (!style) { return 'My door'; }
+		return (colour ? style + ' in ' + colour : style).slice(0, 80);
+	}
+
+	// The POST body for /enquiry from the form's values.
+	function buildData(values, design, pageUrl) {
+		return {
+			designName: String(values.designName || '').trim(),
+			name: values.name,
+			email: values.email,
+			postcode: values.postcode,
+			telephone: values.telephone || '',
+			hd_hp: values.hd_hp || '',
+			design: cleanDesign(design || {}),
+			// The designer's own page (no query) — the server validates it's same-origin and
+			// builds the "open my design" email link from it.
+			pageUrl: pageUrl
+		};
+	}
+
 	function create(o) {
 		var I18N = o.i18n || {};
 		var CFG = o.cfg || {};
 		var formEl = null;
 		var lastContact = null;
 		var designImage = null;
+		var nameTouched = false; // has the customer typed their own design name?
 
 		function renderForm(container) {
 			container.innerHTML = '';
-			container.appendChild(el('div', 'hd-dd__steptitle', I18N.formTitle || 'Get your free quote'));
-			container.appendChild(el('div', 'hd-dd__form-reassure',
-				I18N.reassure || 'Free and no-obligation — no payment now. We just need a few details to send your tailored quote.'));
+			container.appendChild(el('div', 'hd-dd__steptitle', I18N.formTitle || 'Where shall we send your link and price?'));
 			if (!formEl) { formEl = buildForm(); }
+			// Keep the suggested name in step with the door until the customer types their own.
+			if (!nameTouched) { formEl.elements['designName'].value = defaultDesignName(cleanDesign(o.getDesign())); }
 			container.appendChild(formEl);
 		}
 
@@ -69,22 +113,22 @@
 			var form = document.createElement('form');
 			form.className = 'hd-dd__form';
 			form.setAttribute('novalidate', 'novalidate');
-			[
-				{ name: 'name', label: 'Name', type: 'text', autocomplete: 'name' },
-				{ name: 'telephone', label: 'Telephone', type: 'tel', autocomplete: 'tel' },
-				{ name: 'email', label: 'Email', type: 'email', autocomplete: 'email' },
-				{ name: 'postcode', label: 'Post code', type: 'text', autocomplete: 'postal-code' }
-			].forEach(function (fld) {
+			FIELDS.forEach(function (fld) {
 				var row = el('label', 'hd-dd__form-row');
 				row.appendChild(el('span', 'hd-dd__form-label', fld.label));
 				var input = document.createElement('input');
 				input.className = 'hd-dd__form-input';
 				input.type = fld.type;
 				input.name = fld.name;
-				input.required = true;
+				input.required = fld.required;
+				if (fld.maxLength) { input.maxLength = fld.maxLength; }
 				input.setAttribute('autocomplete', fld.autocomplete);
-				// Pre-fill from the previous submission so "Design another door" is quick.
-				if (lastContact && lastContact[fld.name] != null) { input.value = lastContact[fld.name]; }
+				if (fld.name === 'designName') {
+					input.addEventListener('input', function () { nameTouched = true; });
+				} else if (lastContact && lastContact[fld.name] != null) {
+					// Pre-fill from the previous save so "Design another door" is quick.
+					input.value = lastContact[fld.name];
+				}
 				row.appendChild(input);
 				var err = el('span', 'hd-dd__form-error');
 				err.setAttribute('data-error-for', fld.name);
@@ -102,20 +146,14 @@
 			hp.setAttribute('aria-hidden', 'true');
 			form.appendChild(hp);
 
-			var consent = el('label', 'hd-dd__consent');
-			var cb = document.createElement('input');
-			cb.type = 'checkbox';
-			cb.name = 'consent';
-			cb.required = true;
-			consent.appendChild(cb);
-			consent.appendChild(el('span', null, I18N.consent || 'I agree to be contacted about this enquiry.'));
-			form.appendChild(consent);
-
-			var submitBtn = el('button', 'hd-dd__submit', I18N.submit || 'Send my free quote request');
+			var submitBtn = el('button', 'hd-dd__submit', I18N.submit || 'Save my design & get my price');
 			submitBtn.type = 'submit';
 			form.appendChild(submitBtn);
+			// In place of a consent tick: saving is asking us for a price.
+			form.appendChild(el('div', 'hd-dd__form-consentline',
+				I18N.consentLine || 'By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.'));
 			form.appendChild(el('div', 'hd-dd__form-trust',
-				I18N.trust || 'No spam, ever — your details are only used to prepare your quote.'));
+				I18N.trust || 'No spam, ever — your details are only used to prepare your price.'));
 			var statusEl = el('div', 'hd-dd__form-status');
 			statusEl.setAttribute('role', 'status');
 			statusEl.setAttribute('aria-live', 'polite');
@@ -129,18 +167,14 @@
 			var statusEl = form.querySelector('.hd-dd__form-status');
 			var submitBtn = form.querySelector('.hd-dd__submit');
 			var f = form.elements; // named access (form.name is shadowed by the control named "name").
-			var data = {
+			var data = buildData({
+				designName: f['designName'].value,
 				name: f['name'].value,
-				telephone: f['telephone'].value,
 				email: f['email'].value,
 				postcode: f['postcode'].value,
-				consent: f['consent'].checked,
-				hd_hp: f['hd_hp'].value,
-				design: cleanDesign(o.getDesign()),
-				// The designer's own page (no query) — the server validates it's same-origin and
-				// builds the "revisit your design" email link from it.
-				pageUrl: window.location.origin + window.location.pathname
-			};
+				telephone: f['telephone'].value,
+				hd_hp: f['hd_hp'].value
+			}, o.getDesign(), window.location.origin + window.location.pathname);
 			var exp = o.experiment ? o.experiment() : null;
 			if (exp) { data.experiment = exp; }
 
@@ -196,30 +230,31 @@
 				pic.alt = 'Your door design';
 				wrap.appendChild(pic);
 			}
-			wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Thank you — your design is on its way to us.'));
+			wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Saved — and your price is on its way.'));
 			wrap.appendChild(el('div', 'hd-dd__thanks-text',
-				'We’ll be in touch shortly with your free, no-obligation quote — usually within one working day. We’ve also emailed you a copy with a link to revisit or tweak this design.'));
+				'We’ve emailed you a link to come back to this design. We’ll work out a price for this exact door and send it to you, usually within one working day.'));
 			wrap.appendChild(el('div', 'hd-dd__thanks-price',
 				'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.'));
 			var again = el('button', 'hd-dd__thanks-again', 'Design another door');
 			again.type = 'button';
 			again.addEventListener('click', onAgain);
 			wrap.appendChild(again);
-			wrap.appendChild(el('div', 'hd-dd__thanks-note', 'Quoting for more than one door? Design the next one now — we already have your details.'));
+			wrap.appendChild(el('div', 'hd-dd__thanks-note', 'More than one door? Design the next one now — we already have your details.'));
 			// A reliable, bookmarkable revisit link (works even if the email doesn't arrive).
 			if (result && result.token) {
-				var link = el('a', 'hd-dd__thanks-link', 'Revisit this design');
+				var link = el('a', 'hd-dd__thanks-link', 'Open this design');
 				link.href = window.location.origin + window.location.pathname + '?design=' + encodeURIComponent(result.token);
 				wrap.appendChild(link);
 			}
 			container.appendChild(wrap);
 		}
 
-		// "Design another door": rebuild the form next time so it pre-fills from lastContact.
-		function reset() { formEl = null; }
+		// "Design another door": rebuild the form next time so it pre-fills from lastContact
+		// and suggests a name for the new door.
+		function reset() { formEl = null; nameTouched = false; }
 
 		return { renderForm: renderForm, renderSuccess: renderSuccess, reset: reset };
 	}
 
-	return { create: create, snapshot: snapshot, cleanDesign: cleanDesign };
+	return { create: create, snapshot: snapshot, cleanDesign: cleanDesign, FIELDS: FIELDS, defaultDesignName: defaultDesignName, buildData: buildData };
 }));
