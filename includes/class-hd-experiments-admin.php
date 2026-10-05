@@ -62,6 +62,10 @@ class HD_DD_Experiments_Admin {
 		if ( 'stop' === $do ) {
 			return HD_DD_Experiments::end( 'stopped' ) ? 'stopped' : new WP_Error( 'hd_dd_exp_none', '' );
 		}
+		if ( 'set_percent' === $do ) {
+			$r = HD_DD_Experiments::set_percent( isset( $post['percent'] ) ? (int) $post['percent'] : 0 );
+			return is_wp_error( $r ) ? $r : 'split_changed';
+		}
 		if ( 'start' === $do ) {
 			$r = HD_DD_Experiments::start(
 				isset( $post['control'] ) ? sanitize_key( $post['control'] ) : '',
@@ -79,6 +83,8 @@ class HD_DD_Experiments_Admin {
 			'started'           => array( 'success', __( 'Test started. New visitors are now split between the two flows.', 'hd-door-designer' ) ),
 			'stopped'           => array( 'success', __( 'Test stopped. The default flow is unchanged.', 'hd-door-designer' ) ),
 			'made_default'      => array( 'success', __( 'Done — that flow is now the default for every visitor, and the test has ended.', 'hd-door-designer' ) ),
+			'split_changed'     => array( 'success', __( 'Split updated. It applies to new visitors; anyone already in the test keeps their flow.', 'hd-door-designer' ) ),
+			'hd_dd_exp_same'    => array( 'error', __( 'That is already the split.', 'hd-door-designer' ) ),
 			'hd_dd_exp_running' => array( 'error', __( 'A test is already running. Stop it first.', 'hd-door-designer' ) ),
 			'hd_dd_exp_flows'   => array( 'error', __( 'Pick two different flows.', 'hd-door-designer' ) ),
 			'hd_dd_exp_percent' => array( 'error', __( 'The split must be between 1 and 99%.', 'hd-door-designer' ) ),
@@ -144,6 +150,7 @@ class HD_DD_Experiments_Admin {
 			echo esc_html( sprintf( __( '%1$s gets %2$d%% of new visitors, %3$s the rest. Started %4$s UTC — %5$d days ago.', 'hd-door-designer' ), $chal, (int) $exp['percent'], $control, $exp['started_at'], HD_DD_Experiments::days_run( $exp ) ) );
 			?>
 		</p>
+		<?php $this->render_split( $exp, $chal ); ?>
 		<table class="widefat striped" style="max-width:820px;">
 			<thead><tr>
 				<th><?php esc_html_e( 'Flow', 'hd-door-designer' ); ?></th>
@@ -197,6 +204,38 @@ class HD_DD_Experiments_Admin {
 			<?php $this->action_form( 'stop', array(), __( 'Stop test', 'hd-door-designer' ), 'button-secondary', __( 'Stop the test? The default flow stays as it is.', 'hd-door-designer' ) ); ?>
 		</p>
 		<?php
+	}
+
+	/** The running test's split: change form, what a change means, and the changes so far. */
+	private function render_split( array $exp, $chal ) {
+		?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 8px;">
+			<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>" />
+			<input type="hidden" name="do" value="set_percent" />
+			<?php wp_nonce_field( self::ACTION ); ?>
+			<label for="hd_exp_split">
+				<?php
+				/* translators: %s: challenger flow */
+				echo esc_html( sprintf( __( '%% of new visitors to %s', 'hd-door-designer' ), $chal ) );
+				?>
+			</label>
+			<input type="number" name="percent" id="hd_exp_split" min="1" max="99" value="<?php echo (int) $exp['percent']; ?>" class="small-text" /> %
+			<button type="submit" class="button button-secondary"><?php esc_html_e( 'Update split', 'hd-door-designer' ); ?></button>
+		</form>
+		<p class="description" style="max-width:820px;"><?php esc_html_e( 'A new split applies to new visitors only — anyone already in the test keeps their flow, and cached pages may use the old split for a while. Changing it mid-test can skew the comparison if conversion rates shift over time.', 'hd-door-designer' ); ?></p>
+		<?php foreach ( self::split_changes( $exp ) as $line ) : ?>
+			<p class="description" style="margin:0;"><?php echo esc_html( $line ); ?></p>
+		<?php endforeach; ?>
+		<?php
+	}
+
+	/** @return string[] One line per logged split change: "2026-10-05 14:02 UTC: 40% → 25%". */
+	public static function split_changes( array $exp ) {
+		$out = array();
+		foreach ( ( isset( $exp['split_changes'] ) && is_array( $exp['split_changes'] ) ) ? $exp['split_changes'] : array() as $c ) {
+			$out[] = sprintf( '%s UTC: %d%% → %d%%', substr( (string) $c['at'], 0, 16 ), (int) $c['from'], (int) $c['to'] );
+		}
+		return $out;
 	}
 
 	/** One-button admin-post form. */
@@ -269,7 +308,11 @@ class HD_DD_Experiments_Admin {
 				<?php foreach ( $history as $h ) : ?>
 					<tr>
 						<td><?php echo esc_html( substr( $h['started_at'], 0, 10 ) . ' → ' . substr( $h['ended_at'], 0, 10 ) ); ?></td>
-						<td><?php echo esc_html( HD_DD_Experiments::flow_label( $h['control'] ) . ' vs ' . HD_DD_Experiments::flow_label( $h['challenger'] ) . ' (' . (int) $h['percent'] . '%)' ); ?></td>
+						<td><?php echo esc_html( HD_DD_Experiments::flow_label( $h['control'] ) . ' vs ' . HD_DD_Experiments::flow_label( $h['challenger'] ) . ' (' . (int) $h['percent'] . '%)' ); ?>
+							<?php foreach ( self::split_changes( $h ) as $line ) : ?>
+								<br><small><?php echo esc_html( $line ); ?></small>
+							<?php endforeach; ?>
+						</td>
 						<td>
 							<?php foreach ( (array) $h['stats'] as $arm ) : ?>
 								<?php echo esc_html( sprintf( '%s: %d visitors, %d leads', $arm['label'], $arm['visitors'], $arm['leads'] ) ); ?><br>

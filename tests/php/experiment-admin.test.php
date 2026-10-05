@@ -23,6 +23,21 @@ $exp = HD_DD_Experiments::current();
 check( $exp && 40 === $exp['percent'] && 'swipe' === $exp['challenger'], 'experiment stored with its split' );
 check( 'hd_dd_exp_running' === $A::apply( array( 'do' => 'start', 'control' => 'swipe', 'challenger' => 'classic', 'percent' => '50' ) )->get_error_code(), 'a second test is refused while one runs' );
 
+// --- Change the split while the test runs --------------------------------------------------------
+check( 'hd_dd_exp_percent' === $A::apply( array( 'do' => 'set_percent', 'percent' => '100' ) )->get_error_code(), 'new split 100 is refused' );
+check( 'hd_dd_exp_percent' === $A::apply( array( 'do' => 'set_percent', 'percent' => '0' ) )->get_error_code(), 'new split 0 is refused' );
+check( 'hd_dd_exp_percent' === $A::apply( array( 'do' => 'set_percent' ) )->get_error_code(), 'a missing split is refused' );
+check( 'hd_dd_exp_same' === $A::apply( array( 'do' => 'set_percent', 'percent' => '40' ) )->get_error_code(), 'the same split is not a change' );
+check( 40 === HD_DD_Experiments::current()['percent'] && empty( HD_DD_Experiments::current()['split_changes'] ), 'refused changes leave the split and its log alone' );
+check( 'split_changed' === $A::apply( array( 'do' => 'set_percent', 'percent' => '25' ) ), 'valid split change' );
+$changed = HD_DD_Experiments::current();
+check( 25 === $changed['percent'] && 25 === HD_DD_Experiments::front_config()['experiment']['percent'], 'the new split is stored and sent to the browser' );
+check( $exp['id'] === $changed['id'] && $exp['started_at'] === $changed['started_at'] && 'running' === $changed['status'], 'the test keeps its id, start date and status' );
+check( 1 === count( $changed['split_changes'] ) && 40 === $changed['split_changes'][0]['from'] && 25 === $changed['split_changes'][0]['to'] && ! empty( $changed['split_changes'][0]['at'] ), 'the change is logged with its time' );
+$A::apply( array( 'do' => 'set_percent', 'percent' => '60' ) );
+$changed = HD_DD_Experiments::current();
+check( 2 === count( $changed['split_changes'] ) && 25 === $changed['split_changes'][1]['from'] && 60 === $changed['split_changes'][1]['to'], 'later changes append to the log' );
+
 // --- Make default ------------------------------------------------------------------------------
 $wpdb->seed( $exp['id'], 'control', 120, 9 );
 $wpdb->seed( $exp['id'], 'challenger', 110, 14 );
@@ -34,11 +49,13 @@ check( 'daniel@dreamfree.co.uk, hello@hertfordshiredoors.co.uk' === HD_DD_Plugin
 $h = HD_DD_Experiments::history();
 check( 1 === count( $h ) && 'made_default:swipe' === $h[0]['outcome'] && ! empty( $h[0]['ended_at'] ), 'history records the outcome and end date' );
 check( 110 === $h[0]['stats']['challenger']['visitors'] && 14 === $h[0]['stats']['challenger']['leads'] && 9 === $h[0]['stats']['control']['leads'], 'history keeps the final numbers' );
+check( 60 === $h[0]['percent'] && 2 === count( $h[0]['split_changes'] ), 'history keeps the final split and its changes' );
 check( 'Swipe made the default' === $A::outcome_label( $h[0]['outcome'] ), 'outcome label' );
 check( 'swipe' === HD_DD_Experiments::front_config()['default'] && null === HD_DD_Experiments::front_config()['experiment'], 'browser now gets swipe, no experiment' );
 
 // --- Stop --------------------------------------------------------------------------------------
 check( 'hd_dd_exp_none' === $A::apply( array( 'do' => 'stop' ) )->get_error_code(), 'stop with nothing running is refused' );
+check( 'hd_dd_exp_none' === $A::apply( array( 'do' => 'set_percent', 'percent' => '30' ) )->get_error_code(), 'a split change with nothing running is refused' );
 $A::apply( array( 'do' => 'start', 'control' => 'swipe', 'challenger' => 'classic', 'percent' => '50' ) );
 check( 'stopped' === $A::apply( array( 'do' => 'stop' ) ), 'stop the test' );
 check( 'swipe' === HD_DD_Plugin::settings()['default_flow'], 'stop leaves the default unchanged' );

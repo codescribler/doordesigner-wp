@@ -118,6 +118,33 @@ class HD_DD_Experiments {
 	}
 
 	/**
+	 * Change the live experiment's split. Only new visitors are affected (assignments are
+	 * sticky); each change is logged in `split_changes` so the numbers can be read honestly.
+	 *
+	 * @param int $percent New % of visitors to the challenger (1–99).
+	 * @return array|WP_Error The updated experiment.
+	 */
+	public static function set_percent( $percent ) {
+		$exp = self::current();
+		if ( ! $exp ) {
+			return new WP_Error( 'hd_dd_exp_none', __( 'No test is running.', 'hd-door-designer' ) );
+		}
+		$percent = (int) $percent;
+		if ( $percent < 1 || $percent > 99 ) {
+			return new WP_Error( 'hd_dd_exp_percent', __( 'The split must be between 1 and 99%.', 'hd-door-designer' ) );
+		}
+		if ( $percent === (int) $exp['percent'] ) {
+			return new WP_Error( 'hd_dd_exp_same', __( 'That is already the split.', 'hd-door-designer' ) );
+		}
+		$changes          = isset( $exp['split_changes'] ) && is_array( $exp['split_changes'] ) ? $exp['split_changes'] : array();
+		$changes[]        = array( 'at' => gmdate( 'Y-m-d H:i:s' ), 'from' => (int) $exp['percent'], 'to' => $percent );
+		$exp['split_changes'] = $changes;
+		$exp['percent']       = $percent;
+		self::save( $exp );
+		return $exp;
+	}
+
+	/**
 	 * End the live experiment: snapshot its final numbers into history, then remove it.
 	 *
 	 * @param string $outcome 'stopped' or 'made_default:<flow>'.
