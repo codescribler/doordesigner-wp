@@ -174,8 +174,9 @@ class HD_DD_Save {
 		}
 		$this->repository->update_payload( $saved['id'], $payload );
 
-		HD_DD_Save_Mailer::send_owner_saved( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array() );
-		HD_DD_Save_Mailer::send_saver( $payload, $this->enquiry->build_reload_url( $this->text( $p, 'pageUrl' ), $saved['token'] ) );
+		$reload_url = $this->enquiry->build_reload_url( $this->text( $p, 'pageUrl' ), $saved['token'] );
+		HD_DD_Save_Mailer::send_owner_saved( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array(), $reload_url );
+		HD_DD_Save_Mailer::send_saver( $payload, $reload_url );
 
 		/** Fires after a design is saved by email (not an enquiry yet). */
 		do_action( 'hd_dd_design_saved', $payload, $saved['id'] );

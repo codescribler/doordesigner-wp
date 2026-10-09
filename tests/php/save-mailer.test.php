@@ -59,6 +59,14 @@ check( false !== strpos( $m['message'], 'has not asked for a price yet' ), 'says
 check( false !== strpos( $m['message'], 'HD-2026-000060' ) && false !== strpos( $m['message'], 'Ketu' ), 'reference and design are listed' );
 check( 0 !== strpos( $m['subject'], 'New door enquiry' ), 'never looks like an enquiry in the inbox' );
 
+check( false === strpos( $m['message'], 'design=' ), 'no design link when none is given' );
+
+hd_test_reset();
+HD_DD_Save_Mailer::send_owner_saved( $payload, 'owner@example.com', array(), $link );
+$m = $GLOBALS['hd_test_mail'][0];
+check( false !== strpos( $m['message'], 'Open this design: ' . $link ), 'the owner note links to the design in the designer' );
+check( false !== strpos( $m['message'], 'their own email' ), 'and says the customer was sent their own email with the buttons' );
+
 hd_test_reset();
 $flagged = $payload; $flagged['flags'] = array( 'honeypot' );
 HD_DD_Save_Mailer::send_owner_saved( $flagged, 'owner@example.com' );

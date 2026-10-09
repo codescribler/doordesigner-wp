@@ -81,9 +81,10 @@ class HD_DD_Save_Mailer {
 	/**
 	 * Tell the business a design was saved by email with no price requested yet.
 	 *
+	 * @param string $reload_url Link that opens the saved design in the designer ('' = omitted).
 	 * @return bool wp_mail result.
 	 */
-	public static function send_owner_saved( array $payload, $recipient, array $attachments = array() ) {
+	public static function send_owner_saved( array $payload, $recipient, array $attachments = array(), $reload_url = '' ) {
 		$email = isset( $payload['customer']['email'] ) ? (string) $payload['customer']['email'] : '';
 		/* translators: %s: the saver's email address */
 		$subject = sprintf( __( 'New saved design — %s', 'hd-door-designer' ), $email );
@@ -104,6 +105,11 @@ class HD_DD_Save_Mailer {
 		if ( ! empty( $payload['image'] ) ) {
 			$lines[] = '';
 			$lines[] = __( 'Picture: ', 'hd-door-designer' ) . $payload['image'];
+		}
+		if ( '' !== (string) $reload_url ) {
+			$lines[] = '';
+			$lines[] = __( 'Open this design: ', 'hd-door-designer' ) . $reload_url;
+			$lines[] = __( 'The customer was sent their own email with buttons to open the design and to ask for an exact price.', 'hd-door-designer' );
 		}
 		$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
 		if ( is_email( $email ) ) {
