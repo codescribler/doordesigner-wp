@@ -56,12 +56,20 @@ class HD_DD_Save {
 		return ( isset( $p[ $key ] ) && is_scalar( $p[ $key ] ) ) ? (string) $p[ $key ] : '';
 	}
 
+	private static function cut( $s, $n ) {
+		return function_exists( 'mb_substr' ) ? mb_substr( $s, 0, $n ) : substr( $s, 0, $n );
+	}
+
 	private function not_found() {
 		return new WP_Error( 'hd_dd_design_not_found', __( 'That saved design could not be found.', 'hd-door-designer' ), array( 'status' => 404 ) );
 	}
 
 	private function no_design() {
 		return new WP_Error( 'hd_dd_no_design', __( 'No door design was received. Please start again.', 'hd-door-designer' ), array( 'status' => 422 ) );
+	}
+
+	private function write_failed() {
+		return new WP_Error( 'hd_dd_save_failed', __( 'Sorry, we could not save that. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
 	}
 
 	private function invalid( array $fields ) {
@@ -165,7 +173,10 @@ class HD_DD_Save {
 		if ( $image ) {
 			$payload['image'] = $image['url'];
 		}
-		$this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ) );
+		// Guarded: a row that became an enquiry meanwhile is left alone. 0 is an unchanged row, not a failure.
+		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'save' ) ) {
+			return $this->write_failed();
+		}
 		return new WP_REST_Response( array( 'ok' => true ), 200 );
 	}
 
@@ -181,7 +192,7 @@ class HD_DD_Save {
 		}
 
 		$p         = $this->params( $request );
-		$name      = sanitize_text_field( wp_unslash( $this->text( $p, 'name' ) ) );
+		$name      = self::cut( sanitize_text_field( wp_unslash( $this->text( $p, 'name' ) ) ), 190 );
 		$postcode  = $this->enquiry->sanitize_postcode( $this->text( $p, 'postcode' ) );
 		$telephone = $this->enquiry->sanitize_phone( $this->text( $p, 'telephone' ) );
 		$errors    = array();
@@ -195,16 +206,25 @@ class HD_DD_Save {
 			return $this->invalid( $errors );
 		}
 
+		$postcode = self::cut( trim( preg_replace( '/\s+/', ' ', $postcode ) ), 16 );
+
 		$payload = json_decode( (string) $row->payload, true );
 		$payload = is_array( $payload ) ? $payload : array();
 		$payload['kind']        = 'enquiry';
 		$payload['submittedAt'] = gmdate( 'c' );
 		$payload['customer']    = array( 'name' => $name, 'telephone' => $telephone, 'email' => (string) $row->customer_email, 'postcode' => $postcode );
 
-		$this->repository->update_row(
+		// Atomic: only one request can turn this save into an enquiry.
+		$claimed = $this->repository->claim_as_enquiry(
 			$row->id,
-			array( 'customer_name' => $name, 'customer_phone' => $telephone, 'customer_postcode' => $postcode, 'kind' => 'enquiry', 'payload' => $payload )
+			array( 'customer_name' => $name, 'customer_phone' => $telephone, 'customer_postcode' => $postcode, 'payload' => $payload )
 		);
+		if ( false === $claimed ) {
+			return $this->write_failed();
+		}
+		if ( 1 !== (int) $claimed ) {
+			return new WP_REST_Response( $done, 200 ); // someone else got there first.
+		}
 
 		HD_DD_Mailer::send( $payload, HD_DD_Plugin::settings()['recipient_email'], $this->attachments( $row->reference ) );
 		HD_DD_Mailer::send_customer_ack( $payload, $this->enquiry->build_reload_url( $this->text( $p, 'pageUrl' ), $row->token ), false );

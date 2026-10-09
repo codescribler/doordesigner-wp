@@ -213,11 +213,12 @@ class HD_DD_Repository {
 	/**
 	 * Update a row in place (a save changing its design, or becoming an enquiry).
 	 *
-	 * @param int   $id     Row id.
-	 * @param array $fields Column => value; arrays are stored as JSON; other columns are ignored.
-	 * @return int|false Rows updated.
+	 * @param int         $id        Row id.
+	 * @param array       $fields    Column => value; arrays are stored as JSON; other columns are ignored.
+	 * @param string|null $only_kind When set, only a row of this kind is written.
+	 * @return int|false Rows updated (0 when nothing changed or the kind did not match).
 	 */
-	public function update_row( $id, array $fields ) {
+	public function update_row( $id, array $fields, $only_kind = null ) {
 		global $wpdb;
 		$data = array();
 		foreach ( self::UPDATABLE as $col ) {
@@ -228,7 +229,24 @@ class HD_DD_Repository {
 		if ( ! $data ) {
 			return 0;
 		}
-		return $wpdb->update( self::table(), $data, array( 'id' => (int) $id ), array_fill( 0, count( $data ), '%s' ), array( '%d' ) );
+		$where  = array( 'id' => (int) $id );
+		$wfmt   = array( '%d' );
+		if ( null !== $only_kind ) {
+			$where['kind'] = (string) $only_kind;
+			$wfmt[]        = '%s';
+		}
+		return $wpdb->update( self::table(), $data, $where, array_fill( 0, count( $data ), '%s' ), $wfmt );
+	}
+
+	/**
+	 * Turn a save into an enquiry atomically: writes the fields and sets kind = enquiry only
+	 * while the row is still a save, so of two simultaneous requests exactly one wins.
+	 *
+	 * @return int|false 1 when claimed, 0 when it was already an enquiry, false on a database error.
+	 */
+	public function claim_as_enquiry( $id, array $fields ) {
+		$fields['kind'] = 'enquiry';
+		return $this->update_row( $id, $fields, 'save' );
 	}
 
 	/** @return array{enquiry:int,save:int} Row counts by kind (failed submissions count as enquiries). */

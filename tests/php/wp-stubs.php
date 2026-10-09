@@ -143,7 +143,8 @@ class HD_Test_WPDB {
 	}
 	public function update( $table, $data, $where, $f = null, $wf = null ) {
 		foreach ( $this->rows as &$r ) {
-			if ( isset( $where['id'] ) && $r['id'] == $where['id'] ) { $r = array_merge( $r, $data ); return 1; }
+			$hit = true; foreach ( $where as $k => $v ) { if ( ! isset( $r[ $k ] ) || (string) $r[ $k ] !== (string) $v ) { $hit = false; } }
+			if ( $hit ) { $r = array_merge( $r, $data ); return 1; }
 		}
 		return 0;
 	}

@@ -57,6 +57,11 @@ class HD_DD_Failure_Log {
 		if ( $status < 400 ) {
 			return false;
 		}
+		// A stale or unknown token, or a design already sent, loses no customer and the body has
+		// nobody to call back.
+		if ( ( 404 === $status || 409 === $status ) && $this->token_of( $request ) ) {
+			return false;
+		}
 		// A 403 is a nonce problem. The designer refreshes its nonce and retries once
 		// (attempt 2); only that final failure is a lost customer. Attempt 1 heals itself,
 		// and a request without the marker did not come from our UI.
@@ -64,6 +69,11 @@ class HD_DD_Failure_Log {
 			return '2' === (string) $request->get_header( 'X-HD-DD-Attempt' );
 		}
 		return true;
+	}
+
+	/** The token in /save/{token}[/quote], or '' on /enquiry and /save. */
+	private function token_of( $request ) {
+		return preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/save/([A-Za-z0-9]{10,64})(/quote)?$#', (string) $request->get_route(), $m ) ? $m[1] : '';
 	}
 
 	private function record( $response, WP_REST_Request $request ) {
@@ -77,6 +87,18 @@ class HD_DD_Failure_Log {
 		foreach ( array( 'name', 'email', 'telephone', 'postcode' ) as $k ) {
 			$customer[ $k ] = isset( $params[ $k ] ) && is_scalar( $params[ $k ] ) ? sanitize_text_field( wp_unslash( (string) $params[ $k ] ) ) : '';
 		}
+		// On a token route the saver's email and reference sit on the saved row.
+		$saved_ref = '';
+		$token     = $this->token_of( $request );
+		if ( $token ) {
+			$row = $this->repository->get_by_token( $token );
+			if ( $row ) {
+				$saved_ref = (string) $row->reference;
+				if ( '' === $customer['email'] ) {
+					$customer['email'] = (string) $row->customer_email;
+				}
+			}
+		}
 		$design = ( isset( $params['design'] ) && is_array( $params['design'] ) ) ? $this->clean_design( $params['design'] ) : array();
 
 		$record = array(
@@ -88,6 +110,7 @@ class HD_DD_Failure_Log {
 			),
 			'failedAt' => gmdate( 'c' ),
 			'customer' => $customer,
+			'savedReference' => $saved_ref,
 			'design'   => $design,
 			'request'  => array(
 				'ip'        => self::client_ip(),
