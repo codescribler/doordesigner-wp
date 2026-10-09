@@ -1,7 +1,7 @@
 # Swipe 2: swipe helpers and a two-step Review — Design
 
 **Date:** 2026-10-09
-**Status:** Draft for Daniel's review. Nothing built.
+**Status:** Implemented on `feat/swipe-2` (v0.4.0), not yet released.
 **Repos:** `codescribler/doordesigner-wp` (this plugin) and a small change in the manager app
 for the new "opened" figure (see Analytics). The manager is released first.
 
@@ -131,6 +131,7 @@ Extend the existing `hd_enquiries` table; a save and its later quote request are
   acknowledgement. Calling it twice changes nothing the second time.
 - **`GET /design/{token}`** also returns `flow` and `kind` (still no personal data).
 - `/enquiry` is unchanged: classic keeps posting to it.
+- A quote request claims the saved record atomically, so two simultaneous requests send one set of emails; a 404 or 409 on a token route is not logged as a failed submission.
 
 ### Emails
 
@@ -179,8 +180,7 @@ the dashboard cannot say whether people are failing to start.
   as the first choice, and show per funnel "Opened the designer: N · did not start: M (x%)"
   above the existing steps, with `browsed` between them for Swipe 2.
 - The manager's push validator is strict, so the manager is released before the plugin sends
-  the new steps (same order as the version-cohorts rollout). Whether the site's hd-analytics
-  plugin passes the new keys through unchanged is to be confirmed in the plan.
+  the new steps (same order as the version-cohorts rollout). The site's hd-analytics plugin accepts any step key and clamps `order` to 0–99, so `opened` at order 0 needs no change there. The manager's push validator already accepts free-form steps; the manager change is only so `opened`/`browsed` are not mistaken for "started".
 - History: there is no `opened` data before this release, so "did not start" is shown only
   from the release date. The Experiments page's "Visitors (opened the designer)" column is the
   only earlier evidence: since 1 Oct, about 17 of 18 classic visitors and 17 of 21 swipe

@@ -195,7 +195,7 @@ site-wide analytics plugin counting you.
 
 ## A/B experiments
 
-The designer has more than one flow (`classic`, `swipe`; add more with the `hd_dd_flows`
+The designer has more than one flow (`classic`, `swipe2`; add more with the `hd_dd_flows`
 filter). **Door Enquiries → Settings → Default designer flow** is what everyone sees
 when no test is running.
 
@@ -249,9 +249,7 @@ required; it posts `form=quote` so the server applies those original rules and s
 original customer email). `tests/js/control-arm.test.js` guards this: while an A/B test is
 running, new Review-step work goes into the swipe flow, not the classic one.
 
-In the swipe flow the Review step ends with "Save my design & get my price". A save is an
-enquiry: it is stored, emailed to the recipients and counted as a lead, and the customer is
-emailed a link back to the design. Required: a name for the design, name, email, postcode.
+Swipe 2 (`swipe2`, funnel `door-designer-v3`) shows the door, a one-line summary, a guide price (Door Enquiries → Settings → Review step) and a two-step form: an email-only save (`POST /save`, stored with `kind = save`, not a lead), then name and postcode for an exact price (`POST /save/{token}/quote`, the same row becomes an enquiry and counts as the A/B conversion). `?flow=swipe` is an alias of `swipe2`. Both flows report an `opened` step when the designer first draws.
 
 **Door Enquiries → Settings → Review step** holds the Checkatrade rating (out of 10), review count,
 profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
@@ -274,7 +272,11 @@ No framework — plain Node and PHP scripts that exit non-zero on failure:
 node tests/js/api-client.test.js      # REST client: nonce self-heal
 node tests/js/funnel.test.js          # hdAnalytics reporter
 node tests/js/experiment.test.js      # A/B assignment, stickiness, overrides, exposure
-node tests/js/funnel-v3.test.js       # door-designer-v3 funnel order
+node tests/js/funnel-v3.test.js       # door-designer-v3 funnel: opened, browsed, saved
+node tests/js/swipe-hint.test.js      # the swipe hint pill
+node tests/js/review-save.test.js     # two-step save form (email, then quote details)
+node tests/js/review-summary.test.js  # Review one-line summary
+node tests/js/swipe-wiring.test.js    # swipe screens carry the helpers and the new Review
 node tests/js/design-index.test.js    # swipe showcase: design → types, Avantal cassettes
 node tests/js/flow-steps.test.js      # swipe screens per door type + funnel events
 node tests/js/carousel.test.js        # cover-flow maths (settle, window, placement)
@@ -283,8 +285,15 @@ node tests/js/trust.test.js           # Review-step rating / quote / benefits bl
 node tests/js/enquiry-form.test.js    # save form: fields, default design name, POST body
 node tests/js/copy-rule.test.js       # no customer-facing text promises we won't phone
 node tests/js/control-arm.test.js     # the classic flow (A/B control) stays the original designer
+node tests/js/notrack.test.js         # ?notrack: owner visits never reach analytics
+node tests/js/door-card.test.js       # close-up box for the door card
+node tests/js/furniture-pick.test.js  # hardware colour change never strands the handle pick
 node tools/tests/test-*.js            # wizard, render model, step config…
-php tests/php/run.php                 # saving (optional phone, design name), emails, review settings, honeypot, failure log, nonce, admin labels, experiments
+php tests/php/run.php                 # all PHP tests below, run together:
+#   enquiry-save, enquiry-honeypot, quote-form-control, nonce-endpoint, failure-log
+#   repository-kind, save-mailer, save-emails, save-endpoints, save-claim
+#   admin-kind, admin-status, trust-settings
+#   experiment-flows, -admin, -conversion, -expose, -stats
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
 
