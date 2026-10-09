@@ -25,4 +25,20 @@ assert.ok(/addEventListener\('animationend', function \(\) \{ cta\.classList\.re
 assert.ok(/if \(!app\.pulsedMove && app\.screen === 'design'\)/.test(view), 'the move pulse is gated on the design screen');
 assert.ok(/min-width: 820px\)[\s\S]*\.hd-sw-cta\.is-pulse \{ animation: none; \}/.test(css), 'no pulse ring on wider screens');
 
+// ---- Review screen: reveal, summary, price, proof, two-step form ------------------------
+assert.ok(view.indexOf('window.HD_DD_ReviewSave.create(') !== -1, 'Review uses the two-step form');
+assert.ok(view.indexOf('P.reviewSummary(') !== -1, 'one-line summary');
+assert.ok(view.indexOf('See all options / edit') !== -1, 'the full list is one tap away');
+assert.ok(view.indexOf('guidePrice') !== -1, 'guide price is shown');
+assert.ok(view.indexOf('HD_DD_Trust.renderProof(') !== -1, 'rating and quote');
+assert.ok(view.indexOf('renderSaveBar') === -1 && view.indexOf('savebar') === -1, 'no button above the door');
+assert.ok(view.indexOf("'Email me my design'") !== -1, 'floating button on phones');
+assert.ok(view.indexOf("app.funnel.step('saved')") !== -1, 'saved is reported');
+assert.ok(view.indexOf('app.funnel.lead()') !== -1, 'the quote request is the lead');
+assert.ok(app.indexOf("'form'") === -1 && app.indexOf("'details'") === -1, 'the separate form screen is gone');
+assert.ok(app.indexOf('self.savedToken = token') !== -1, 'a returning saver goes straight to step 2');
+assert.ok(css.indexOf('.hd-sw-summary') !== -1 && css.indexOf('.hd-sw-price') !== -1 && css.indexOf('.hd-sw-savebox') !== -1, 'review styles');
+assert.ok(css.indexOf('hd-dd__savebar') === -1, 'the save bar styles are removed');
+assert.ok(assets.indexOf("'-reviewsave'") !== -1, 'review-save.js is registered');
+
 console.log('swipe-wiring.test.js: all assertions passed');

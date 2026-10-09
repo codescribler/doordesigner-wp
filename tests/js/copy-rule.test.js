@@ -37,10 +37,9 @@ function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
 var swipe = read('assets/js/swipe/swipe-view.js');
 var enquiry = read('assets/js/enquiry.js');
 assert.ok(swipe.indexOf('Get my free quote') === -1, 'old CTA removed from the swipe flow');
-assert.ok(swipe.indexOf('HD_DD_Trust.render(') !== -1, 'swipe Review step draws the trust block');
+assert.ok(swipe.indexOf('HD_DD_Trust.renderProof(') !== -1, 'swipe Review step draws the proof block');
 assert.ok(enquiry.indexOf('only used to prepare') === -1, 'no line contradicting the consent line');
 assert.ok(enquiry.indexOf('By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.') !== -1, 'consent line verbatim');
 assert.ok(enquiry.indexOf("'consent'") === -1 && enquiry.indexOf('hd-dd__consent') === -1, 'no consent tick left in the form');
-assert.strictEqual(require('../../assets/js/trust.js').COPY.benefits[2], 'No pressure and no obligation. You decide what happens next.');
 
 console.log('copy-rule.test.js: all assertions passed');

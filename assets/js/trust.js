@@ -1,29 +1,15 @@
 // assets/js/trust.js
-// The block above "Save my design & get my price" on the Review step, in both flows: the
-// Checkatrade rating line, one real customer quote, and what saving gets you. The rating and
-// quotes come from wp-admin settings via HD_DD_CONFIG.trust; with none set, only the benefits
-// show. Copy rule: nothing here may make a promise about phone calls
+// Social proof on the swipe flow's Review step: the Checkatrade rating line and one real
+// customer quote, from wp-admin settings via HD_DD_CONFIG.trust. With nothing set, nothing
+// is drawn. Copy rule: nothing here may make a promise about phone calls
 // (tests/js/copy-rule.test.js scans every line of this file, comments included).
 //
-//   HD_DD_Trust.render(container, HD_DD_CONFIG.trust);
-//   HD_DD_Trust.renderSaveBar(container, HD_DD_CONFIG.trust, onClick);  // above the door picture
+//   HD_DD_Trust.renderProof(container, HD_DD_CONFIG.trust);
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) { module.exports = factory(); }
 	else { root.HD_DD_Trust = factory(); }
 }(typeof self !== 'undefined' ? self : this, function () {
 	'use strict';
-
-	var COPY = {
-		heading: 'Save this design and get your price',
-		benefits: [
-			'We’ll email you a link so you can come back to it any time',
-			'We’ll work out a price for this exact door and send it to you',
-			'No pressure and no obligation. You decide what happens next.'
-		],
-		cta: 'Save my design & get my price',
-		barHeading: 'Your door is ready',
-		barNote: 'Free, no obligation'
-	};
 
 	function el(tag, cls, txt) {
 		var n = document.createElement(tag);
@@ -50,49 +36,26 @@
 		return quotes[Math.min(quotes.length - 1, Math.max(0, i))];
 	}
 
-	function render(container, trust, rand) {
-		var box = el('div', 'hd-dd__trust');
-
+	// The rating line and a quote. Returns the block, or null when there is nothing to show.
+	function renderProof(container, trust, rand) {
 		var line = ratingLine(trust);
+		var quote = pickQuote(trust, rand);
+		if (!line && !quote) { return null; }
+		var box = el('div', 'hd-dd__trust');
 		if (line) {
 			var rating = el(line.url ? 'a' : 'div', 'hd-dd__trust-rating', line.text);
 			if (line.url) { rating.href = line.url; rating.target = '_blank'; rating.rel = 'noopener'; }
 			box.appendChild(rating);
 		}
-
-		var quote = pickQuote(trust, rand);
 		if (quote) {
 			var fig = el('figure', 'hd-dd__trust-quote');
-			fig.appendChild(el('blockquote', null, '“' + quote.text + '”'));
-			if (quote.by) { fig.appendChild(el('figcaption', null, '— ' + quote.by)); }
+			fig.appendChild(el('blockquote', null, '\u201c' + quote.text + '\u201d'));
+			if (quote.by) { fig.appendChild(el('figcaption', null, '\u2014 ' + quote.by)); }
 			box.appendChild(fig);
 		}
-
-		box.appendChild(el('div', 'hd-dd__trust-heading', COPY.heading));
-		var list = el('ul', 'hd-dd__trust-benefits');
-		COPY.benefits.forEach(function (b) { list.appendChild(el('li', null, b)); });
-		box.appendChild(list);
-
 		container.appendChild(box);
 		return box;
 	}
 
-	// The save bar that sits above the door picture when the customer arrives on Review: the
-	// same action and the same words as the button at the foot of the step, offered before
-	// they scroll, with the rating and the reassurance on the line directly beneath it.
-	function renderSaveBar(container, trust, onClick) {
-		var bar = el('div', 'hd-dd__savebar');
-		bar.appendChild(el('div', 'hd-dd__savebar-heading', COPY.barHeading));
-		var btn = el('button', 'hd-dd__savebar-btn', COPY.cta);
-		btn.type = 'button';
-		btn.addEventListener('click', onClick);
-		bar.appendChild(btn);
-		var rated = ratingLine(trust);
-		bar.appendChild(el('div', 'hd-dd__savebar-note',
-			(rated ? '★ ' + trust.rating + '/10 on Checkatrade · ' : '') + COPY.barNote));
-		container.appendChild(bar);
-		return bar;
-	}
-
-	return { COPY: COPY, ratingLine: ratingLine, pickQuote: pickQuote, render: render, renderSaveBar: renderSaveBar };
+	return { ratingLine: ratingLine, pickQuote: pickQuote, renderProof: renderProof };
 }));

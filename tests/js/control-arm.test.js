@@ -31,8 +31,12 @@ assert.ok(classic.indexOf('window.HD_DD_Enquiry.') === -1, 'classic does not use
 assert.ok(quote.indexOf('designName') === -1, 'the original form has no design-name field');
 
 // And the swipe flow is the one carrying the new work.
-['HD_DD_Trust.render(', 'HD_DD_Trust.renderSaveBar(', 'window.HD_DD_Enquiry.create('].forEach(function (s) {
+['HD_DD_Trust.renderProof(', 'window.HD_DD_ReviewSave.create(', 'window.HD_DD_Enquiry.create('].forEach(function (s) {
   assert.ok(swipe.indexOf(s) !== -1, 'swipe flow has ' + s);
+});
+// The control never reports anything but its own funnel's steps from its own files.
+['HD_DD_ReviewSave', 'door-designer-v3', "'browsed'"].forEach(function (s) {
+  assert.ok(classic.indexOf(s) === -1 && review.indexOf(s) === -1 && quote.indexOf(s) === -1, 'classic has no "' + s + '"');
 });
 
 console.log('control-arm.test.js: all assertions passed');

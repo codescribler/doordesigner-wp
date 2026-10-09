@@ -149,6 +149,19 @@
 		return list;
 	}
 
+	// "Abbott · Anthracite Grey · Satin glass · Chrome hardware" — the Review step's one-line
+	// summary, from the same rows the full list shows.
+	function reviewSummary(rows) {
+		var by = {};
+		(rows || []).forEach(function (r) { if (r && r.value) { by[r.name] = String(r.value).trim(); } });
+		var parts = [];
+		if (by['Design']) { parts.push(by['Design']); }
+		if (by['Colour']) { parts.push(by['Colour']); }
+		if (by['Glass']) { parts.push(/^(solid|unglazed)$/i.test(by['Glass']) ? 'Solid' : by['Glass'] + ' glass'); }
+		if (by['Hardware']) { parts.push(by['Hardware'] + ' hardware'); }
+		return parts.join(' \u00b7 ');
+	}
+
 	// A cheap still thumbnail of a design (the mould's blank image) for the showcase strip.
 	function blankThumb(base, model, type, styleLabel) {
 		var T = model && model.types && model.types[type];
@@ -170,6 +183,6 @@
 
 	return {
 		el: el, short: short, TYPE_DESC: TYPE_DESC, segmented: segmented, chips: chips, disclosure: disclosure,
-		reviewList: reviewList, scroller: scroller, blankThumb: blankThumb, glassThumb: glassThumb, colourThumb: colourThumb
+		reviewList: reviewList, reviewSummary: reviewSummary, scroller: scroller, blankThumb: blankThumb, glassThumb: glassThumb, colourThumb: colourThumb
 	};
 }));

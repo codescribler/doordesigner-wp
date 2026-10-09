@@ -1,6 +1,6 @@
 // assets/js/enquiry.js
 // The "save my design & get my price" form, submit, thank-you screen and door snapshot —
-// used by the swipe flow. (The classic flow is the A/B control and keeps the original quote
+// used by the swipe flow. The swipe flow now draws its form with swipe/review-save.js and uses this module for the door snapshot and the thank-you screen; the form below is kept only until it is removed in a follow-up. (The classic flow is the A/B control and keeps the original quote
 // form in enquiry-quote.js.) A save is an enquiry: it is stored, emailed to us, and counts as a lead.
 //
 //   var enq = HD_DD_Enquiry.create({
@@ -221,20 +221,22 @@
 
 		// The post-submission screen — confirms, points to the revisit link, frames price, and
 		// invites another design.
-		function renderSuccess(container, result, onAgain) {
+		function renderSuccess(container, result, onAgain, image) {
 			container.innerHTML = '';
 			var wrap = el('div', 'hd-dd__thanks');
-			if (designImage) {
+			var shot = image || designImage;
+			if (shot) {
 				var pic = el('img', 'hd-dd__thanks-img');
-				pic.src = designImage;
+				pic.src = shot;
 				pic.alt = 'Your door design';
 				wrap.appendChild(pic);
 			}
 			wrap.appendChild(el('div', 'hd-dd__thanks-title', 'Saved — and your price is on its way.'));
 			wrap.appendChild(el('div', 'hd-dd__thanks-text',
 				'We’ve emailed you a link to come back to this design. We’ll work out a price for this exact door and send it to you, usually within one working day.'));
-			wrap.appendChild(el('div', 'hd-dd__thanks-price',
-				'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.'));
+			var guide = (CFG.trust && CFG.trust.guidePrice != null) ? CFG.trust.guidePrice
+				: 'Fitted doors typically cost \u00a31,500 to \u00a34,000. Most of our customers pay around \u00a32,000.';
+			if (guide) { wrap.appendChild(el('div', 'hd-dd__thanks-price', guide)); }
 			var again = el('button', 'hd-dd__thanks-again', 'Design another door');
 			again.type = 'button';
 			again.addEventListener('click', onAgain);

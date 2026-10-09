@@ -2,7 +2,7 @@
 // The swipe flow's controller: state, navigation, analytics. Rendering lives in swipe-view.js.
 //
 // Order: showcase (pick a design) → door type (+ hinge) → colour → glass → handle (+ finish)
-// → letterplate → knocker → side panels → your door → enquiry form. Choices are stored through
+// → letterplate → knocker → side panels → your door (save by email, then ask for a price). Choices are stored through
 // the classic HD_DD_Wizard, so validity rules, defaults and pruning are exactly the classic
 // flow's; the enquiry payload is identical.
 (function () {
@@ -39,7 +39,8 @@
 		this.memory = {};         // every choice made this run, so switching type can restore them
 		this.auto = {};           // furniture we substituted after a finish change (not the customer's pick)
 		this.wanted = {};         // furniture that was on the door before a finish change removed it
-		this.screen = 'design';   // 'design' | screen key | 'review' | 'form' | 'done'
+		this.screen = 'design';   // 'design' | screen key | 'review' | 'done'
+		this.reviewOpen = false;  // the full options list on Review is expanded
 		this.showcaseAt = 0;
 		this.viewed = {};         // designs brought to the centre of the showcase
 	};
@@ -237,11 +238,7 @@
 		this.render();
 		this.track('door_step_' + key);
 		if (key === 'review') { this.funnel.step('review'); }
-		if (key === 'form') { this.funnel.step('details'); }
-		// Opening the save form scrolls to the form itself (see the view), not back to the top.
-		if (key !== 'form') {
-			try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
-		}
+		try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
 	};
 
 	SwipeApp.prototype.next = function () {
@@ -256,7 +253,6 @@
 	};
 
 	SwipeApp.prototype.back = function () {
-		if (this.screen === 'form') { return this.go('review'); }
 		var list = this.screens();
 		if (this.screen === 'review') { return this.go(list.length ? list[list.length - 1].key : 'design'); }
 		var i = this.screenPos(list);
@@ -291,6 +287,10 @@
 			if (!d || !d.types[t]) { self.render(); return; }
 			self.chosen = d;
 			self.setType(t, saved);
+			// Saved but no price asked for yet: carry on from step 2 on the same record.
+			if (res.body.kind === 'save') { self.savedToken = token; }
+			// The email's "Get my exact price" button lands on the form itself.
+			self.focusSave = /[?&]price=1(&|#|$)/.test(String(window.location.search || ''));
 			self.go('review');
 		}).catch(function () { self.render(); });
 	};

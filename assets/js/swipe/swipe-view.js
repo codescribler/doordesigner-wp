@@ -1,6 +1,6 @@
 // assets/js/swipe/swipe-view.js
 // Draws the swipe flow for HD_DD_SwipeApp: the shell (back, progress, body, action button),
-// the design showcase, the option screens (carousel + sub-choices) and the review. It reads
+// the design showcase, the option screens (carousel + sub-choices) and the review (summary, guide price and the two-step save form). It reads
 // state from the app and calls back into it; it holds no design state of its own.
 (function () {
 	'use strict';
@@ -15,8 +15,8 @@
 
 	function create(app) {
 		var v = {};
-		var shell = null, back, progressEl, counter, saveBar, stage, stageCanvas, body, cta;
-		var carousel = null, compositor = null, enquiry = null, hint = null;
+		var shell = null, back, progressEl, counter, stage, stageCanvas, body, cta;
+		var carousel = null, compositor = null, enquiry = null, hint = null, save = null, watch = null;
 
 		function build() {
 			app.root.innerHTML = '';
@@ -29,9 +29,6 @@
 			progressEl = el('div', 'hd-sw-progress');
 			counter = el('span', 'hd-sw-counter');
 			head.appendChild(back); head.appendChild(progressEl); head.appendChild(counter);
-			// Review only: a save button above the door picture (HD_DD_Trust.renderSaveBar).
-			saveBar = el('div', 'hd-dd__savebar-slot');
-			saveBar.hidden = true;
 			stage = el('div', 'hd-sw-stage');
 			stageCanvas = el('canvas', 'hd-sw-stage__door');
 			stage.appendChild(stageCanvas);
@@ -39,13 +36,14 @@
 			cta = el('button', 'hd-sw-cta');
 			cta.type = 'button';
 			cta.addEventListener('animationend', function () { cta.classList.remove('is-pulse'); });
-			shell.appendChild(head); shell.appendChild(saveBar); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
+			shell.appendChild(head); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
 			app.root.appendChild(shell);
 			if (window.HD_DD_Preview && app.model) {
 				compositor = window.HD_DD_Preview.create(stageCanvas, { model: app.model, assetBase: app.assetBase() });
 			}
 		}
 
+		// Used for the thank-you screen and the form scroll helper.
 		function enquiryCtl() {
 			if (!enquiry) {
 				enquiry = window.HD_DD_Enquiry.create({
@@ -271,37 +269,85 @@
 			return rows;
 		}
 
-		// The save bar above the door picture: shown on Review, gone once the form is open.
-		// Left alone while it is already up, so its one-off entrance does not replay.
-		function renderSaveBar(show) {
-			show = show && !!window.HD_DD_Trust;
-			if (show && !saveBar.hidden) { return; }
-			saveBar.innerHTML = '';
-			saveBar.hidden = !show;
-			if (!show) { return; }
-			window.HD_DD_Trust.renderSaveBar(saveBar, CFG.trust, function () { app.track('door_save_top'); app.go('form'); });
-		}
-
 		function paintStage() {
 			if (compositor) { try { compositor.render(app.type(), app.design()); } catch (e) { /* missing asset */ } }
 		}
 
-		// The review list, the trust block, and — once "Save my design" is tapped — the save
-		// form opened in place beneath them. Returns the form's box (or null) for scrolling.
-		function review(formOpen) {
-			heading('Your door', 'Here’s your design. Tap Edit to change anything.');
-			body.appendChild(P.reviewList(reviewRows(), function (key) { app.go(key); }));
-			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
-			if (window.HD_DD_Trust) { window.HD_DD_Trust.render(body, CFG.trust); }
-			if (!formOpen) {
-				setCta((window.HD_DD_Trust ? window.HD_DD_Trust.COPY.cta : 'Save my design & get my price') + ' →', function () { app.track('door_save_bottom'); app.go('form'); });
-				return null;
+		// The Review step's two-step form (assets/js/swipe/review-save.js).
+		function saver() {
+			if (!save) {
+				save = window.HD_DD_ReviewSave.create({
+					api: app.api, cfg: CFG, flow: app.flow, token: app.savedToken || null,
+					getDesign: function () { return app.design(); },
+					getCanvas: function () { return stageCanvas; },
+					experiment: function () { return app.experiment; },
+					onSaved: function (result) {
+						app.savedToken = result.token;
+						app.funnel.step('saved');
+						app.track('door_saved');
+						setCta(null);
+					},
+					onQuoted: function (result, image) {
+						app.track('door_quote_submitted'); // the conversion event
+						app.funnel.lead();
+						app.lastResult = result;
+						app.lastImage = image;
+						app.go('done');
+					}
+				});
 			}
-			var box = el('div', 'hd-dd__savebox');
+			return save;
+		}
+
+		// On phones the form can start below the fold: a floating button takes them to it,
+		// and steps aside once the form itself is on screen.
+		function floatingSave(box) {
+			if (saver().saved()) { setCta(null); return; }
+			setCta('Email me my design', function () {
+				window.HD_DD_Enquiry.scrollToForm(box, app.root);
+				saver().focus();
+			});
+			if (!('IntersectionObserver' in window)) { return; }
+			watch = new window.IntersectionObserver(function (entries) {
+				cta.hidden = saver().saved() || entries[entries.length - 1].isIntersecting;
+			}, { threshold: 0.35 });
+			watch.observe(box);
+		}
+
+		// Reveal, one-line summary (full list a tap away), guide price, proof, then the form.
+		function review() {
+			heading('Your door is ready', 'Send it to yourself to keep, or change anything first.');
+			var rows = reviewRows();
+			var summary = el('div', 'hd-sw-summary');
+			summary.appendChild(el('span', 'hd-sw-summary__text', P.reviewSummary(rows)));
+			var more = el('button', 'hd-sw-summary__more', 'See all options / edit');
+			more.type = 'button';
+			var list = P.reviewList(rows, function (key) { app.go(key); });
+			list.hidden = !app.reviewOpen;
+			more.setAttribute('aria-expanded', app.reviewOpen ? 'true' : 'false');
+			more.addEventListener('click', function () {
+				app.reviewOpen = !app.reviewOpen;
+				list.hidden = !app.reviewOpen;
+				more.setAttribute('aria-expanded', app.reviewOpen ? 'true' : 'false');
+			});
+			summary.appendChild(more);
+			body.appendChild(summary);
+			body.appendChild(list);
+
+			var guide = CFG.trust && CFG.trust.guidePrice;
+			if (guide) { body.appendChild(el('p', 'hd-sw-price', guide)); }
+			if (window.HD_DD_Trust) { window.HD_DD_Trust.renderProof(body, CFG.trust); }
+
+			var box = el('div', 'hd-sw-savebox');
 			body.appendChild(box);
-			enquiryCtl().renderForm(box);
-			setCta(null);
-			return box;
+			saver().render(box);
+			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
+
+			floatingSave(box);
+			if (app.focusSave) {
+				app.focusSave = false;
+				window.HD_DD_Enquiry.scrollToForm(box, app.root);
+			}
 		}
 
 		v.loading = function () { if (!shell) { build(); } body.textContent = I18N.loadingDesign || 'Loading your saved design…'; };
@@ -310,20 +356,24 @@
 			if (!shell) { build(); }
 			if (carousel) { carousel.destroy(); carousel = null; }
 			if (hint) { hint.dismiss(); hint = null; }
+			if (watch) { watch.disconnect(); watch = null; }
 			body.innerHTML = '';
 			var scr = app.screen;
-			var formBox = null;
-			shell.className = 'hd-dd hd-sw hd-sw--' + (scr === 'design' || scr === 'review' || scr === 'form' || scr === 'done' ? scr : 'option');
+			shell.className = 'hd-dd hd-sw hd-sw--' + (scr === 'design' || scr === 'review' || scr === 'done' ? scr : 'option');
 			back.hidden = scr === 'design' || scr === 'done';
 			renderProgress();
-			stage.hidden = !(scr === 'review' || scr === 'form');
-			renderSaveBar(scr === 'review');
+			stage.hidden = scr !== 'review';
 			if (scr === 'design') { showcase(); }
-			else if (scr === 'review') { paintStage(); review(false); }
-			else if (scr === 'form') { paintStage(); formBox = review(true); }
+			else if (scr === 'review') { paintStage(); review(); }
 			else if (scr === 'done') {
 				setCta(null);
-				enquiryCtl().renderSuccess(body, app.lastResult, function () { enquiryCtl().reset(); app.reset(); v.render(); });
+				enquiryCtl().renderSuccess(body, app.lastResult, function () {
+					if (save) { save.reset(); }
+					app.savedToken = null;
+					enquiryCtl().reset();
+					app.reset();
+					v.render();
+				}, app.lastImage);
 			} else {
 				var screen = app.currentScreen();
 				if (screen) { optionScreen(screen); } else { app.go('review'); return; }
@@ -333,7 +383,6 @@
 				void body.offsetWidth; // restart the entry animation
 				body.classList.add('is-entering');
 				if (scr === 'review') { stage.classList.remove('is-revealing'); void stage.offsetWidth; stage.classList.add('is-revealing'); }
-				if (formBox) { window.HD_DD_Enquiry.scrollToForm(formBox, app.root); }
 			}
 		};
 
