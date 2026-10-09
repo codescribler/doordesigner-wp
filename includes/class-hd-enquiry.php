@@ -3,6 +3,7 @@
  * Enquiry submission endpoint. Validates + sanitises the customer fields, rebuilds
  * the design in Endurance's exact vocabulary from the SERVER-side catalogue (so the
  * stored labels are authoritative, not client-supplied), persists it, and emails it.
+ * Its validation and payload helpers are public so HD_DD_Save can reuse them.
  *
  * @package HD_Door_Designer
  */
@@ -80,7 +81,16 @@ class HD_DD_Enquiry {
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $design ) ) {
 			return new WP_Error( 'hd_dd_design_unreadable', __( 'That saved design could not be read.', 'hd-door-designer' ), array( 'status' => 404 ) );
 		}
-		return new WP_REST_Response( array( 'design' => $design ), 200 );
+		return new WP_REST_Response(
+			array(
+				'design' => $design,
+				// Which designer this was saved from, so the link reopens it there; and whether
+				// a price has been asked for yet. Still no personal details.
+				'flow'   => isset( $row->flow ) ? (string) $row->flow : '',
+				'kind'   => ( isset( $row->kind ) && 'save' === $row->kind ) ? 'save' : 'enquiry',
+			),
+			200
+		);
 	}
 
 	/** Nonce gate. The front-end is given a 'wp_rest' nonce at enqueue time. */
@@ -173,6 +183,8 @@ class HD_DD_Enquiry {
 				'status'      => $flagged ? 'flagged' : 'new',
 				'payload'     => array(), // filled below once we have the reference.
 				'source_ip'   => $this->client_ip(),
+				'kind'        => 'enquiry',
+				'flow'        => $quote_form ? 'classic' : '',
 			)
 		);
 
@@ -231,7 +243,7 @@ class HD_DD_Enquiry {
 	 * @param array $submitted heading => { id, label, style? }
 	 * @return array heading => { label, id }
 	 */
-	private function resolve_design( array $submitted ) {
+	public function resolve_design( array $submitted ) {
 		$catalogue = $this->catalogue->get();
 		$door_type = isset( $submitted['Door Type']['label'] ) ? $submitted['Door Type']['label'] : '';
 		$type_node = ( $catalogue && isset( $catalogue[ $door_type ]['fields'] ) ) ? $catalogue[ $door_type ] : null;
@@ -343,7 +355,7 @@ class HD_DD_Enquiry {
 	 * so a forged pageUrl can never put an off-site link in the email. Falls back to the
 	 * configured designer page, then the home URL.
 	 */
-	private function build_reload_url( $page_url, $token ) {
+	public function build_reload_url( $page_url, $token ) {
 		$home_host = wp_parse_url( home_url(), PHP_URL_HOST );
 		$base      = '';
 
@@ -359,7 +371,7 @@ class HD_DD_Enquiry {
 	}
 
 	/** Assemble the canonical enquiry payload (the shape the quote-creator consumes). */
-	private function build_payload( $reference, array $customer, array $design, $design_name = '' ) {
+	public function build_payload( $reference, array $customer, array $design, $design_name = '' ) {
 		$handle_label = '';
 		if ( isset( $design['Handle']['label'] ) ) {
 			$handle_label = $design['Handle']['label'];
@@ -390,7 +402,7 @@ class HD_DD_Enquiry {
 	 * @param string $data_url  data:image/png;base64,... from the front end.
 	 * @return array{path:string,url:string}|null
 	 */
-	private function store_design_image( $reference, $data_url ) {
+	public function store_design_image( $reference, $data_url ) {
 		if ( '' === $data_url || ! preg_match( '#^data:image/png;base64,#', $data_url ) ) {
 			return null;
 		}
@@ -433,24 +445,24 @@ class HD_DD_Enquiry {
 	// -------------------------------------------------------------------
 	// Sanitisers / validators
 	// -------------------------------------------------------------------
-	private function sanitize_phone( $raw ) {
+	public function sanitize_phone( $raw ) {
 		$raw = wp_unslash( (string) $raw );
 		$clean = trim( preg_replace( '/[^0-9\+\(\)\s\-]/', '', $raw ) );
 		return trim( substr( $clean, 0, 40 ) );
 	}
 
-	private function sanitize_postcode( $raw ) {
+	public function sanitize_postcode( $raw ) {
 		$raw = strtoupper( trim( wp_unslash( (string) $raw ) ) );
 		return preg_replace( '/[^A-Z0-9 ]/', '', $raw );
 	}
 
-	private function is_valid_uk_postcode( $postcode ) {
+	public function is_valid_uk_postcode( $postcode ) {
 		// Loose UK postcode pattern (validation is tightened at survey, not here).
 		$normalised = strtoupper( preg_replace( '/\s+/', '', (string) $postcode ) );
 		return (bool) preg_match( '/^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/', $normalised );
 	}
 
-	private function client_ip() {
+	public function client_ip() {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		return ( $ip && filter_var( $ip, FILTER_VALIDATE_IP ) ) ? $ip : '';
 	}

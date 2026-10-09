@@ -1,6 +1,6 @@
 <?php
 /**
- * Records every enquiry POST that did NOT end in a stored enquiry — validation
+ * Records every enquiry or save POST that did NOT end in a stored enquiry — validation
  * errors, an unrecoverable nonce failure, a database error — as a status=failed row
  * carrying whatever the customer typed, writes a line to the PHP error log, and emails
  * the enquiry recipients so the customer can be called back.
@@ -50,7 +50,7 @@ class HD_DD_Failure_Log {
 		if ( ! ( $request instanceof WP_REST_Request ) || ! is_object( $response ) || ! method_exists( $response, 'get_status' ) ) {
 			return false;
 		}
-		if ( 'POST' !== $request->get_method() || '/' . HD_DD_REST_NS . '/enquiry' !== $request->get_route() ) {
+		if ( 'POST' !== $request->get_method() || ! preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/(enquiry|save(/[A-Za-z0-9]{10,64}(/quote)?)?)$#', (string) $request->get_route() ) ) {
 			return false;
 		}
 		$status = (int) $response->get_status();

@@ -48,6 +48,7 @@ require_once HD_DD_DIR . 'includes/class-hd-save-mailer.php';
 require_once HD_DD_DIR . 'includes/class-hd-trust-settings.php';
 require_once HD_DD_DIR . 'includes/class-hd-failure-log.php';
 require_once HD_DD_DIR . 'includes/class-hd-enquiry.php';
+require_once HD_DD_DIR . 'includes/class-hd-save.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-stats.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-notifier.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiments.php';
