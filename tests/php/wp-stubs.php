@@ -147,8 +147,22 @@ class HD_Test_WPDB {
 		}
 		return 0;
 	}
-	public function prepare( $q ) { return $q; }
-	public function get_row( $q ) { return null; }
+	public function prepare( $q ) {
+		$args = array_slice( func_get_args(), 1 );
+		if ( 1 === count( $args ) && is_array( $args[0] ) ) { $args = $args[0]; }
+		foreach ( $args as $a ) {
+			$q = preg_replace( '/%[sd]/', is_int( $a ) ? (string) $a : "'" . addslashes( (string) $a ) . "'", $q, 1 );
+		}
+		return $q;
+	}
+	public function get_row( $q ) {
+		if ( preg_match( "/WHERE token = '([^']*)'/", $q, $m ) ) {
+			foreach ( $this->rows as $r ) {
+				if ( isset( $r['token'] ) && $r['token'] === $m[1] ) { return (object) $r; }
+			}
+		}
+		return null;
+	}
 	public function get_results( $q ) { return array(); }
 	public function get_var( $q ) { return count( $this->rows ); }
 	public function query( $q ) { return 0; }

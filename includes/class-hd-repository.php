@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 class HD_DD_Repository {
 
-	const DB_VERSION = '3';
+	const DB_VERSION = '4';
 
 	/** @return string Fully-prefixed table name. */
 	public static function table() {
@@ -57,6 +57,8 @@ class HD_DD_Repository {
 			customer_phone VARCHAR(40) NOT NULL DEFAULT '',
 			customer_postcode VARCHAR(16) NOT NULL DEFAULT '',
 			design_name VARCHAR(120) NOT NULL DEFAULT '',
+			kind VARCHAR(10) NOT NULL DEFAULT 'enquiry',
+			flow VARCHAR(20) NOT NULL DEFAULT '',
 			design LONGTEXT NULL,
 			payload LONGTEXT NULL,
 			source_ip VARCHAR(45) NOT NULL DEFAULT '',
@@ -64,7 +66,8 @@ class HD_DD_Repository {
 			UNIQUE KEY reference (reference),
 			UNIQUE KEY token (token),
 			KEY created_at (created_at),
-			KEY status (status)
+			KEY status (status),
+			KEY kind (kind)
 		) {$charset_collate};";
 
 		dbDelta( $sql );
@@ -74,7 +77,8 @@ class HD_DD_Repository {
 	 * Insert an enquiry.
 	 *
 	 * @param array $data Pre-sanitised fields plus 'design' (array), 'payload' (array) and an
-	 *                    optional 'status' ('new' by default; 'flagged' for a honeypot hit).
+	 *                    optional 'status' ('new' by default; 'flagged' for a honeypot hit),
+	 *                    plus optional 'kind' and 'flow'.
 	 * @return array{id:int,reference:string,token:string}|WP_Error
 	 */
 	public function insert( array $data ) {
@@ -96,11 +100,13 @@ class HD_DD_Repository {
 				'customer_phone'    => $data['telephone'],
 				'customer_postcode' => $data['postcode'],
 				'design_name'       => isset( $data['design_name'] ) ? (string) $data['design_name'] : '',
+				'kind'              => ( isset( $data['kind'] ) && 'save' === $data['kind'] ) ? 'save' : 'enquiry',
+				'flow'              => isset( $data['flow'] ) ? (string) $data['flow'] : '',
 				'design'            => wp_json_encode( $data['design'] ),
 				'payload'           => wp_json_encode( $data['payload'] ),
 				'source_ip'         => $data['source_ip'],
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 
 		if ( false === $ok ) {
@@ -201,14 +207,54 @@ class HD_DD_Repository {
 		);
 	}
 
-	/** @return array Row objects, newest first. */
-	public function list( $limit = 100, $offset = 0 ) {
+	/** Columns update_row() may write. reference and token are never changed after insert. */
+	const UPDATABLE = array( 'customer_name', 'customer_phone', 'customer_postcode', 'design_name', 'design', 'payload', 'kind' );
+
+	/**
+	 * Update a row in place (a save changing its design, or becoming an enquiry).
+	 *
+	 * @param int   $id     Row id.
+	 * @param array $fields Column => value; arrays are stored as JSON; other columns are ignored.
+	 * @return int|false Rows updated.
+	 */
+	public function update_row( $id, array $fields ) {
+		global $wpdb;
+		$data = array();
+		foreach ( self::UPDATABLE as $col ) {
+			if ( array_key_exists( $col, $fields ) ) {
+				$data[ $col ] = is_array( $fields[ $col ] ) ? wp_json_encode( $fields[ $col ] ) : (string) $fields[ $col ];
+			}
+		}
+		if ( ! $data ) {
+			return 0;
+		}
+		return $wpdb->update( self::table(), $data, array( 'id' => (int) $id ), array_fill( 0, count( $data ), '%s' ), array( '%d' ) );
+	}
+
+	/** @return array{enquiry:int,save:int} Row counts by kind (failed submissions count as enquiries). */
+	public function count_by_kind() {
 		global $wpdb;
 		$table = self::table();
+		$out   = array( 'enquiry' => 0, 'save' => 0 );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		return $wpdb->get_results(
-			$wpdb->prepare( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d", $limit, $offset )
-		);
+		foreach ( (array) $wpdb->get_results( "SELECT kind, COUNT(*) AS n FROM {$table} GROUP BY kind" ) as $r ) {
+			if ( isset( $out[ $r->kind ] ) ) {
+				$out[ $r->kind ] = (int) $r->n;
+			}
+		}
+		return $out;
+	}
+
+	/** @return array Row objects, newest first; $kind 'save' or 'enquiry' narrows the list. */
+	public function list( $limit = 100, $offset = 0, $kind = '' ) {
+		global $wpdb;
+		$table = self::table();
+		if ( 'save' === $kind || 'enquiry' === $kind ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+			return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE kind = %s ORDER BY created_at DESC LIMIT %d OFFSET %d", $kind, $limit, $offset ) );
+		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d", $limit, $offset ) );
 	}
 
 	/** @return object|null */

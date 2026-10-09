@@ -102,7 +102,7 @@ add_action( 'hd_dd_enquiry_submitted', function () use ( &$fired ) { $fired++; }
 hd_test_save();
 check( 1 === $fired, 'hd_dd_enquiry_submitted fires once (A/B conversions keep counting)' );
 check( 2 === count( $GLOBALS['hd_test_mail'] ), 'owner notification and customer email both sent' );
-check( '3' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the design_name column is added on update' );
+check( '4' === HD_DD_Repository::DB_VERSION, 'schema version bumped so new columns are added on update' );
 
 // --- 7) Hardening: odd input types and over-long phone numbers -------------------------
 hd_test_reset();
