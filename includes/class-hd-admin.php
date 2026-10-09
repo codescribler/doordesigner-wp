@@ -193,14 +193,18 @@ class HD_DD_Admin {
 			$this->render_detail( $enquiry_id );
 			return;
 		}
-		$rows  = $this->repository->list( 200, 0 );
-		$total = $this->repository->count();
+		$kind   = self::list_kind( isset( $_GET['kind'] ) ? wp_unslash( $_GET['kind'] ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read-only filter, sanitised in list_kind().
+		$rows   = $this->repository->list( 200, 0, $kind );
+		$counts = $this->repository->count_by_kind();
+		$base   = admin_url( 'admin.php?page=' . self::MENU_SLUG );
 		?>
 		<div class="wrap">
-			<h1>
-				<?php esc_html_e( 'Door Enquiries', 'hd-door-designer' ); ?>
-				<span class="count">(<?php echo esc_html( $total ); ?>)</span>
-			</h1>
+			<h1><?php esc_html_e( 'Door Enquiries', 'hd-door-designer' ); ?></h1>
+			<ul class="subsubsub" style="float:none;margin:6px 0 10px;">
+				<li><a href="<?php echo esc_url( $base ); ?>" <?php echo '' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'All', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) ( $counts['enquiry'] + $counts['save'] ); ?>)</span></a> |</li>
+				<li><a href="<?php echo esc_url( $base . '&kind=enquiry' ); ?>" <?php echo 'enquiry' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'Enquiries', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) $counts['enquiry']; ?>)</span></a> |</li>
+				<li><a href="<?php echo esc_url( $base . '&kind=save' ); ?>" <?php echo 'save' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'Saved designs', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) $counts['save']; ?>)</span></a></li>
+			</ul>
 
 			<?php if ( isset( $_GET['hd_dd_deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only success flag. ?>
 				<div class="notice notice-success is-dismissible"><p>
@@ -240,9 +244,9 @@ class HD_DD_Admin {
 							?>
 							<tr>
 								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
-								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php if ( ! empty( $row->design_name ) ) : ?><br><small><?php echo esc_html( $row->design_name ); ?></small><?php endif; ?><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
+								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php if ( ! empty( $row->design_name ) ) : ?><br><small><?php echo esc_html( $row->design_name ); ?></small><?php endif; ?><?php echo self::kind_badge( isset( $row->kind ) ? $row->kind : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in kind_badge(). ?><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
-								<td><?php echo esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
+								<td><?php echo '' === (string) $row->customer_name ? '&mdash;' : esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
 									<a href="mailto:<?php echo esc_attr( $row->customer_email ); ?>"><?php echo esc_html( $row->customer_email ); ?></a><br>
 									<?php if ( '' === $row->customer_phone ) : ?>
@@ -341,6 +345,9 @@ class HD_DD_Admin {
 					<table class="widefat striped">
 						<tbody>
 							<tr><th style="width:200px;"><?php esc_html_e( 'Received', 'hd-door-designer' ); ?></th><td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td></tr>
+							<?php if ( isset( $row->kind ) && 'save' === $row->kind ) : ?>
+								<tr><th><?php esc_html_e( 'Type', 'hd-door-designer' ); ?></th><td><?php esc_html_e( 'Saved design. They gave an email address only and have not asked for a price yet.', 'hd-door-designer' ); ?></td></tr>
+							<?php endif; ?>
 							<?php if ( ! empty( $row->design_name ) ) : ?>
 								<tr><th><?php esc_html_e( 'Design name', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->design_name ); ?></td></tr>
 							<?php endif; ?>
@@ -414,6 +421,20 @@ class HD_DD_Admin {
 			}
 		}
 		return $label;
+	}
+
+	/** The list's label for an email-only save, or '' for an enquiry. Escaped. */
+	public static function kind_badge( $kind ) {
+		if ( 'save' !== $kind ) {
+			return '';
+		}
+		return '<br><span style="display:inline-block;margin-top:3px;padding:1px 7px;border-radius:9px;background:#e7f0ec;color:#1d4f3f;font-size:11px;font-weight:600;">' . esc_html__( 'Saved, no price requested', 'hd-door-designer' ) . '</span>';
+	}
+
+	/** The list filter from the URL: 'save', 'enquiry', or '' for everything. */
+	public static function list_kind( $raw ) {
+		$kind = is_string( $raw ) ? sanitize_key( $raw ) : '';
+		return in_array( $kind, array( 'save', 'enquiry' ), true ) ? $kind : '';
 	}
 
 	/** The list's coloured badge for status_label(), or '' for a normal row. Escaped. */
