@@ -38,6 +38,7 @@
 			body = el('div', 'hd-sw-body');
 			cta = el('button', 'hd-sw-cta');
 			cta.type = 'button';
+			cta.addEventListener('animationend', function () { cta.classList.remove('is-pulse'); });
 			shell.appendChild(head); shell.appendChild(saveBar); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
 			app.root.appendChild(shell);
 			if (window.HD_DD_Preview && app.model) {
@@ -96,7 +97,7 @@
 		function userMoved() {
 			if (hint) { hint.dismiss(); hint = null; }
 			app.browsed();
-			if (!app.pulsedMove) { app.pulsedMove = true; pulseCta(); }
+			if (!app.pulsedMove && app.screen === 'design') { app.pulsedMove = true; pulseCta(); }
 		}
 
 		// Once per page load, on the first carousel they see.

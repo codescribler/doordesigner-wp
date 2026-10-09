@@ -21,4 +21,8 @@ assert.ok(/SwipeApp\.prototype\.browsed = function \(\) \{[^}]*this\.chosen/.tes
 assert.ok(/\.hd-sw-cta \{[^}]*border-radius: 999px/.test(css), 'the action button is a pill on phones');
 assert.ok(assets.indexOf("'swipehint'") !== -1, 'swipe-hint.js is registered');
 
+assert.ok(/addEventListener\('animationend', function \(\) \{ cta\.classList\.remove\('is-pulse'\)/.test(view), 'the pulse class is removed when the animation ends');
+assert.ok(/if \(!app\.pulsedMove && app\.screen === 'design'\)/.test(view), 'the move pulse is gated on the design screen');
+assert.ok(/min-width: 820px\)[\s\S]*\.hd-sw-cta\.is-pulse \{ animation: none; \}/.test(css), 'no pulse ring on wider screens');
+
 console.log('swipe-wiring.test.js: all assertions passed');

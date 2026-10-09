@@ -190,6 +190,7 @@
   .hd-sw-holder { margin: 0; }
   .hd-sw-carousel__track { border-radius: 14px; }
   .hd-sw-cta { position: static; margin: 16px 0 0; border-radius: 12px; box-shadow: none; }
+  .hd-sw-cta.is-pulse { animation: none; }
   .hd-sw-stage { margin: 0 0 12px; border-radius: 14px; }
 }
 
