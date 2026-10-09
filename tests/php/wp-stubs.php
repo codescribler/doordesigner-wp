@@ -232,6 +232,7 @@ require_once HD_DD_DIR . 'includes/class-hd-repository.php';
 require_once HD_DD_DIR . 'includes/class-hd-catalogue.php';
 require_once HD_DD_DIR . 'includes/class-hd-lock-deriver.php';
 require_once HD_DD_DIR . 'includes/class-hd-mailer.php';
+require_once HD_DD_DIR . 'includes/class-hd-save-mailer.php';
 require_once HD_DD_DIR . 'includes/class-hd-enquiry.php';
 require_once HD_DD_DIR . 'includes/class-hd-trust-settings.php';
 require_once HD_DD_DIR . 'includes/class-hd-plugin.php';

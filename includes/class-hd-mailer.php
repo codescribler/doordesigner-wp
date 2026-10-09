@@ -144,7 +144,10 @@ class HD_DD_Mailer {
 		$intro = $quote_form
 			? esc_html__( 'Thanks for designing your door with Hertfordshire Doors. We have received it and will be in touch shortly with your free, no-obligation quote — usually within one working day.', 'hd-door-designer' )
 			: esc_html__( 'Your design is saved. Use the button below to come back to it any time. We will work out a price for this exact door and send it to you, usually within one working day.', 'hd-door-designer' );
-		$price = esc_html__( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' );
+		// Classic (the A/B control) keeps its original sentence; the new flow uses the setting.
+		$price = $quote_form
+			? esc_html__( 'As a guide, a fully fitted composite door installed by qualified fitters typically ranges from £1,000 to £4,000 depending on the options you choose.', 'hd-door-designer' )
+			: esc_html( HD_DD_Trust_Settings::guide_price() );
 
 		$design_title = ( ! $quote_form && isset( $payload['designName'] ) && '' !== $payload['designName'] ) ? esc_html( $payload['designName'] ) : esc_html__( 'Your design', 'hd-door-designer' );
 
@@ -165,9 +168,9 @@ class HD_DD_Mailer {
 			. '</tr></table>'
 			. '</td></tr>'
 			. $revisit
-			. '<tr><td style="padding:20px 28px 0;">'
-			. '<p style="margin:0;padding:12px 14px;background:#f3f3f1;border:1px solid #e6e6e6;border-radius:6px;font-size:13px;line-height:1.5;color:#161616;">' . $price . '</p>'
-			. '</td></tr>'
+			. ( '' !== $price ? '<tr><td style="padding:20px 28px 0;">'
+				. '<p style="margin:0;padding:12px 14px;background:#f3f3f1;border:1px solid #e6e6e6;border-radius:6px;font-size:13px;line-height:1.5;color:#161616;">' . $price . '</p>'
+				. '</td></tr>' : '' )
 			. '<tr><td style="padding:18px 28px 28px;"><p style="margin:0;font-size:13px;color:#8a8e96;">Hertfordshire Doors</p></td></tr>'
 			. '</table></td></tr></table></body></html>';
 	}

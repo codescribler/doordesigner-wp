@@ -1,7 +1,7 @@
 <?php
 /**
  * Review-step social proof: the Checkatrade rating line and real customer quotes shown
- * above "Save my design & get my price". Owns its four settings (stored in the shared
+ * above "Save my design & get my price". Owns the Review-step settings (stored in the shared
  * hd_dd_settings option), their sanitising, and the shape handed to the browser.
  * Nothing here is invented: with no quotes entered, no quote is shown.
  *
@@ -14,6 +14,8 @@ class HD_DD_Trust_Settings {
 
 	const QUOTE_MAX = 6;
 
+	const GUIDE_PRICE = 'Fitted doors typically cost £1,500 to £4,000. Most of our customers pay around £2,000.';
+
 	/** @return array Setting key => default. */
 	public static function defaults() {
 		return array(
@@ -21,6 +23,7 @@ class HD_DD_Trust_Settings {
 			'proof_count'  => '79',
 			'proof_url'    => '',
 			'proof_quotes' => '',
+			'guide_price'  => self::GUIDE_PRICE,
 		);
 	}
 
@@ -56,6 +59,9 @@ class HD_DD_Trust_Settings {
 			} elseif ( 'proof_url' === $key ) {
 				$url         = esc_url_raw( trim( $raw ) );
 				$out[ $key ] = preg_match( '#^https?://#i', $url ) ? $url : '';
+			} elseif ( 'guide_price' === $key ) {
+				$v           = sanitize_text_field( $raw );
+				$out[ $key ] = function_exists( 'mb_substr' ) ? mb_substr( $v, 0, 200 ) : substr( $v, 0, 200 );
 			} else {
 				$lines = array();
 				foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
@@ -102,6 +108,12 @@ class HD_DD_Trust_Settings {
 		return $quotes;
 	}
 
+	/** The guide price sentence shown on Review and in the customer emails ('' = hidden). */
+	public static function guide_price() {
+		$s = HD_DD_Plugin::settings();
+		return isset( $s['guide_price'] ) ? (string) $s['guide_price'] : self::GUIDE_PRICE;
+	}
+
 	/** The `trust` object for HD_DD_CONFIG (read by assets/js/trust.js). */
 	public static function front_config() {
 		$s      = HD_DD_Plugin::settings();
@@ -113,6 +125,7 @@ class HD_DD_Trust_Settings {
 			'count'  => $show ? number_format( (int) $count ) : '',
 			'url'    => esc_url_raw( (string) $s['proof_url'] ),
 			'quotes' => self::parse_quotes( (string) $s['proof_quotes'] ),
+			'guidePrice' => self::guide_price(),
 		);
 	}
 
@@ -125,7 +138,7 @@ class HD_DD_Trust_Settings {
 	public static function render_fields( array $s, $option ) {
 		?>
 		<h2><?php esc_html_e( 'Review step', 'hd-door-designer' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'Shown above the "Save my design & get my price" button. Only use your real rating and real customer words.', 'hd-door-designer' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Shown on the Review step of the new designer. Only use your real rating and real customer words.', 'hd-door-designer' ); ?></p>
 		<table class="form-table" role="presentation">
 			<tr>
 				<th scope="row"><label for="hd_proof_rating"><?php esc_html_e( 'Checkatrade rating (out of 10)', 'hd-door-designer' ); ?></label></th>
@@ -146,6 +159,13 @@ class HD_DD_Trust_Settings {
 				<td>
 					<textarea name="<?php echo esc_attr( $option ); ?>[proof_quotes]" id="hd_proof_quotes" class="large-text" rows="5"><?php echo esc_textarea( $s['proof_quotes'] ); ?></textarea>
 					<p class="description"><?php esc_html_e( 'One per line: Quote text | Name, Town. Up to six; one is shown at random. Leave empty to show none.', 'hd-door-designer' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="hd_guide_price"><?php esc_html_e( 'Guide price', 'hd-door-designer' ); ?></label></th>
+				<td>
+					<input name="<?php echo esc_attr( $option ); ?>[guide_price]" id="hd_guide_price" type="text" class="large-text" value="<?php echo esc_attr( $s['guide_price'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'Shown above the email box and in the email we send. Leave empty to show no price.', 'hd-door-designer' ); ?></p>
 				</td>
 			</tr>
 		</table>
