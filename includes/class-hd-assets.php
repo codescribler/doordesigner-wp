@@ -108,10 +108,12 @@ class HD_DD_Assets {
 		foreach ( $swipe as $key => $def ) {
 			wp_register_script( self::HANDLE . '-' . $key, HD_DD_URL . 'assets/js/swipe/' . $def[0], $def[1], $ver_js, true );
 		}
+		// The Review step's two-step form (email first, then the details for a price).
+		wp_register_script( self::HANDLE . '-reviewsave', HD_DD_URL . 'assets/js/swipe/review-save.js', array( self::HANDLE . '-enquiry' ), $ver_js, true );
 		wp_register_script(
 			self::HANDLE . '-swipeview',
 			HD_DD_URL . 'assets/js/swipe/swipe-view.js',
-			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-swipehint', self::HANDLE . '-shared', self::HANDLE . '-enquiry', self::HANDLE . '-trust' ),
+			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-swipehint', self::HANDLE . '-reviewsave', self::HANDLE . '-shared', self::HANDLE . '-enquiry', self::HANDLE . '-trust' ),
 			$ver_js,
 			true
 		);
