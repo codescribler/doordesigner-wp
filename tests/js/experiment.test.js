@@ -82,18 +82,18 @@ assert.strictEqual(a.store, null, '89-day-old assignment is kept');
 });
 
 // 7) A forced flow wins, is not counted, and leaves storage alone.
-a = X.assign(CFG, 'swipe', stored, Math.random, NOW);
-assert.deepStrictEqual([a.flow, a.counted, a.store, a.experimentId], ['swipe', false, null, null]);
-a = X.assign({ 'default': 'classic', experiment: null }, 'swipe', null, Math.random, NOW);
-assert.deepStrictEqual([a.flow, a.counted], ['swipe', false]);
+a = X.assign(CFG, 'swipe2', stored, Math.random, NOW);
+assert.deepStrictEqual([a.flow, a.counted, a.store, a.experimentId], ['swipe2', false, null, null]);
+a = X.assign({ 'default': 'classic', experiment: null }, 'swipe2', null, Math.random, NOW);
+assert.deepStrictEqual([a.flow, a.counted], ['swipe2', false]);
 a = X.assign(CFG, 'bogus', null, seq([0.9]), NOW);
 assert.strictEqual(a.counted, true, 'an unknown forced flow is ignored');
 
 // 8) forcedFlow(): ?flow= first, then data-flow; '' when absent/unknown.
 function el(v) { return { getAttribute: function (n) { return n === 'data-flow' ? v : null; } }; }
-assert.strictEqual(X.forcedFlow('?flow=swipe', el('')), 'swipe');
+assert.strictEqual(X.forcedFlow('?flow=swipe', el('')), 'swipe2');
 assert.strictEqual(X.forcedFlow('?door_type=Single&flow=Classic', el('swipe')), 'classic', 'query beats data-flow, case-insensitive');
-assert.strictEqual(X.forcedFlow('', el('swipe')), 'swipe');
+assert.strictEqual(X.forcedFlow('', el('swipe')), 'swipe2');
 assert.strictEqual(X.forcedFlow('?flow=nope', el('')), '');
 assert.strictEqual(X.forcedFlow('?flow=nope', el('classic')), 'classic');
 assert.strictEqual(X.forcedFlow('', null), '');
@@ -109,7 +109,7 @@ assert.strictEqual(a.visitorId, '00112233445566778899aabbccddeeff', 'crypto visi
 assert.deepStrictEqual(store.get(), { experimentId: EXP.id, arm: 'control', visitorId: a.visitorId, assignedAt: NOW });
 var again = X.resolve(CFG, '', { storage: store, rand: seq([0.0]), now: NOW + DAY, crypto: null });
 assert.deepStrictEqual([again.arm, again.visitorId, again.store], ['control', a.visitorId, null], 'second load is sticky');
-assert.strictEqual(X.resolve(CFG, 'swipe', { storage: store }).counted, false);
+assert.strictEqual(X.resolve(CFG, 'swipe2', { storage: store }).counted, false);
 assert.strictEqual(store.get().arm, 'control', 'forced load leaves storage alone');
 
 // 10) Storage unavailable (throws, or absent): assigned fresh each load, still counted.
@@ -124,10 +124,27 @@ assert.doesNotThrow(function () { X.resolve(null, null, { storage: brokenStorage
 
 // 11) enquiryRef()
 assert.deepStrictEqual(X.enquiryRef(a), { experimentId: EXP.id, visitorId: a.visitorId, arm: 'control' });
-assert.strictEqual(X.enquiryRef(X.assign(CFG, 'swipe', null)), null, 'forced → no ref');
+assert.strictEqual(X.enquiryRef(X.assign(CFG, 'swipe2', null)), null, 'forced → no ref');
 assert.strictEqual(X.enquiryRef(null), null);
 
 // 12) expose(): posts once per visitor per experiment; never throws.
+// ---- Swipe 2: the old swipe key is an alias; saved designs reopen in their own flow ----
+var EX = require('../../assets/js/experiment.js');
+assert.strictEqual(EX.canonical('swipe'), 'swipe2');
+assert.strictEqual(EX.canonical(' Swipe '), 'swipe2');
+assert.strictEqual(EX.canonical('classic'), 'classic');
+assert.strictEqual(EX.canonical(undefined), '');
+assert.strictEqual(EX.forcedFlow('?flow=swipe', null), 'swipe2');
+assert.strictEqual(EX.forcedFlow('?flow=swipe2', null), 'swipe2');
+assert.strictEqual(EX.forcedFlow('', { getAttribute: function () { return 'swipe'; } }), 'swipe2');
+assert.strictEqual(EX.storedFlow({ flow: 'swipe' }, true), 'swipe2');
+assert.strictEqual(EX.storedFlow({ flow: 'swipe2' }, true), 'swipe2');
+assert.strictEqual(EX.storedFlow({ flow: 'swipe2' }, false), 'classic', 'no render model: fall back');
+assert.strictEqual(EX.storedFlow({ flow: 'classic' }, true), 'classic');
+assert.strictEqual(EX.storedFlow({ flow: '' }, true), '', "old rows: caller keeps today's behaviour");
+assert.strictEqual(EX.storedFlow(null, true), '');
+assert.strictEqual(EX.storedFlow({ flow: 'made-up' }, true), '');
+
 (async function () {
   var calls = [];
   function api(res) { return function (path, opts) { calls.push([path, opts]); return Promise.resolve(res); }; }

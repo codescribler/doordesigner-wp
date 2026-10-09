@@ -16,7 +16,7 @@ global.window = {
     lead: function (f) { calls.push(['lead', f]); }
   }
 };
-var v2 = Funnel.create('door-designer-v2', Funnel.ORDER_V2);
+var v2 = Funnel.create('door-designer-v3', Funnel.ORDER_V3);
 
 // Normal visitor: events flow.
 assert.strictEqual(Funnel.muted(), false);

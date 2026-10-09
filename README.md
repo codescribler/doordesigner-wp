@@ -169,8 +169,8 @@ detail view.
   chips), then door type (+ hinge side), colour (+ inside colour), glass, handle (+ finish),
   letterplate, knocker and side panels. Every screen is a swipeable carousel of the customer's
   own door with that option applied, with a helper line and a "Love it · next: …" button.
-  Reports to its own funnel **`door-designer-v2`** (lower-case step keys; order in
-  `HD_DD_Funnel.ORDER_V2`), so the manager's per-funnel "started" and step order stay correct
+  Reports to its own funnel **`door-designer-v3`** (lower-case step keys; order in
+  `HD_DD_Funnel.ORDER_V3`), so the manager's per-funnel "started" and step order stay correct
   for both. Choices go through the same wizard controller and step rules as classic, so the
   enquiry payload is identical.
 
@@ -274,7 +274,7 @@ No framework — plain Node and PHP scripts that exit non-zero on failure:
 node tests/js/api-client.test.js      # REST client: nonce self-heal
 node tests/js/funnel.test.js          # hdAnalytics reporter
 node tests/js/experiment.test.js      # A/B assignment, stickiness, overrides, exposure
-node tests/js/funnel-v2.test.js       # door-designer-v2 funnel order
+node tests/js/funnel-v3.test.js       # door-designer-v3 funnel order
 node tests/js/design-index.test.js    # swipe showcase: design → types, Avantal cassettes
 node tests/js/flow-steps.test.js      # swipe screens per door type + funnel events
 node tests/js/carousel.test.js        # cover-flow maths (settle, window, placement)

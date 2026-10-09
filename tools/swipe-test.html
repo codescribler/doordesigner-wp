@@ -61,7 +61,7 @@
     window.HD_DD_CONFIG.assetBase = live ? 'https://hertfordshiredoors.co.uk/wp-json/hd-door-designer/v1/img' : data.model._assetBase;
     statusEl.textContent = 'Swipe harness · assetBase ' + data.model._assetBase;
     mount.innerHTML = '';
-    var funnel = window.HD_DD_Funnel.create('door-designer-v2', window.HD_DD_Funnel.ORDER_V2);
+    var funnel = window.HD_DD_Funnel.create('door-designer-v3', window.HD_DD_Funnel.ORDER_V3);
     var doorType = new URLSearchParams(location.search).get('door_type') || '';
     window.swipeApp = new window.HD_DD_SwipeApp(mount, data.customerView, data.model, data.categories, { funnel: funnel, doorType: doorType });
     window.swipeApp.render();

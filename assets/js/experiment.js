@@ -17,9 +17,25 @@
   var ARMS = { control: true, challenger: true };
   var VISITOR_RE = /^[a-f0-9]{32}$/;
 
+  // The first swipe flow was retired when Swipe 2 replaced it; old links keep working.
+  var ALIASES = { swipe: 'swipe2' };
+  function canonical(flow) {
+    var f = String(flow == null ? '' : flow).trim().toLowerCase();
+    return ALIASES[f] || f;
+  }
+
+  // The flow a saved design should reopen in, from GET design/{token}. '' = not recorded
+  // (rows saved before this was stored): the caller falls back to the normal assignment.
+  function storedFlow(body, canSwipe) {
+    var f = canonical(body && body.flow);
+    if (f === 'classic') { return 'classic'; }
+    if (f === 'swipe2') { return canSwipe ? 'swipe2' : 'classic'; }
+    return '';
+  }
+
   // Flows a forced value may name: the built-in ones plus whatever the config mentions.
   function knownFlows(cfg) {
-    var known = { classic: true, swipe: true };
+    var known = { classic: true, swipe2: true };
     cfg = cfg || {};
     if (cfg['default']) { known[cfg['default']] = true; }
     if (cfg.experiment) {
@@ -161,9 +177,9 @@
     try {
       var known = knownFlows(flowCfg);
       var m = /[?&]flow=([^&#]*)/.exec(String(search || ''));
-      var q = m ? decodeURIComponent(m[1].replace(/\+/g, ' ')).trim().toLowerCase() : '';
+      var q = m ? canonical(decodeURIComponent(m[1].replace(/\+/g, ' '))) : '';
       if (q && known[q]) { return q; }
-      var d = (mountEl && typeof mountEl.getAttribute === 'function') ? String(mountEl.getAttribute('data-flow') || '').trim().toLowerCase() : '';
+      var d = (mountEl && typeof mountEl.getAttribute === 'function') ? canonical(mountEl.getAttribute('data-flow')) : '';
       return (d && known[d]) ? d : '';
     } catch (e) { return ''; }
   }
@@ -173,5 +189,5 @@
     return (a && a.counted && a.experimentId) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
   }
 
-  return { assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
+  return { canonical: canonical, storedFlow: storedFlow, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
 }));

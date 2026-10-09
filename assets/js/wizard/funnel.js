@@ -9,19 +9,20 @@
   // Canonical dashboard order — fixed per step key regardless of which conditional
   // steps a given visitor is offered, so the funnel draws a stable sequence.
   var ORDER = {
-    type: 1, frame: 2, style: 3, hinge: 4, extColour: 5, intColour: 6,
+    opened: 0, type: 1, frame: 2, style: 3, hinge: 4, extColour: 5, intColour: 6,
     sidelightType: 7, sidelightGlass: 8, glazing: 9, hardware: 10, handle: 11,
     letterplate: 12, letterplatePosition: 13, knocker: 14, review: 15, details: 16
   };
 
-  // The swipe flow reports as its own funnel ('door-designer-v2') with its own order:
-  // the manager treats a funnel's lowest-ordered step as "started" across the whole date
-  // range, so re-ordering steps inside the classic funnel would miscount both flows.
-  // Keys are lower-case because the analytics pipeline lower-cases step names anyway.
-  var ORDER_V2 = {
-    design: 1, type: 2, hinge: 3, colour: 4, intcolour: 5, glazing: 6, hardware: 7,
-    handle: 8, letterplate: 9, letterplateposition: 10, knocker: 11, frame: 12,
-    sidelighttype: 13, sidelightglass: 14, review: 15, details: 16
+  // Swipe 2 reports as its own funnel ('door-designer-v3'). `opened` (the designer drew its
+  // first screen) and `browsed` (the first swipe or tap through the doors) come before any
+  // choice, so the dashboard can show who arrived and never started. `saved` is the
+  // email-only save on Review; the quote request is the lead. Keys are lower-case because
+  // the analytics pipeline lower-cases step names anyway.
+  var ORDER_V3 = {
+    opened: 0, browsed: 1, design: 2, type: 3, hinge: 4, colour: 5, intcolour: 6, glazing: 7,
+    hardware: 8, handle: 9, letterplate: 10, letterplateposition: 11, knocker: 12, frame: 13,
+    sidelighttype: 14, sidelightglass: 15, review: 16, saved: 17
   };
 
   // "Don't count me": ?notrack=1 switches every designer analytics call off in this browser
@@ -63,7 +64,7 @@
   function create(name, order) {
     function step(key, choice) {
       var t = tracker();
-      if (!t || !order[key]) { return; }
+      if (!t || order[key] == null) { return; }
       var opts = { order: order[key] };
       if (choice) { opts.choice = choice; }
       var ver = version();
@@ -85,5 +86,5 @@
 
   var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, ORDER_V2: ORDER_V2, create: create, step: classic.step, lead: classic.lead, muted: muted };
+  return { ORDER: ORDER, ORDER_V3: ORDER_V3, create: create, step: classic.step, lead: classic.lead, muted: muted };
 }));
