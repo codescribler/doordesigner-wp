@@ -26,6 +26,7 @@
 		this.funnel = opts.funnel || { step: function () {}, lead: function () {} };
 		this.experiment = opts.experiment || null;
 		this.api = opts.api;
+		this.flow = opts.flow || 'swipe2';
 		this.filter = opts.doorType === 'Avantal' ? 'Aluminium' : 'All';
 		this.preferType = opts.doorType && opts.doorType !== 'Avantal' ? opts.doorType : null;
 		this.view = window.HD_DD_SwipeView.create(this);
@@ -94,6 +95,15 @@
 	SwipeApp.prototype.tag = function (k, v) {
 		if (muted()) { return; }
 		try { if (typeof window.clarity === 'function') { window.clarity('set', k, String(v)); } } catch (e) { /* best-effort */ }
+	};
+
+	// The visitor moved the showcase themselves. Reported once per page load and only before
+	// a design is chosen: it sits before `design` in the funnel, so a later one would read
+	// on the dashboard as going backwards.
+	SwipeApp.prototype.browsed = function () {
+		if (this._browsed || this.chosen || this.screen !== 'design') { return; }
+		this._browsed = true;
+		this.funnel.step('browsed');
 	};
 
 	// ---- Choosing ------------------------------------------------------------

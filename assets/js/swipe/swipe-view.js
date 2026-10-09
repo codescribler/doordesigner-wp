@@ -11,13 +11,12 @@
 	var el = P.el;
 	var Shared = window.HD_DD_Shared;
 	var DI = window.HD_DD_DesignIndex;
-	var NUDGE_KEY = 'hd_sw_nudged';
 	var CLOSEUP = { handle: 'handle', letterplate: 'letterplate', knocker: 'knocker' };
 
 	function create(app) {
 		var v = {};
 		var shell = null, back, progressEl, counter, saveBar, stage, stageCanvas, body, cta;
-		var carousel = null, compositor = null, enquiry = null;
+		var carousel = null, compositor = null, enquiry = null, hint = null;
 
 		function build() {
 			app.root.innerHTML = '';
@@ -86,10 +85,27 @@
 			return cap;
 		}
 
-		function maybeNudge() {
-			var seen = false;
-			try { seen = !!window.localStorage.getItem(NUDGE_KEY); window.localStorage.setItem(NUDGE_KEY, '1'); } catch (e) { seen = false; }
-			if (!seen && carousel) { setTimeout(function () { if (carousel) { carousel.nudge(); } }, 700); }
+		// ---- Helpers that teach the swipe ---------------------------------------------
+		function pulseCta() {
+			cta.classList.remove('is-pulse');
+			void cta.offsetWidth; // restart the animation
+			cta.classList.add('is-pulse');
+		}
+
+		// The visitor moved a carousel themselves.
+		function userMoved() {
+			if (hint) { hint.dismiss(); hint = null; }
+			app.browsed();
+			if (!app.pulsedMove) { app.pulsedMove = true; pulseCta(); }
+		}
+
+		// Once per page load, on the first carousel they see.
+		function maybeHint(holder) {
+			if (app.hintShown || !window.HD_DD_SwipeHint) { return; }
+			app.hintShown = true;
+			var touch = false;
+			try { touch = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) { touch = false; }
+			hint = window.HD_DD_SwipeHint.create(holder, { touch: touch, onIdle: function () { if (carousel) { carousel.nudge(); } } });
 		}
 
 		// ---- Showcase ------------------------------------------------------------
@@ -100,7 +116,7 @@
 			app.index.filters.forEach(function (f) {
 				var b = el('button', 'hd-sw-chip' + (f === app.filter ? ' is-on' : ''), f);
 				b.type = 'button';
-				b.addEventListener('click', function () { app.filter = f; app.showcaseAt = 0; v.render(); });
+				b.addEventListener('click', function () { app.filter = f; app.showcaseAt = 0; userMoved(); v.render(); });
 				filters.appendChild(b);
 			});
 			body.appendChild(P.scroller(filters));
@@ -123,7 +139,7 @@
 				Array.prototype.forEach.call(strip.children, function (c, j) { c.classList.toggle('is-on', j === i); });
 				var on = strip.children[i];
 				if (on) { strip.scrollLeft = Math.max(0, on.offsetLeft - strip.clientWidth / 2 + on.clientWidth / 2); }
-				setCta('Choose ' + list[i].name + ' →', function () { app.pickDesign(list[i]); });
+				setCta('Choose this door: ' + list[i].name + ' →', function () { app.pickDesign(list[i]); });
 			}
 			carousel = window.HD_DD_Carousel.create(holder, {
 				count: list.length, index: app.showcaseAt, ariaLabel: 'Door designs',
@@ -132,6 +148,7 @@
 					var s = app.showcaseDesign(list[i]);
 					window.HD_DD_DoorCard.paint(card, { model: app.model, assetBase: app.assetBase(), type: s.type, design: s.design, omitSlots: ['Handles', 'HandlesRight'] });
 				},
+				onUser: userMoved,
 				onChange: function (i) { app._showcaseTouched = true; update(i); }
 			});
 			list.forEach(function (d, j) {
@@ -142,11 +159,13 @@
 				var url = P.blankThumb(app.assetBase(), app.model, s.type, s.design['Door Design'].label);
 				if (url) { var im = el('img'); im.alt = ''; im.loading = 'lazy'; im.src = url; b.appendChild(im); }
 				else { b.textContent = d.name; }
-				b.addEventListener('click', function () { carousel.setIndex(j); update(j); });
+				b.addEventListener('click', function () { carousel.setIndex(j); update(j); userMoved(); });
 				strip.appendChild(b);
 			});
 			update(Math.min(app.showcaseAt, list.length - 1));
-			maybeNudge();
+			body.appendChild(el('p', 'hd-sw-prompt', 'Happy with this one? Tap Choose.'));
+			maybeHint(holder);
+			if (!app.pulsedIntro) { app.pulsedIntro = true; pulseCta(); }
 		}
 
 		// ---- Option screens --------------------------------------------------------
@@ -190,6 +209,7 @@
 					var t = isType ? choices[i].label : app.type();
 					window.HD_DD_DoorCard.paint(card, { model: app.model, assetBase: app.assetBase(), type: t, design: probe(choices[i]), closeUp: screen.main ? CLOSEUP[screen.main.key] : null });
 				},
+				onUser: userMoved,
 				onChange: function (i) {
 					if (isType) { app.setType(choices[i].label); } else { app.select(headingKey, choices[i]); }
 					updateCaption(i);
@@ -288,6 +308,7 @@
 		v.render = function (quiet) {
 			if (!shell) { build(); }
 			if (carousel) { carousel.destroy(); carousel = null; }
+			if (hint) { hint.dismiss(); hint = null; }
 			body.innerHTML = '';
 			var scr = app.screen;
 			var formBox = null;

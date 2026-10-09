@@ -149,13 +149,20 @@
 
 /* 6. Action button ---------------------------------------------------------------- */
 .hd-sw-cta {
-  position: sticky; bottom: 0; z-index: 20;
-  margin: 12px -16px 0; padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
-  border: 0; border-radius: 0; width: calc(100% + 32px);
+  position: sticky; bottom: 12px; z-index: 20;
+  display: block; width: 100%; margin: 14px 0 12px; padding: 16px 20px;
+  border: 0; border-radius: 999px;
   background: var(--sw-accent); color: #fff;
   font: inherit; font-weight: 700; font-size: 1.02rem; cursor: pointer;
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, .08);
+  /* A pale ring lifts it off whatever scrolls beneath, so it reads as a button, not a bar. */
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, .92), 0 10px 24px rgba(29, 79, 63, .38);
 }
+.hd-sw-cta.is-pulse { animation: hd-sw-ctapulse 1.1s ease-out 1; }
+@keyframes hd-sw-ctapulse {
+  0%   { box-shadow: 0 0 0 6px rgba(255, 255, 255, .92), 0 10px 24px rgba(29, 79, 63, .38), 0 0 0 6px rgba(29, 79, 63, .5); }
+  100% { box-shadow: 0 0 0 6px rgba(255, 255, 255, .92), 0 10px 24px rgba(29, 79, 63, .38), 0 0 0 22px rgba(29, 79, 63, 0); }
+}
+.hd-sw-prompt { margin: 10px 0 0; text-align: center; font-size: .92rem; color: #33413b; }
 .hd-sw-cta[hidden] { display: none; }
 .hd-sw-cta:active { filter: brightness(.92); }
 
@@ -182,7 +189,7 @@
   .hd-sw { --sw-h: min(56vh, 480px); padding: 0 24px; }
   .hd-sw-holder { margin: 0; }
   .hd-sw-carousel__track { border-radius: 14px; }
-  .hd-sw-cta { position: static; margin: 16px 0 0; width: 100%; border-radius: 12px; padding: 16px 20px; }
+  .hd-sw-cta { position: static; margin: 16px 0 0; border-radius: 12px; box-shadow: none; }
   .hd-sw-stage { margin: 0 0 12px; border-radius: 14px; }
 }
 
@@ -210,3 +217,25 @@
   0%   { box-shadow: 0 6px 18px rgba(0, 0, 0, .16), 0 0 0 0 rgba(29, 79, 63, .45); }
   100% { box-shadow: 0 6px 18px rgba(0, 0, 0, .16), 0 0 0 16px rgba(29, 79, 63, 0); }
 }
+
+/* 11. Swipe helpers: arrows on the carousel and the hint pill ----------------------------- */
+.hd-sw-carousel { position: relative; }
+.hd-sw-carousel__arrow {
+  position: absolute; top: 42%; z-index: 150; transform: translateY(-50%);
+  width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255, 255, 255, .94); color: #161616; font-size: 26px; line-height: 1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .18);
+}
+.hd-sw-carousel__arrow--prev { left: 6px; }
+.hd-sw-carousel__arrow--next { right: 6px; }
+.hd-sw-carousel__arrow[hidden] { display: none; }
+.hd-sw-carousel__arrow:focus-visible { outline: 3px solid #7fb5a2; outline-offset: 2px; }
+.hd-sw-holder { position: relative; }
+.hd-sw-hint {
+  position: absolute; left: 50%; bottom: 54px; z-index: 160; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
+  background: rgba(22, 22, 22, .88); color: #fff; font-size: .9rem; font-weight: 600;
+  white-space: nowrap; pointer-events: none;
+}
+.hd-sw-hint__hand { display: inline-block; font-size: 1.2rem; animation: hd-sw-hand 1.3s ease-in-out infinite; }
+@keyframes hd-sw-hand { 0%, 100% { transform: translateX(7px); } 50% { transform: translateX(-9px); } }

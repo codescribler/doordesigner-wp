@@ -103,6 +103,7 @@ class HD_DD_Assets {
 			'carousel'    => array( 'carousel.js', array() ),
 			'doorcard'    => array( 'door-card.js', array( self::HANDLE . '-preview' ) ),
 			'swipeparts'  => array( 'swipe-parts.js', array() ),
+			'swipehint'   => array( 'swipe-hint.js', array() ),
 		);
 		foreach ( $swipe as $key => $def ) {
 			wp_register_script( self::HANDLE . '-' . $key, HD_DD_URL . 'assets/js/swipe/' . $def[0], $def[1], $ver_js, true );
@@ -110,7 +111,7 @@ class HD_DD_Assets {
 		wp_register_script(
 			self::HANDLE . '-swipeview',
 			HD_DD_URL . 'assets/js/swipe/swipe-view.js',
-			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-shared', self::HANDLE . '-enquiry', self::HANDLE . '-trust' ),
+			array( self::HANDLE . '-designindex', self::HANDLE . '-flowsteps', self::HANDLE . '-carousel', self::HANDLE . '-doorcard', self::HANDLE . '-swipeparts', self::HANDLE . '-swipehint', self::HANDLE . '-shared', self::HANDLE . '-enquiry', self::HANDLE . '-trust' ),
 			$ver_js,
 			true
 		);
