@@ -41,4 +41,12 @@ assert.ok(css.indexOf('.hd-sw-summary') !== -1 && css.indexOf('.hd-sw-price') !=
 assert.ok(css.indexOf('hd-dd__savebar') === -1, 'the save bar styles are removed');
 assert.ok(assets.indexOf("'-reviewsave'") !== -1, 'review-save.js is registered');
 
+// ---- Review fix round 1 ------------------------------------------------------------------
+assert.ok(/if \(!this\.focusSave\) \{[^}]*scrollIntoView/.test(app), 'go() does not scroll to the top when landing on the price form');
+assert.ok(view.indexOf("saver().saved() ? 'Get my exact price' : 'Email me my design'") !== -1, 'a returning saver gets the exact-price floating button');
+assert.ok(view.indexOf('image || window.HD_DD_Enquiry.snapshot(stageCanvas)') !== -1, 'the thank-you picture falls back to a fresh snapshot');
+assert.ok(view.indexOf('Sorry, the form could not load. Please reload the page.') !== -1 && view.indexOf('!!window.HD_DD_ReviewSave') !== -1, 'missing form module is handled');
+assert.ok(/onSaved: function \(result\) \{\s*setCta\(null\);\s*app\.savedToken/.test(view), 'the floating button is cleared first on save');
+assert.ok(/this\.savedToken = null;[\s\S]*this\.focusSave = false;[\s\S]*this\.view = /.test(app), 'saved state starts in the constructor');
+
 console.log('swipe-wiring.test.js: all assertions passed');

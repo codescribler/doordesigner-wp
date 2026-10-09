@@ -282,16 +282,16 @@
 					getCanvas: function () { return stageCanvas; },
 					experiment: function () { return app.experiment; },
 					onSaved: function (result) {
+						setCta(null);
 						app.savedToken = result.token;
 						app.funnel.step('saved');
 						app.track('door_saved');
-						setCta(null);
 					},
 					onQuoted: function (result, image) {
 						app.track('door_quote_submitted'); // the conversion event
 						app.funnel.lead();
 						app.lastResult = result;
-						app.lastImage = image;
+						app.lastImage = image || window.HD_DD_Enquiry.snapshot(stageCanvas);
 						app.go('done');
 					}
 				});
@@ -302,14 +302,14 @@
 		// On phones the form can start below the fold: a floating button takes them to it,
 		// and steps aside once the form itself is on screen.
 		function floatingSave(box) {
-			if (saver().saved()) { setCta(null); return; }
-			setCta('Email me my design', function () {
+			// A returning saver is already saved: their button leads to the price step.
+			setCta(saver().saved() ? 'Get my exact price' : 'Email me my design', function () {
 				window.HD_DD_Enquiry.scrollToForm(box, app.root);
 				saver().focus();
 			});
 			if (!('IntersectionObserver' in window)) { return; }
 			watch = new window.IntersectionObserver(function (entries) {
-				cta.hidden = saver().saved() || entries[entries.length - 1].isIntersecting;
+				cta.hidden = !cta.textContent || entries[entries.length - 1].isIntersecting;
 			}, { threshold: 0.35 });
 			watch.observe(box);
 		}
@@ -340,10 +340,12 @@
 
 			var box = el('div', 'hd-sw-savebox');
 			body.appendChild(box);
-			saver().render(box);
+			var formOk = !!window.HD_DD_ReviewSave;
+			if (formOk) { saver().render(box); }
+			else { box.textContent = 'Sorry, the form could not load. Please reload the page.'; setCta(null); }
 			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
 
-			floatingSave(box);
+			if (formOk) { floatingSave(box); }
 			if (app.focusSave) {
 				app.focusSave = false;
 				window.HD_DD_Enquiry.scrollToForm(box, app.root);

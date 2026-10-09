@@ -29,6 +29,10 @@
 		this.flow = opts.flow || 'swipe2';
 		this.filter = opts.doorType === 'Avantal' ? 'Aluminium' : 'All';
 		this.preferType = opts.doorType && opts.doorType !== 'Avantal' ? opts.doorType : null;
+		this.savedToken = null;   // the saved-design record this visit works on
+		this.lastResult = null;   // the quote response, for the thank-you screen
+		this.lastImage = null;    // the door picture for the thank-you screen
+		this.focusSave = false;   // landed from the email's price button: go straight to the form
 		this.view = window.HD_DD_SwipeView.create(this);
 		this.reset();
 	}
@@ -238,7 +242,10 @@
 		this.render();
 		this.track('door_step_' + key);
 		if (key === 'review') { this.funnel.step('review'); }
-		try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+		// Landing on the price form: the view scrolls to the form, so do not scroll to the top.
+		if (!this.focusSave) {
+			try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+		}
 	};
 
 	SwipeApp.prototype.next = function () {
