@@ -38,7 +38,7 @@ hd_exp_expose( array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' =
 $res = hd_exp_submit( array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' => 'challenger' ) );
 check( ! is_wp_error( $res ) && 201 === $res->get_status(), 'enquiry accepted' );
 $p = hd_exp_last_payload();
-check( isset( $p['experiment'] ) && array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' => 'challenger', 'flow' => 'swipe' ) === $p['experiment'], 'payload carries the experiment ref + its flow' );
+check( isset( $p['experiment'] ) && array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' => 'challenger', 'flow' => 'swipe2' ) === $p['experiment'], 'payload carries the experiment ref + its flow' );
 check( null !== $wpdb->visitors[ $exp['id'] . '|' . $vid ]['converted_at'], 'listener converted the visitor' );
 $converted_at = $wpdb->visitors[ $exp['id'] . '|' . $vid ]['converted_at'];
 
@@ -90,14 +90,14 @@ $wpdb->seed( $exp['id'], 'challenger', 1000, 50 );
 $e = new HD_DD_Experiments();
 $e->evaluate_current();
 $cur = HD_DD_Experiments::current();
-check( 'winner_found' === $cur['status'] && 'swipe' === $cur['decision']['winner'], 'cron marks winner_found' );
+check( 'winner_found' === $cur['status'] && 'swipe2' === $cur['decision']['winner'], 'cron marks winner_found' );
 check( ! empty( $cur['decided_at'] ) && true === $cur['emailed']['winner'], 'decided_at + emailed recorded' );
 $mail = $GLOBALS['hd_test_mail'];
 check( 1 === count( $mail ), 'one email sent' );
-check( $mail && 'Door designer A/B test: Swipe is the clear winner' === $mail[0]['subject'], 'winner subject (got "' . ( $mail ? $mail[0]['subject'] : '' ) . '")' );
+check( $mail && 'Door designer A/B test: Swipe 2 is the clear winner' === $mail[0]['subject'], 'winner subject (got "' . ( $mail ? $mail[0]['subject'] : '' ) . '")' );
 check( $mail && 'daniel@dreamfree.co.uk, hello@hertfordshiredoors.co.uk' === $mail[0]['to'], 'sent to the enquiry recipients' );
 $body = $mail ? $mail[0]['message'] : '';
-foreach ( array( 'Classic: 1000 visitors opened the designer, 20 enquiries (2.0% conversion)', 'Swipe: 1000 visitors opened the designer, 50 enquiries (5.0% conversion)', '100% chance', 'run for 30 days', 'admin.php?page=hd-dd-experiments', 'Make X the default', 'Expected loss if you pick Swipe: 0.00', 'Expected loss if you pick Classic: 2.99', 'For context: with about 4 leads a week' ) as $needle ) {
+foreach ( array( 'Classic: 1000 visitors opened the designer, 20 enquiries (2.0% conversion)', 'Swipe 2: 1000 visitors opened the designer, 50 enquiries (5.0% conversion)', '100% chance', 'run for 30 days', 'admin.php?page=hd-dd-experiments', 'Make X the default', 'Expected loss if you pick Swipe 2: 0.00', 'Expected loss if you pick Classic: 2.99', 'For context: with about 4 leads a week' ) as $needle ) {
 	check( false !== strpos( $body, $needle ), "email body contains \"$needle\"" );
 }
 $e->evaluate_current();

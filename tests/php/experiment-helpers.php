@@ -90,7 +90,7 @@ function hd_exp_reset() {
 }
 
 /** Start an experiment, optionally back-dated by $days_ago. */
-function hd_exp_start( $days_ago = 0, $control = 'classic', $challenger = 'swipe', $percent = 50 ) {
+function hd_exp_start( $days_ago = 0, $control = 'classic', $challenger = 'swipe2', $percent = 50 ) {
 	$exp = HD_DD_Experiments::start( $control, $challenger, $percent );
 	if ( $days_ago && is_array( $exp ) ) {
 		$exp['started_at'] = gmdate( 'Y-m-d H:i:s', time() - $days_ago * 86400 - 60 );

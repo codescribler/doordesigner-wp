@@ -23,7 +23,7 @@ hd_exp_reset();
 $exp = hd_exp_start();
 check( is_array( $exp ) && preg_match( '/^exp_\d{8}_[a-f0-9]{6}$/', $exp['id'] ), 'experiment id shape (got ' . ( is_array( $exp ) ? $exp['id'] : 'error' ) . ')' );
 check( 'running' === $exp['status'] && 50 === $exp['percent'], 'starts running at 50%' );
-check( is_wp_error( HD_DD_Experiments::start( 'classic', 'swipe' ) ), 'only one experiment at a time' );
+check( is_wp_error( HD_DD_Experiments::start( 'classic', 'swipe2' ) ), 'only one experiment at a time' );
 
 $res = hd_exp_expose( array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' => 'challenger' ) );
 check( 200 === $res->get_status() && true === $res->get_data()['ok'], 'valid exposure → ok:true' );
@@ -77,12 +77,12 @@ foreach ( $GLOBALS['hd_test_transients'] as $k => $t ) {
 // --- Front-end config ------------------------------------------------------------------------
 hd_exp_reset();
 check( array( 'default' => 'classic', 'experiment' => null ) === HD_DD_Experiments::front_config(), 'no experiment → default classic' );
-$GLOBALS['hd_test_options']['hd_dd_settings'] = array( 'default_flow' => 'swipe' );
-check( 'swipe' === HD_DD_Experiments::front_config()['default'], 'default follows the setting' );
+$GLOBALS['hd_test_options']['hd_dd_settings'] = array( 'default_flow' => 'swipe2' );
+check( 'swipe2' === HD_DD_Experiments::front_config()['default'], 'default follows the setting' );
 $GLOBALS['hd_test_options']['hd_dd_settings'] = array( 'default_flow' => 'bogus' );
 check( 'classic' === HD_DD_Experiments::front_config()['default'], 'an unregistered default falls back to classic' );
-$exp = hd_exp_start( 0, 'classic', 'swipe', 30 );
-check( array( 'id' => $exp['id'], 'control' => 'classic', 'challenger' => 'swipe', 'percent' => 30 ) === HD_DD_Experiments::front_config()['experiment'], 'experiment carried to the browser' );
+$exp = hd_exp_start( 0, 'classic', 'swipe2', 30 );
+check( array( 'id' => $exp['id'], 'control' => 'classic', 'challenger' => 'swipe2', 'percent' => 30 ) === HD_DD_Experiments::front_config()['experiment'], 'experiment carried to the browser' );
 check( is_wp_error( HD_DD_Experiments::start( 'classic', 'classic' ) ), 'control and challenger must differ' );
 
 // --- Cron scheduling --------------------------------------------------------------------------

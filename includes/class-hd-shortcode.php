@@ -51,7 +51,7 @@ class HD_DD_Shortcode {
 		}
 
 		// Only registered flows; anything else means "no override".
-		$flow = HD_DD_Experiments::is_flow( $atts['flow'] ) ? $atts['flow'] : '';
+		$flow = HD_DD_Experiments::canonical_flow( $atts['flow'] );
 
 		// Safety net: ensure assets are loaded even when rendered outside the_content.
 		$this->assets->enqueue();

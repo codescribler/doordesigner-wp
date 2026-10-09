@@ -19,7 +19,7 @@ class HD_DD_Experiments {
 	const OPTION      = 'hd_dd_experiment';
 	const HISTORY     = 'hd_dd_experiment_history';
 	const DB_OPTION   = 'hd_dd_experiments_db_version';
-	const DB_VERSION  = '1';
+	const DB_VERSION  = '2';
 	const CRON        = 'hd_dd_experiment_evaluate';
 	const RATE_LIMIT  = 30;   // exposes per IP …
 	const RATE_WINDOW = 3600; // … per hour.
@@ -35,9 +35,12 @@ class HD_DD_Experiments {
 	// -------------------------------------------------------------------
 	// Flows + state
 	// -------------------------------------------------------------------
+	/** Flows retired from use: old key => the flow that replaced it. Labels stay for history. */
+	const RETIRED = array( 'swipe' => 'swipe2' );
+
 	/** @return array flow key => label. */
 	public static function flows() {
-		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe' => 'Swipe' ) );
+		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe2' => 'Swipe 2' ) );
 	}
 
 	public static function is_flow( $flow ) {
@@ -47,6 +50,32 @@ class HD_DD_Experiments {
 	public static function flow_label( $flow ) {
 		$flows = self::flows();
 		return isset( $flows[ $flow ] ) ? (string) $flows[ $flow ] : ucfirst( (string) $flow );
+	}
+
+	/** A live flow key for any input: retired keys map to their replacement; '' if unknown. */
+	public static function canonical_flow( $flow ) {
+		$flow = is_string( $flow ) ? strtolower( trim( $flow ) ) : '';
+		if ( array_key_exists( $flow, self::RETIRED ) ) {
+			$flow = self::RETIRED[ $flow ];
+		}
+		return self::is_flow( $flow ) ? $flow : '';
+	}
+
+	/**
+	 * After an update that retires a flow: a running test naming it is ended (its numbers go
+	 * to history, because its challenger no longer exists), and a default pointing at it
+	 * moves to the replacement. Safe to run more than once.
+	 */
+	public static function migrate_flows() {
+		$exp = self::current();
+		if ( $exp && ( array_key_exists( (string) $exp['control'], self::RETIRED ) || array_key_exists( (string) $exp['challenger'], self::RETIRED ) ) ) {
+			self::end( 'stopped' );
+		}
+		$saved = get_option( 'hd_dd_settings', array() );
+		if ( is_array( $saved ) && isset( $saved['default_flow'] ) && is_string( $saved['default_flow'] ) && array_key_exists( $saved['default_flow'], self::RETIRED ) ) {
+			$saved['default_flow'] = self::RETIRED[ $saved['default_flow'] ];
+			update_option( 'hd_dd_settings', $saved );
+		}
 	}
 
 	/** The default flow setting, forced to a registered flow. */
@@ -368,6 +397,7 @@ class HD_DD_Experiments {
 	public static function maybe_upgrade() {
 		if ( get_option( self::DB_OPTION ) !== self::DB_VERSION ) {
 			self::create_table();
+			self::migrate_flows();
 			update_option( self::DB_OPTION, self::DB_VERSION, false );
 		}
 	}
