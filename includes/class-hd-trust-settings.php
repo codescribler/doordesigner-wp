@@ -1,8 +1,9 @@
 <?php
 /**
  * Review-step social proof: the Checkatrade rating line and real customer quotes shown
- * above "Save my design & get my price". Owns the Review-step settings (stored in the shared
- * hd_dd_settings option), their sanitising, and the shape handed to the browser.
+ * above the save form ("Email me my design"), and the guide price. Owns the Review-step
+ * settings (stored in the shared hd_dd_settings option), their sanitising, and the shape
+ * handed to the browser.
  * Nothing here is invented: with no quotes entered, no quote is shown.
  *
  * @package HD_Door_Designer
@@ -28,12 +29,12 @@ class HD_DD_Trust_Settings {
 	}
 
 	/**
-	 * Clean the four settings from a submitted form. A key missing from $input keeps its
+	 * Clean the Review-step settings (every key in defaults()) from a submitted form. A key missing from $input keeps its
 	 * current value; a key present but invalid becomes '' (which hides that element).
 	 *
 	 * @param array $input   Raw submitted settings.
 	 * @param array $current Current settings.
-	 * @return array The four trust keys.
+	 * @return array The Review-step keys.
 	 */
 	public static function sanitize( array $input, array $current ) {
 		$out = array();

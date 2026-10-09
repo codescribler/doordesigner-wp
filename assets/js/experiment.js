@@ -33,6 +33,13 @@
     return '';
   }
 
+  // Swipe 2 may only start when everything it needs is loaded: the render model and its
+  // scripts. A cached page from before an update can lack a script tag the new code relies
+  // on; those visitors get classic instead (boot.js), and are not counted.
+  function canRunSwipe(win, renderModel) {
+    return !!(renderModel && win && win.HD_DD_SwipeApp && win.HD_DD_ReviewSave && win.HD_DD_SwipeHint);
+  }
+
   // Flows a forced value may name: the built-in ones plus whatever the config mentions.
   function knownFlows(cfg) {
     var known = { classic: true, swipe2: true };
@@ -189,5 +196,5 @@
     return (a && a.counted && a.experimentId) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
   }
 
-  return { canonical: canonical, storedFlow: storedFlow, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
+  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
 }));

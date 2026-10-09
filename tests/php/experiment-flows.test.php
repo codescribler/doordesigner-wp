@@ -43,4 +43,35 @@ check( null !== HD_DD_Experiments::current(), 'a Classic vs Swipe 2 test keeps r
 check( array() === HD_DD_Experiments::history(), 'and nothing is added to history' );
 check( '2' === HD_DD_Experiments::DB_VERSION, 'version bumped so the migration runs on update' );
 
+// A stored test with keys missing (hand-edited or from an old version) is not a crash or a notice.
+hd_exp_reset();
+update_option( HD_DD_Experiments::OPTION, array( 'id' => 'exp_20260101_bbbbbb' ) );
+$notices = array();
+set_error_handler( function ( $no, $str ) use ( &$notices ) { $notices[] = $str; return true; } );
+HD_DD_Experiments::migrate_flows();
+restore_error_handler();
+check( array() === $notices, 'missing control/challenger raise nothing (got: ' . implode( ' | ', $notices ) . ')' );
+check( null !== HD_DD_Experiments::current() && array() === HD_DD_Experiments::history(), 'and that test is left as it is' );
+
+// The plugin update runs the migration once: maybe_upgrade() at schema version 1.
+hd_exp_reset();
+update_option( HD_DD_Experiments::DB_OPTION, '1' );
+$old = array(
+	'id' => 'exp_20261001_7d55ea', 'control' => 'classic', 'challenger' => 'swipe', 'percent' => 50,
+	'started_at' => '2026-10-01 14:13:32', 'status' => 'running', 'decided_at' => null, 'decision' => null,
+	'emailed' => array( 'winner' => false, 'no_difference' => false ), 'unattributed' => 0,
+);
+update_option( HD_DD_Experiments::OPTION, $old );
+update_option( 'hd_dd_settings', array( 'default_flow' => 'swipe' ) );
+HD_DD_Experiments::maybe_upgrade();
+check( 1 === count( $GLOBALS['hd_test_dbdelta'] ), 'the upgrade creates / updates the table' );
+check( null === HD_DD_Experiments::current() && 1 === count( HD_DD_Experiments::history() ), 'the upgrade ends the test that names the retired flow' );
+check( 'swipe2' === HD_DD_Plugin::settings()['default_flow'], 'and moves the default' );
+check( HD_DD_Experiments::DB_VERSION === get_option( HD_DD_Experiments::DB_OPTION ), 'the version is stored' );
+// A second load does nothing at all, even if there were something to migrate.
+update_option( HD_DD_Experiments::OPTION, $old );
+HD_DD_Experiments::maybe_upgrade();
+check( 1 === count( $GLOBALS['hd_test_dbdelta'] ), 'a second call does not touch the table' );
+check( null !== HD_DD_Experiments::current() && 1 === count( HD_DD_Experiments::history() ), 'and does not run the migration again' );
+
 hd_test_done( 'experiment-flows.test.php' );

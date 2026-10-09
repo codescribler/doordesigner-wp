@@ -17,4 +17,13 @@ check( 'enquiry' === HD_DD_Admin::list_kind( 'ENQUIRY' ), 'filter: enquiries, an
 check( '' === HD_DD_Admin::list_kind( 'drop table' ), 'anything else means everything' );
 check( '' === HD_DD_Admin::list_kind( array( 'save' ) ), 'an array means everything' );
 
+// The list shows the latest 200 rows; say so when there are more.
+check( 200 === HD_DD_Admin::LIST_LIMIT, 'the list shows 200 rows' );
+check( '' === HD_DD_Admin::limit_note( 0 ) && '' === HD_DD_Admin::limit_note( 200 ), 'no note while everything fits' );
+$note = HD_DD_Admin::limit_note( 201 );
+check( false !== strpos( $note, 'Showing the latest 200.' ), 'a note when the total is above 200 (got ' . $note . ')' );
+$counts = array( 'enquiry' => 250, 'save' => 30 );
+check( 280 === HD_DD_Admin::list_total( $counts, '' ) && 250 === HD_DD_Admin::list_total( $counts, 'enquiry' ) && 30 === HD_DD_Admin::list_total( $counts, 'save' ), 'the total follows the filter' );
+check( '' === HD_DD_Admin::limit_note( HD_DD_Admin::list_total( $counts, 'save' ) ), 'so a short filtered list has no note' );
+
 hd_test_done( 'admin-kind.test.php' );

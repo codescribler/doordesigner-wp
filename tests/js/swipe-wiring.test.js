@@ -21,7 +21,7 @@ assert.ok(/SwipeApp\.prototype\.browsed = function \(\) \{[^}]*this\.chosen/.tes
 assert.ok(/\.hd-sw-cta \{[^}]*border-radius: 999px/.test(css), 'the action button is a pill on phones');
 assert.ok(assets.indexOf("'swipehint'") !== -1, 'swipe-hint.js is registered');
 
-assert.ok(/addEventListener\('animationend', function \(\) \{ cta\.classList\.remove\('is-pulse'\)/.test(view), 'the pulse class is removed when the animation ends');
+assert.ok(/\['animationend', 'animationcancel'\]\.forEach\(function \(type\) \{\s*cta\.addEventListener\(type, function \(\) \{ cta\.classList\.remove\('is-pulse'\)/.test(view), 'the pulse class is removed when the animation ends or is cancelled');
 assert.ok(/if \(!app\.pulsedMove && app\.screen === 'design'\)/.test(view), 'the move pulse is gated on the design screen');
 assert.ok(/min-width: 820px\)[\s\S]*\.hd-sw-cta\.is-pulse \{ animation: none; \}/.test(css), 'no pulse ring on wider screens');
 
@@ -45,7 +45,22 @@ assert.ok(assets.indexOf("'-reviewsave'") !== -1, 'review-save.js is registered'
 assert.ok(view.indexOf("saver().saved() ? 'Get my exact price' : 'Email me my design'") !== -1, 'a returning saver gets the exact-price floating button');
 assert.ok(view.indexOf('image || window.HD_DD_Enquiry.snapshot(stageCanvas)') !== -1, 'the thank-you picture falls back to a fresh snapshot');
 assert.ok(view.indexOf('Sorry, the form could not load. Please reload the page.') !== -1 && view.indexOf('!!window.HD_DD_ReviewSave') !== -1, 'missing form module is handled');
-assert.ok(/onSaved: function \(result\) \{\s*setCta\(null\);\s*app\.savedToken/.test(view), 'the floating button is cleared first on save');
+assert.ok(/onSaved: function \(result\) \{\s*(\/\/[^\n]*\s*)*if \(app\.screen === 'review'\) \{ setCta\(null\); \}\s*app\.savedToken/.test(view), 'the floating button is cleared first on save, and only on Review');
+assert.ok(!/onSaved: function \(result\) \{\s*setCta\(null\)/.test(view), 'a late save reply never clears the button of another screen');
 assert.ok(/this\.savedToken = null;[\s\S]*this\.focusSave = false;[\s\S]*this\.view = /.test(app), 'saved state starts in the constructor');
+
+// ---- Final review fixes ---------------------------------------------------------------------
+var boot = read('assets/js/boot.js');
+assert.ok(boot.indexOf('.canRunSwipe(window, rm)') !== -1, 'boot asks experiment.js whether Swipe 2 can run');
+assert.ok(boot.indexOf('rm && window.HD_DD_SwipeApp)') === -1, 'the old one-script check is gone');
+assert.ok(app.indexOf('self.savedKind = res.body.kind') !== -1, 'the kind of an opened link is remembered');
+assert.ok(view.indexOf("alreadySent: app.savedKind === 'enquiry'") !== -1, 'a link to a sent design tells the form');
+assert.ok(/function floatingSave\(box\) \{\s*(\/\/[^\n]*\s*)*if \(saver\(\)\.alreadySent\(\)\) \{ setCta\(null\); return; \}/.test(view), 'no floating button when the design was already sent');
+var carousel = read('assets/js/swipe/carousel.js');
+var hintSrc = read('assets/js/swipe/swipe-hint.js');
+var saveSrc = read('assets/js/swipe/review-save.js');
+assert.ok(carousel.indexOf("'\\u2039'") !== -1 && carousel.indexOf("'\\u203a'") !== -1, 'carousel arrows are written as escapes');
+assert.ok(hintSrc.indexOf("'\\u261e'") !== -1, 'the hint hand is written as an escape');
+assert.ok(/^[\x00-\x7F]*$/.test(hintSrc) && /^[\x00-\x7F]*$/.test(saveSrc), 'swipe-hint.js and review-save.js are plain ASCII');
 
 console.log('swipe-wiring.test.js: all assertions passed');

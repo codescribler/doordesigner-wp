@@ -149,7 +149,7 @@
 		return list;
 	}
 
-	// "Abbott · Anthracite Grey · Satin glass · Chrome hardware" — the Review step's one-line
+	// "Abbott, Anthracite Grey, Satin glass, Chrome hardware" (joined with a middle dot): the Review step's one-line
 	// summary, from the same rows the full list shows.
 	function reviewSummary(rows) {
 		var by = {};

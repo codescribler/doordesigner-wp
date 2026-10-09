@@ -1,9 +1,13 @@
 <?php
 /**
- * Records every enquiry or save POST that did NOT end in a stored enquiry — validation
- * errors, an unrecoverable nonce failure, a database error — as a status=failed row
- * carrying whatever the customer typed, writes a line to the PHP error log, and emails
+ * Records every enquiry, save or price-request POST that did NOT end in a stored record —
+ * validation errors, an unrecoverable nonce failure, a database error — as a status=failed
+ * row carrying whatever the customer typed, writes a line to the PHP error log, and emails
  * the enquiry recipients so the customer can be called back.
+ *
+ * Watched routes: /enquiry, /save and /save/{token}/quote. The background design update
+ * (/save/{token}) is not one of them: the customer typed nothing there, and their saved
+ * design is still on record.
  *
  * Hooks rest_post_dispatch, which WordPress applies to EVERY REST response including
  * authentication failures raised before the route's own callbacks run.
@@ -50,11 +54,15 @@ class HD_DD_Failure_Log {
 		if ( ! ( $request instanceof WP_REST_Request ) || ! is_object( $response ) || ! method_exists( $response, 'get_status' ) ) {
 			return false;
 		}
-		if ( 'POST' !== $request->get_method() || ! preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/(enquiry|save(/[A-Za-z0-9]{10,64}(/quote)?)?)$#', (string) $request->get_route() ) ) {
+		if ( 'POST' !== $request->get_method() || ! preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/(enquiry|save|save/[A-Za-z0-9]{10,64}/quote)$#', (string) $request->get_route() ) ) {
 			return false;
 		}
 		$status = (int) $response->get_status();
 		if ( $status < 400 ) {
+			return false;
+		}
+		// Too many saves from one connection (HD_DD_Save): turned away on purpose, not a failure.
+		if ( 429 === $status ) {
 			return false;
 		}
 		// A stale or unknown token, or a design already sent, loses no customer and the body has
@@ -71,9 +79,9 @@ class HD_DD_Failure_Log {
 		return true;
 	}
 
-	/** The token in /save/{token}[/quote], or '' on /enquiry and /save. */
+	/** The token in /save/{token}/quote, or '' on /enquiry and /save. */
 	private function token_of( $request ) {
-		return preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/save/([A-Za-z0-9]{10,64})(/quote)?$#', (string) $request->get_route(), $m ) ? $m[1] : '';
+		return preg_match( '#^/' . preg_quote( HD_DD_REST_NS, '#' ) . '/save/([A-Za-z0-9]{10,64})/quote$#', (string) $request->get_route(), $m ) ? $m[1] : '';
 	}
 
 	private function record( $response, WP_REST_Request $request ) {

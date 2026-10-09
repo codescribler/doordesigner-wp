@@ -1,8 +1,8 @@
 // assets/js/swipe/swipe-app.js
 // The swipe flow's controller: state, navigation, analytics. Rendering lives in swipe-view.js.
 //
-// Order: showcase (pick a design) → door type (+ hinge) → colour → glass → handle (+ finish)
-// → letterplate → knocker → side panels → your door (save by email, then ask for a price). Choices are stored through
+// Order: showcase (pick a design) -> door type (+ hinge) -> colour -> glass -> handle (+ finish)
+// -> letterplate -> knocker -> side panels -> your door (save by email, then ask for a price). Choices are stored through
 // the classic HD_DD_Wizard, so validity rules, defaults and pruning are exactly the classic
 // flow's; the enquiry payload is identical.
 (function () {
@@ -30,6 +30,7 @@
 		this.filter = opts.doorType === 'Avantal' ? 'Aluminium' : 'All';
 		this.preferType = opts.doorType && opts.doorType !== 'Avantal' ? opts.doorType : null;
 		this.savedToken = null;   // the saved-design record this visit works on
+		this.savedKind = null;    // kind of the row a link opened: 'save', or 'enquiry' (already sent)
 		this.lastResult = null;   // the quote response, for the thank-you screen
 		this.lastImage = null;    // the door picture for the thank-you screen
 		this.focusSave = false;   // landed from the email's price button: go straight to the form
@@ -296,6 +297,8 @@
 			self.chosen = d;
 			self.setType(t, saved);
 			// Saved but no price asked for yet: carry on from step 2 on the same record.
+			// Already an enquiry: Review says we have it, until the design is changed.
+			self.savedKind = res.body.kind;
 			if (res.body.kind === 'save') { self.savedToken = token; }
 			// The email's "Get my exact price" button lands on the form itself.
 			self.focusSave = /[?&]price=1(&|#|$)/.test(String(window.location.search || ''));

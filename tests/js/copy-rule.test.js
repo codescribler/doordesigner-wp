@@ -42,4 +42,10 @@ assert.ok(enquiry.indexOf('only used to prepare') === -1, 'no line contradicting
 assert.ok(enquiry.indexOf('By saving you’re asking us for a price. We’ll use your details to send it and may get in touch about your door.') !== -1, 'consent line verbatim');
 assert.ok(enquiry.indexOf("'consent'") === -1 && enquiry.indexOf('hd-dd__consent') === -1, 'no consent tick left in the form');
 
+// The live form's consent line (the Review step's two-step form) is pinned too.
+var ReviewSave = require('../../assets/js/swipe/review-save.js');
+var consent = ReviewSave.COPY.consent;
+assert.strictEqual(consent, 'By asking for a price you’re agreeing we can use your details to send it and get in touch about your door.', 'live consent line verbatim');
+BANNED.forEach(function (re) { assert.ok(!re.test(consent), 'the live consent line passes the copy rule'); });
+
 console.log('copy-rule.test.js: all assertions passed');

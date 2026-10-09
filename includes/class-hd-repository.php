@@ -23,12 +23,36 @@ class HD_DD_Repository {
 	 * Run pending migrations on plugin UPDATE (the activation hook only fires on activate,
 	 * not on update). dbDelta is idempotent, so we only call it when the stored schema
 	 * version differs — cheap on every other load.
+	 *
+	 * The version is stored only once the columns this version adds are really there. If
+	 * dbDelta could not add them, the version stays behind: the next load tries again, and
+	 * insert() keeps to the old columns meanwhile so enquiries are still saved.
 	 */
 	public static function maybe_upgrade() {
-		if ( get_option( 'hd_dd_db_version' ) !== self::DB_VERSION ) {
+		if ( ! self::schema_current() ) {
 			self::create_table();
-			update_option( 'hd_dd_db_version', self::DB_VERSION, false );
+			if ( self::has_columns( array( 'kind', 'flow' ) ) ) {
+				update_option( 'hd_dd_db_version', self::DB_VERSION, false );
+			}
 		}
+	}
+
+	/** True when the stored schema version is this code's version. */
+	private static function schema_current() {
+		return get_option( 'hd_dd_db_version' ) === self::DB_VERSION;
+	}
+
+	/** True when every named column exists on the enquiries table. */
+	private static function has_columns( array $columns ) {
+		global $wpdb;
+		$table = self::table();
+		foreach ( $columns as $column ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+			if ( ! $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM {$table} LIKE %s", $column ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -88,26 +112,28 @@ class HD_DD_Repository {
 		$token     = $this->generate_token();
 		$now       = current_time( 'mysql' );
 
-		$ok = $wpdb->insert(
-			self::table(),
-			array(
-				'reference'         => $reference,
-				'token'             => $token,
-				'created_at'        => $now,
-				'status'            => ( isset( $data['status'] ) && '' !== $data['status'] ) ? $data['status'] : 'new',
-				'customer_name'     => $data['name'],
-				'customer_email'    => $data['email'],
-				'customer_phone'    => $data['telephone'],
-				'customer_postcode' => $data['postcode'],
-				'design_name'       => isset( $data['design_name'] ) ? (string) $data['design_name'] : '',
-				'kind'              => ( isset( $data['kind'] ) && 'save' === $data['kind'] ) ? 'save' : 'enquiry',
-				'flow'              => isset( $data['flow'] ) ? (string) $data['flow'] : '',
-				'design'            => wp_json_encode( $data['design'] ),
-				'payload'           => wp_json_encode( $data['payload'] ),
-				'source_ip'         => $data['source_ip'],
-			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+		$row = array(
+			'reference'         => $reference,
+			'token'             => $token,
+			'created_at'        => $now,
+			'status'            => ( isset( $data['status'] ) && '' !== $data['status'] ) ? $data['status'] : 'new',
+			'customer_name'     => $data['name'],
+			'customer_email'    => $data['email'],
+			'customer_phone'    => $data['telephone'],
+			'customer_postcode' => $data['postcode'],
+			'design_name'       => isset( $data['design_name'] ) ? (string) $data['design_name'] : '',
+			'kind'              => ( isset( $data['kind'] ) && 'save' === $data['kind'] ) ? 'save' : 'enquiry',
+			'flow'              => isset( $data['flow'] ) ? (string) $data['flow'] : '',
+			'design'            => wp_json_encode( $data['design'] ),
+			'payload'           => wp_json_encode( $data['payload'] ),
+			'source_ip'         => $data['source_ip'],
 		);
+		// The schema upgrade has not completed (see maybe_upgrade): keep to the columns that exist.
+		if ( ! self::schema_current() ) {
+			unset( $row['kind'], $row['flow'] );
+		}
+
+		$ok = $wpdb->insert( self::table(), $row, array_fill( 0, count( $row ), '%s' ) );
 
 		if ( false === $ok ) {
 			return new WP_Error( 'hd_dd_db_insert_failed', __( 'Could not save the enquiry.', 'hd-door-designer' ) );

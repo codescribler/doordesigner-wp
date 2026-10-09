@@ -26,7 +26,7 @@
 		pill.setAttribute('aria-hidden', 'true'); // the helper line above the carousel says the same
 		var hand = document.createElement('span');
 		hand.className = 'hd-sw-hint__hand';
-		hand.textContent = '☞';
+		hand.textContent = '\u261e';
 		var label = document.createElement('span');
 		label.className = 'hd-sw-hint__text';
 		label.textContent = text(!!o.touch);

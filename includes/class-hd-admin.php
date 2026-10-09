@@ -194,7 +194,7 @@ class HD_DD_Admin {
 			return;
 		}
 		$kind   = self::list_kind( isset( $_GET['kind'] ) ? wp_unslash( $_GET['kind'] ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read-only filter, sanitised in list_kind().
-		$rows   = $this->repository->list( 200, 0, $kind );
+		$rows   = $this->repository->list( self::LIST_LIMIT, 0, $kind );
 		$counts = $this->repository->count_by_kind();
 		$base   = admin_url( 'admin.php?page=' . self::MENU_SLUG );
 		?>
@@ -223,6 +223,7 @@ class HD_DD_Admin {
 				<input type="hidden" name="action" value="hd_dd_delete_enquiries" />
 				<?php wp_nonce_field( 'hd_dd_delete_enquiries' ); ?>
 				<p style="margin:8px 0;"><button type="submit" class="button hd-dd-delete-btn" style="color:#b32d2e;border-color:#b32d2e;"><?php esc_html_e( 'Delete selected', 'hd-door-designer' ); ?></button></p>
+				<?php echo self::limit_note( self::list_total( $counts, $kind ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in limit_note(). ?>
 				<table class="wp-list-table widefat fixed striped">
 					<thead>
 						<tr>
@@ -432,6 +433,25 @@ class HD_DD_Admin {
 	}
 
 	/** The list filter from the URL: 'save', 'enquiry', or '' for everything. */
+	/** Rows the list shows (the newest). */
+	const LIST_LIMIT = 200;
+
+	/** How many rows the current filter matches, from count_by_kind(). */
+	public static function list_total( array $counts, $kind ) {
+		$enquiries = isset( $counts['enquiry'] ) ? (int) $counts['enquiry'] : 0;
+		$saves     = isset( $counts['save'] ) ? (int) $counts['save'] : 0;
+		return 'save' === $kind ? $saves : ( 'enquiry' === $kind ? $enquiries : $enquiries + $saves );
+	}
+
+	/** A note for above the table when there are more rows than the list shows; '' otherwise. Escaped. */
+	public static function limit_note( $total ) {
+		if ( (int) $total <= self::LIST_LIMIT ) {
+			return '';
+		}
+		/* translators: %d: number of rows shown */
+		return '<p class="description">' . esc_html( sprintf( __( 'Showing the latest %d.', 'hd-door-designer' ), self::LIST_LIMIT ) ) . '</p>';
+	}
+
 	public static function list_kind( $raw ) {
 		$kind = is_string( $raw ) ? sanitize_key( $raw ) : '';
 		return in_array( $kind, array( 'save', 'enquiry' ), true ) ? $kind : '';

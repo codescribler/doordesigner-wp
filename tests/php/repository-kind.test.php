@@ -44,4 +44,31 @@ check( 0 === $repo->update_row( $b['id'], array( 'reference' => 'HACK' ) ), 'not
 check( array( 'enquiry' => 0, 'save' => 0 ) === $repo->count_by_kind(), 'count_by_kind always has both keys' );
 check( '4' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the columns are added on update' );
 
+// --- Schema upgrade: the version only moves once the new columns really exist (A4) ----------
+hd_test_reset();
+$repo = new HD_DD_Repository();
+update_option( 'hd_dd_db_version', '3' );
+$wpdb->columns = array( 'id', 'reference', 'token' ); // dbDelta ran but did not add kind / flow.
+HD_DD_Repository::maybe_upgrade();
+check( 1 === count( $GLOBALS['hd_test_dbdelta'] ), 'the upgrade runs dbDelta' );
+check( '3' === get_option( 'hd_dd_db_version' ), 'columns missing: the version is left alone' );
+$r = $repo->insert( hd_row( array( 'kind' => 'save', 'flow' => 'swipe2' ) ) );
+check( ! is_wp_error( $r ) && 1 === count( $wpdb->rows ) && 'jo@example.com' === $wpdb->rows[0]['customer_email'], 'an insert still succeeds on the old schema' );
+check( ! array_key_exists( 'kind', $wpdb->rows[0] ) && ! array_key_exists( 'flow', $wpdb->rows[0] ), 'and leaves out the columns that are not there' );
+check( count( $wpdb->last_insert_format ) === count( $wpdb->rows[0] ) - 1, 'one format per column written' );
+HD_DD_Repository::maybe_upgrade();
+check( 2 === count( $GLOBALS['hd_test_dbdelta'] ) && '3' === get_option( 'hd_dd_db_version' ), 'it tries again on the next load' );
+$wpdb->columns = array( 'id', 'reference', 'token', 'kind' );
+HD_DD_Repository::maybe_upgrade();
+check( '3' === get_option( 'hd_dd_db_version' ), 'one of the two columns is not enough' );
+$wpdb->columns = array( 'id', 'reference', 'token', 'kind', 'flow' );
+HD_DD_Repository::maybe_upgrade();
+check( HD_DD_Repository::DB_VERSION === get_option( 'hd_dd_db_version' ), 'columns present: the version is stored' );
+$repo->insert( hd_row( array( 'kind' => 'save', 'flow' => 'swipe2' ) ) );
+check( 'save' === $wpdb->rows[1]['kind'] && 'swipe2' === $wpdb->rows[1]['flow'], 'and inserts write kind and flow again' );
+check( count( $wpdb->last_insert_format ) === count( $wpdb->rows[1] ) - 1, 'one format per column written' );
+$calls = count( $GLOBALS['hd_test_dbdelta'] );
+HD_DD_Repository::maybe_upgrade();
+check( $calls === count( $GLOBALS['hd_test_dbdelta'] ), 'once current, nothing runs' );
+
 hd_test_done( 'repository-kind.test.php' );

@@ -49,7 +49,7 @@ function harness(over) {
   };
   var o = {
     api: h.api, cfg: { restUrl: 'https://example.test/wp-json/x/' }, flow: 'swipe2',
-    getDesign: function () { return h.design; }, getCanvas: function () { return null; },
+    getDesign: function () { if (h.designThrows) { throw new Error('no design'); } return h.design; }, getCanvas: function () { return null; },
     experiment: function () { return { experimentId: 'exp_1', visitorId: 'v', arm: 'challenger' }; },
     onSaved: function (r) { h.saved.push(r); }, onQuoted: function (r, img) { h.quoted.push([r, img]); }
   };
@@ -239,6 +239,111 @@ var OK_QUOTE = { ok: true, status: 200, body: { ok: true, reference: 'HD-1', tok
   submit(h.box);
   await tick();
   assert.strictEqual(paths(h).filter(function (p) { return p === QUOTE; }).length, 1, 'one quote');
+
+  // ---- Typed values are kept as they are typed, not only on submit (B3) ----------------------
+  function type(box, name, value) { var i = input(box, name); i.value = value; i.listeners.input(); }
+  h = harness();
+  type(h.box, 'email', 'jo@example.com');
+  h.rs.render(h.box); // an Edit round trip redraws the form
+  assert.strictEqual(input(h.box, 'email').value, 'jo@example.com', 'a typed email survives a redraw');
+  h = await savedOnStepTwo();
+  type(h.box, 'name', 'Jo Bloggs');
+  type(h.box, 'postcode', 'AL1 1AA');
+  type(h.box, 'telephone', '01234 567890');
+  h.rs.render(h.box);
+  assert.deepStrictEqual([input(h.box, 'name').value, input(h.box, 'postcode').value, input(h.box, 'telephone').value],
+    ['Jo Bloggs', 'AL1 1AA', '01234 567890'], 'typed step 2 values survive a redraw');
+
+  // ---- The saved row was sent from another tab: a 409 on the update goes back to step 1 (B2) ----
+  h = await savedOnStepTwo();
+  h.design = VINSON;
+  h.reply = function (path) { return path === UPDATE ? { ok: false, status: 409, body: { code: 'hd_dd_already_enquiry' } } : OK_QUOTE; };
+  h.rs.render(h.box);
+  await tick();
+  assert.deepStrictEqual(paths(h), ['save', UPDATE]);
+  assert.strictEqual(h.rs.saved(), false, 'the old record is let go');
+  assert.ok(input(h.box, 'email') && !input(h.box, 'name'), 'back on step 1');
+  assert.strictEqual(input(h.box, 'email').value, 'jo@example.com', 'with the email already filled in');
+  assert.ok(text(h.box).indexOf(RS.COPY.failed) === -1, 'and no error message');
+  h.reply = { ok: true, status: 201, body: { ok: true, reference: 'HD-2', token: 'tok2222222222' } };
+  submit(h.box);
+  await tick();
+  assert.strictEqual(h.calls[h.calls.length - 1][0], 'save', 'the changed design is saved as a new one');
+  assert.deepStrictEqual(h.calls[h.calls.length - 1][1].design, VINSON);
+  assert.strictEqual(h.rs.saved(), true);
+  // The same when the 409 arrives while the price button is waiting on the update.
+  h = await savedOnStepTwo();
+  h.design = VINSON;
+  h.reply = function (path) { return path === UPDATE ? { ok: false, status: 500, body: {} } : OK_QUOTE; };
+  h.rs.render(h.box);
+  await tick();
+  h.reply = function (path) { return path === UPDATE ? { ok: false, status: 409, body: {} } : OK_QUOTE; };
+  fillDetails(h);
+  submit(h.box);
+  await tick();
+  assert.strictEqual(paths(h).indexOf(QUOTE), -1, 'no quote is sent for a record that is no longer a save');
+  assert.ok(input(h.box, 'email'), 'step 1 again');
+  assert.ok(!find(h.box, 'hd-dd__submit').disabled, 'with a working button');
+  h.reply = { ok: true, status: 201, body: { ok: true, reference: 'HD-3', token: 'tok3333333333' } };
+  submit(h.box);
+  await tick();
+  assert.strictEqual(h.rs.saved(), true, 'and the form is not left locked');
+
+  // ---- A throw while preparing the price request does not wedge the button (B4) ---------------
+  h = await savedOnStepTwo();
+  fillDetails(h);
+  h.designThrows = true;
+  assert.doesNotThrow(function () { submit(h.box); });
+  await tick();
+  assert.strictEqual(find(h.box, 'hd-dd__submit').disabled, false, 'button usable after the throw');
+  assert.ok(text(h.box).indexOf(RS.COPY.failed) !== -1, 'the failed message shows');
+  assert.strictEqual(paths(h).indexOf(QUOTE), -1);
+  h.designThrows = false;
+  h.reply = OK_QUOTE;
+  submit(h.box);
+  await tick();
+  assert.strictEqual(h.quoted.length, 1, 'the next tap goes through');
+
+  // ---- A link to a design that was already sent (B1) -------------------------------------------
+  h = harness({ alreadySent: true });
+  assert.strictEqual(h.rs.alreadySent(), true);
+  assert.strictEqual(h.rs.saved(), false, 'nothing to save or price');
+  assert.ok(text(h.box).indexOf('We already have this design.') !== -1, 'heading');
+  assert.ok(text(h.box).indexOf('Your price is on its way. Change anything above and you can send us the new version.') !== -1, 'text');
+  assert.ok(!input(h.box, 'email') && !input(h.box, 'name') && !find(h.box, 'hd-dd__submit'), 'no form and no button');
+  assert.strictEqual(h.calls.length, 0, 'nothing is sent');
+  assert.doesNotThrow(function () { h.rs.focus(); });
+  // A changed design is a new design: step 1 as normal.
+  var sentDesign = h.design;
+  h.design = VINSON;
+  h.rs.render(h.box);
+  assert.strictEqual(h.rs.alreadySent(), false);
+  assert.ok(input(h.box, 'email'), 'a changed design shows step 1');
+  assert.ok(text(h.box).indexOf('We already have this design.') === -1);
+  // Changed back to what was sent: we still have that one.
+  h.design = sentDesign;
+  h.rs.render(h.box);
+  assert.strictEqual(h.rs.alreadySent(), true);
+  assert.ok(!input(h.box, 'email'));
+  // The changed design saves as a new record and carries on to step 2.
+  h.design = VINSON;
+  h.rs.render(h.box);
+  h.reply = OK_SAVE;
+  type(h.box, 'email', 'jo@example.com');
+  submit(h.box);
+  await tick();
+  assert.strictEqual(h.calls[0][0], 'save');
+  assert.ok(input(h.box, 'name'), 'on to step 2');
+  assert.strictEqual(h.rs.alreadySent(), false);
+  // "Design another door" forgets the sent design.
+  h = harness({ alreadySent: true });
+  h.rs.reset();
+  h.rs.render(h.box);
+  assert.strictEqual(h.rs.alreadySent(), false);
+  assert.ok(input(h.box, 'email'));
+  // Without the option nothing changes.
+  h = harness();
+  assert.strictEqual(h.rs.alreadySent(), false);
 
   // ---- Step 1 when the network drops ------------------------------------------------------------
   h = harness();

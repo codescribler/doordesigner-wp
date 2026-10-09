@@ -153,6 +153,19 @@ assert.deepStrictEqual([a.flow, a.arm, a.counted], ['swipe2', 'challenger', true
 a = X.assign(oldCfg, '', null, seq([0.9]), NOW);
 assert.deepStrictEqual([a.flow, a.arm, a.counted], ['classic', 'control', true]);
 
+// 12b) canRunSwipe(): Swipe 2 starts only when the render model and every script it needs are
+// there (a cached page from before an update can be missing a script tag).
+var ALL = { HD_DD_SwipeApp: function () {}, HD_DD_ReviewSave: {}, HD_DD_SwipeHint: {} };
+assert.strictEqual(typeof X.canRunSwipe, 'function', 'canRunSwipe is exported');
+assert.strictEqual(X.canRunSwipe(ALL, { any: 'model' }), true, 'everything loaded: Swipe 2 may start');
+assert.strictEqual(X.canRunSwipe(ALL, null), false, 'no render model');
+assert.strictEqual(X.canRunSwipe(null, { any: 'model' }), false, 'no window');
+Object.keys(ALL).forEach(function (k) {
+  var w = {};
+  Object.keys(ALL).forEach(function (j) { if (j !== k) { w[j] = ALL[j]; } });
+  assert.strictEqual(X.canRunSwipe(w, { any: 'model' }), false, 'missing ' + k + ': classic instead');
+});
+
 // 13) expose(): posts once per visitor per experiment; never throws.
 (async function () {
   var calls = [];

@@ -188,8 +188,9 @@ the dashboard cannot say whether people are failing to start.
 
 ### Funnel and events
 
-- Funnel `door-designer-v3`: the v2 step order up to `review` (15), then **`saved`** (16), then
-  the lead. There is no `details` step because the form no longer opens as a separate view.
+- Funnel `door-designer-v3`: `opened` (0) and `browsed` (1) come first, then the v2 step order
+  from `design` (2) up to `review` (16), then **`saved`** (17), then the lead. There is no
+  `details` step because the form no longer opens as a separate view.
 - Clarity events: `door_saved`, `door_quote_submitted` (unchanged name for the conversion).
 - The manager dashboard draws funnels and steps from whatever names arrive (v2 appeared without
   a manager change). To verify after release: the "Door designer v3" block appears, the `saved`
@@ -232,6 +233,8 @@ the dashboard cannot say whether people are failing to start.
 0. Release the manager app first and confirm "Push to dashboard now" still reads OK.
 1. Release the plugin; Daniel updates it in wp-admin. The running Classic vs Swipe test stops
    and is archived.
-2. Daniel tries `?flow=swipe2&notrack=1` on his phone and adds customer quotes in Settings.
-3. Daniel starts Classic vs Swipe 2 on the Experiments page.
-4. Check the dashboard shows the v3 funnel after the next nightly push.
+2. Purge the page cache (Hostinger and Cloudflare) so no visitor is served old page HTML with
+   new scripts.
+3. Daniel tries `?flow=swipe2&notrack=1` on his phone and adds customer quotes in Settings.
+4. Daniel starts Classic vs Swipe 2 on the Experiments page.
+5. Check the dashboard shows the v3 funnel after the next nightly push.

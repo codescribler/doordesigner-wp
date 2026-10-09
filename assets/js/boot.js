@@ -4,7 +4,7 @@
 //   • ?flow= or the shortcode's data-flow force a flow (testing — never counted in experiments)
 //   • else a running A/B experiment assigns the visitor to an arm (sticky, see experiment.js)
 //   • else the site's default flow (wp-admin setting)
-// Each flow reports to its own analytics funnel: classic → 'door-designer', swipe2 → 'door-designer-v3'.
+// Each flow reports to its own analytics funnel: classic -> 'door-designer', swipe2 -> 'door-designer-v3'.
 (function () {
 	'use strict';
 
@@ -54,7 +54,9 @@
 			}
 			// ?notrack=1 (remembered): the owner using the live designer — no analytics, no A/B counting.
 			var muted = !!(window.HD_DD_Funnel && window.HD_DD_Funnel.muted && window.HD_DD_Funnel.muted());
-			var canSwipe = !!(rm && window.HD_DD_SwipeApp);
+			// Swipe 2 needs the render model and all of its scripts (experiment.js canRunSwipe).
+			var X = window.HD_DD_Experiment;
+			var canSwipe = !!(X && X.canRunSwipe && X.canRunSwipe(window, rm));
 			var saved = null;
 			try { saved = new URLSearchParams(window.location.search).get('design'); } catch (e) { saved = null; }
 			var doorType = root.getAttribute('data-door-type') || '';
@@ -81,7 +83,8 @@
 			// The normal route: forced flow, else the A/B arm, else the site default.
 			function launchAssigned() {
 				var a = chooseFlow(root);
-				// The swipe flow draws every card from the render model; without it, fall back.
+				// The swipe flow draws every card from the render model; without it, or without
+				// one of its scripts, fall back to classic (not counted in the test).
 				var flow = (a.flow === 'swipe2' && canSwipe) ? 'swipe2' : 'classic';
 				var assignment = (!muted && a.counted && flow === a.flow) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
 				if (assignment && window.HD_DD_Experiment) { window.HD_DD_Experiment.expose(api, a); }

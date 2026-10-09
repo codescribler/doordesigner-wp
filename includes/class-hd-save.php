@@ -13,6 +13,9 @@ class HD_DD_Save {
 
 	const TOKEN = '(?P<token>[A-Za-z0-9]{10,64})';
 
+	const SAVE_LIMIT  = 20;   // saves per IP …
+	const SAVE_WINDOW = 3600; // … per hour. Each one sends two emails and stores a picture.
+
 	/** @var HD_DD_Repository */
 	private $repository;
 
@@ -72,6 +75,26 @@ class HD_DD_Save {
 		return new WP_Error( 'hd_dd_save_failed', __( 'Sorry, we could not save that. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
 	}
 
+	private function already_enquiry() {
+		return new WP_Error( 'hd_dd_already_enquiry', __( 'That design has already been sent to us.', 'hd-door-designer' ), array( 'status' => 409 ) );
+	}
+
+	/** Max SAVE_LIMIT saves per IP per fixed hour window (as HD_DD_Experiments limits exposes). */
+	private function within_save_limit() {
+		$key = 'hd_dd_save_' . md5( (string) $this->enquiry->client_ip() );
+		$hit = get_transient( $key );
+		$now = time();
+		if ( ! is_array( $hit ) || ! isset( $hit['n'], $hit['until'] ) || $hit['until'] <= $now ) {
+			$hit = array( 'n' => 0, 'until' => $now + self::SAVE_WINDOW );
+		}
+		if ( $hit['n'] >= self::SAVE_LIMIT ) {
+			return false;
+		}
+		$hit['n']++;
+		set_transient( $key, $hit, max( 1, $hit['until'] - $now ) );
+		return true;
+	}
+
 	private function invalid( array $fields ) {
 		return new WP_Error( 'hd_dd_validation', __( 'Please check the highlighted fields.', 'hd-door-designer' ), array( 'status' => 422, 'fields' => $fields ) );
 	}
@@ -101,6 +124,10 @@ class HD_DD_Save {
 		$design = $this->enquiry->resolve_design( ( isset( $p['design'] ) && is_array( $p['design'] ) ) ? $p['design'] : array() );
 		if ( empty( $design ) ) {
 			return $this->no_design();
+		}
+		// Only requests that would be stored count towards the limit; over it, nothing is stored or sent.
+		if ( ! $this->within_save_limit() ) {
+			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many saves from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );
 		}
 		// A filled hidden field is usually autofill on a real customer: keep it, flag it.
 		$flagged = ! empty( $p['hd_hp'] );
@@ -157,7 +184,7 @@ class HD_DD_Save {
 			return $this->not_found();
 		}
 		if ( 'save' !== ( isset( $row->kind ) ? $row->kind : 'enquiry' ) ) {
-			return new WP_Error( 'hd_dd_already_enquiry', __( 'That design has already been sent to us.', 'hd-door-designer' ), array( 'status' => 409 ) );
+			return $this->already_enquiry();
 		}
 		$p      = $this->params( $request );
 		$design = $this->enquiry->resolve_design( ( isset( $p['design'] ) && is_array( $p['design'] ) ) ? $p['design'] : array() );
@@ -169,13 +196,22 @@ class HD_DD_Save {
 		$payload = is_array( $payload ) ? $payload : array();
 		$payload['design']     = $design;
 		$payload['designName'] = $name;
+		// The design first, and only while the row is still a save (the write is guarded).
+		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'save' ) ) {
+			return $this->write_failed();
+		}
+		// 0 rows can mean "nothing changed" as well as "no longer a save", so look again: a row
+		// that became an enquiry meanwhile was not written, and its picture must not be replaced.
+		$fresh = $this->repository->get_by_token( (string) $row->token );
+		if ( ! $fresh || 'save' !== ( isset( $fresh->kind ) ? $fresh->kind : 'enquiry' ) ) {
+			return $this->already_enquiry();
+		}
 		$image = $this->enquiry->store_design_image( $row->reference, $this->text( $p, 'image' ) );
 		if ( $image ) {
 			$payload['image'] = $image['url'];
-		}
-		// Guarded: a row that became an enquiry meanwhile is left alone. 0 is an unchanged row, not a failure.
-		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'save' ) ) {
-			return $this->write_failed();
+			if ( false === $this->repository->update_row( $row->id, array( 'payload' => $payload ), 'save' ) ) {
+				return $this->write_failed();
+			}
 		}
 		return new WP_REST_Response( array( 'ok' => true ), 200 );
 	}

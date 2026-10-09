@@ -1,13 +1,16 @@
 // assets/js/swipe/review-save.js
 // The Review step's form in the swipe flow, in two small steps on one record:
-//   1. "Email me my design" — an email address only. The design is saved at once.
-//   2. "Get my exact price" — name and postcode (phone optional). This is the enquiry.
+//   1. "Email me my design": an email address only. The design is saved at once.
+//   2. "Get my exact price": name and postcode (phone optional). This is the enquiry.
 // If the design is changed after step 1, the saved record is updated the next time the
-// form is drawn. What the visitor typed is kept through failures and re-draws.
+// form is drawn. What the visitor typed is kept, as it is typed, through failures and re-draws.
 //
-//   var rs = HD_DD_ReviewSave.create({ api, cfg, flow, token, getDesign(), getCanvas(),
+// A link to a design that was already sent as an enquiry (alreadySent) shows a plain "we have
+// it" state until the design is changed; a changed design is saved as a new one.
+//
+//   var rs = HD_DD_ReviewSave.create({ api, cfg, flow, token, alreadySent, getDesign(), getCanvas(),
 //     experiment(), onSaved(result), onQuoted(result, imageDataUrl) });
-//   rs.render(container); rs.saved(); rs.focus(); rs.reset();
+//   rs.render(container); rs.saved(); rs.alreadySent(); rs.focus(); rs.reset();
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) { module.exports = factory(require('../enquiry.js')); }
 	else { root.HD_DD_ReviewSave = factory(root.HD_DD_Enquiry); }
@@ -28,6 +31,8 @@
 		noPostcode: 'Please enter your postcode.',
 		failed: 'Something went wrong. Please try again.',
 		expired: 'Your session had expired. Please reload the page and try again.',
+		sentTitle: 'We already have this design.',
+		sentText: 'Your price is on its way. Change anything above and you can send us the new version.',
 		preview: 'Preview mode \u2014 not sent.'
 	};
 
@@ -42,16 +47,18 @@
 	function validEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail(s)); }
 	function designKey(design) { return JSON.stringify(Enquiry.cleanDesign(design || {})); }
 
-	// One labelled input with its own error line.
-	function field(form, label, type, name, autocomplete, value, hint) {
+	// One labelled input with its own error line. What is typed is kept in store[name] as it
+	// is typed, so it is still there after the form is redrawn.
+	function field(form, store, label, type, name, autocomplete, hint) {
 		var row = el('label', 'hd-dd__form-row');
 		row.appendChild(el('span', 'hd-dd__form-label', label));
 		var input = document.createElement('input');
 		input.className = 'hd-dd__form-input';
 		input.type = type;
 		input.name = name;
-		input.value = value || '';
+		input.value = store[name] || '';
 		input.setAttribute('autocomplete', autocomplete);
+		input.addEventListener('input', function () { store[name] = input.value; });
 		row.appendChild(input);
 		if (hint) { row.appendChild(el('span', 'hd-sw-save__hint', hint)); }
 		var error = el('span', 'hd-dd__form-error');
@@ -64,6 +71,8 @@
 		var cfg = o.cfg || {};
 		var token = o.token || null;
 		var savedKey = token ? designKey(o.getDesign()) : null;
+		// Opened from a link to a design already sent as an enquiry: the design as it was sent.
+		var sentKey = (o.alreadySent && !token) ? designKey(o.getDesign()) : null;
 		var justSaved = false;   // saved in this visit (as opposed to opened from the emailed link)
 		var busy = false;
 		var pending = null;      // the design update in flight, if any
@@ -127,7 +136,7 @@
 			if (!cfg.restUrl) { statusEl.textContent = COPY.preview; return; }
 			busy = true;
 			btn.disabled = true;
-			statusEl.textContent = '…';
+			statusEl.textContent = '\u2026';
 			function finish(res) {
 				var ok = !!(res && res.ok && res.body && res.body.ok);
 				busy = false;
@@ -136,19 +145,17 @@
 				done(ok, res);
 			}
 			function go() { post(path, body).then(finish, function () { finish(null); }); }
+			function blocked() { busy = false; btn.disabled = false; statusEl.textContent = COPY.failed; }
 			if (!prep) { go(); return; }
-			prep().then(function (ready) {
-				if (ready) { go(); return; }
-				busy = false;
-				btn.disabled = false;
-				statusEl.textContent = COPY.failed;
-			});
+			var ready;
+			try { ready = Promise.resolve(prep()); } catch (e) { ready = Promise.reject(e); }   // a throw is a failed update
+			ready.then(function (ok) { if (ok) { go(); } else { blocked(); } }, blocked);
 		}
 
 		// ---- Step 1: email only -----------------------------------------------------------
 		function stepOne(container) {
 			var f = form(COPY.saveTitle);
-			var email = field(f, 'Email', 'email', 'email', 'email', values.email);
+			var email = field(f, values, 'Email', 'email', 'email', 'email');
 			first = email.input;
 			var hp = document.createElement('input'); // honeypot: bots fill it, people never see it
 			hp.type = 'text'; hp.name = 'hd_hp'; hp.className = 'hd-dd__hp'; hp.tabIndex = -1;
@@ -189,9 +196,9 @@
 			if (justSaved) { container.appendChild(el('div', 'hd-sw-save__done', COPY.savedLine)); }
 			var f = form(COPY.quoteTitle);
 			var fields = {
-				name: field(f, 'Your name', 'text', 'name', 'name', values.name),
-				postcode: field(f, 'Post code', 'text', 'postcode', 'postal-code', values.postcode, COPY.postcodeHint),
-				telephone: field(f, 'Phone (optional)', 'tel', 'telephone', 'tel', values.telephone)
+				name: field(f, values, 'Your name', 'text', 'name', 'name'),
+				postcode: field(f, values, 'Post code', 'text', 'postcode', 'postal-code', COPY.postcodeHint),
+				telephone: field(f, values, 'Phone (optional)', 'tel', 'telephone', 'tel')
 			};
 			first = fields.name.input;
 			var btn = button(f, COPY.quoteButton);
@@ -228,24 +235,47 @@
 			var p = post('save/' + encodeURIComponent(token), body).then(function (res) {
 				pending = null;
 				if (res && res.ok) { savedKey = key; return true; }
+				// Sent as an enquiry elsewhere (another tab): that record is closed, and this
+				// changed design starts again at step 1 as a new one.
+				if (res && res.status === 409) { token = null; savedKey = null; justSaved = false; if (box) { render(box); } }
 				return false;
 			}, function () { pending = null; return false; });
 			pending = p;
 			return p;
 		}
 
+		// True while the design on screen is the one we were already sent. A changed design is a
+		// new design, and is treated like any unsaved one.
+		function alreadySent() {
+			if (token || sentKey === null) { return false; }
+			try { return designKey(o.getDesign()) === sentKey; } catch (e) { return false; }
+		}
+
+		function sentState(container) {
+			var wrap = el('div', 'hd-sw-save__sent');
+			wrap.appendChild(el('div', 'hd-sw-save__title', COPY.sentTitle));
+			wrap.appendChild(el('div', 'hd-dd__form-trust', COPY.sentText));
+			container.appendChild(wrap);
+		}
+
 		function render(container) {
 			box = container;
+			first = null;
 			container.innerHTML = '';
-			if (token) { if (cfg.restUrl && !busy) { ensureCurrent(); } stepTwo(container); } else { stepOne(container); }
+			if (alreadySent()) { sentState(container); return; }
+			if (token) {
+				if (cfg.restUrl && !busy) { try { ensureCurrent(); } catch (e) { /* retried when they ask for the price */ } }
+				stepTwo(container);
+			} else { stepOne(container); }
 		}
 
 		return {
 			render: render,
 			saved: function () { return !!token; },
+			alreadySent: alreadySent,
 			focus: function () { if (first && first.focus) { first.focus(); } },
 			// "Design another door": a new design starts unsaved; what we know stays filled in.
-			reset: function () { token = null; savedKey = null; justSaved = false; image = null; }
+			reset: function () { token = null; savedKey = null; sentKey = null; justSaved = false; image = null; }
 		};
 	}
 

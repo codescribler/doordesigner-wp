@@ -52,7 +52,9 @@ function hd_test_reset() {
 	global $wpdb;
 	$wpdb                          = new HD_Test_WPDB();
 	$GLOBALS['hd_test_mail']       = array();
-	$GLOBALS['hd_test_options']    = array();
+	// The enquiries table starts on the current schema, as on a site that has finished upgrading.
+	$GLOBALS['hd_test_options']    = array( 'hd_dd_db_version' => HD_DD_Repository::DB_VERSION );
+	$GLOBALS['hd_test_dbdelta']    = array();
 	$GLOBALS['hd_test_transients'] = array();
 	$GLOBALS['hd_test_routes']     = array();
 	$GLOBALS['hd_test_hooks']      = array();
@@ -135,7 +137,11 @@ class WP_REST_Request implements ArrayAccess {
 
 class HD_Test_WPDB {
 	public $prefix = 'wp_'; public $insert_id = 0; public $rows = array(); public $last_error = '';
+	/** Opt-in: the column names SHOW COLUMNS … LIKE finds. null = every column exists. */
+	public $columns = null;
+	public $last_insert_format = null;
 	public function insert( $table, $data, $format = null ) {
+		$this->last_insert_format = $format;
 		$this->insert_id = count( $this->rows ) + 1;
 		$data['id']      = $this->insert_id;
 		$this->rows[]    = $data;
@@ -165,7 +171,12 @@ class HD_Test_WPDB {
 		return null;
 	}
 	public function get_results( $q ) { return array(); }
-	public function get_var( $q ) { return count( $this->rows ); }
+	public function get_var( $q ) {
+		if ( preg_match( "/^SHOW COLUMNS FROM \S+ LIKE '([^']*)'$/", $q, $m ) ) {
+			return ( null === $this->columns || in_array( $m[1], $this->columns, true ) ) ? $m[1] : null;
+		}
+		return count( $this->rows );
+	}
 	public function query( $q ) { return 0; }
 	public function get_charset_collate() { return ''; }
 }

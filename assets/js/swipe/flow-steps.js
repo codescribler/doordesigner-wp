@@ -40,7 +40,7 @@
 	var HINGE_SCREEN = { key: 'hinge', main: 'hinge', subs: [], short: 'hinge side',
 		title: 'Which side should it hinge?', help: 'Viewed from outside — the handle sits opposite the hinges.' };
 
-	// Wizard step key → door-designer-v2 funnel key, in the funnel's canonical order.
+	// Wizard step key → door-designer-v3 funnel key, in the funnel's canonical order.
 	var FUNNEL_KEYS = [
 		['__type__', 'type'], ['hinge', 'hinge'], ['extColour', 'colour'], ['intColour', 'intcolour'],
 		['glazing', 'glazing'], ['hardware', 'hardware'], ['handle', 'handle'], ['letterplate', 'letterplate'],

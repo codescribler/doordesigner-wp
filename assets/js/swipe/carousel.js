@@ -81,7 +81,7 @@
 		root.appendChild(live);
 		container.appendChild(root);
 
-		// ‹ › buttons: tapping works as well as swiping, and a mouse has something to press.
+		// Previous / next buttons: tapping works as well as swiping, and a mouse has something to press.
 		function arrow(dir, glyph, name) {
 			var b = el('button', 'hd-sw-carousel__arrow hd-sw-carousel__arrow--' + dir);
 			b.type = 'button';
@@ -91,8 +91,8 @@
 			root.appendChild(b);
 			return b;
 		}
-		var prevBtn = arrow('prev', '‹', 'Previous');
-		var nextBtn = arrow('next', '›', 'Next');
+		var prevBtn = arrow('prev', '\u2039', 'Previous');
+		var nextBtn = arrow('next', '\u203a', 'Next');
 
 		// A change the visitor made themselves (not one the app set).
 		function user(i) {

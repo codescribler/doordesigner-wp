@@ -35,7 +35,7 @@ class HD_DD_Experiments {
 	// -------------------------------------------------------------------
 	// Flows + state
 	// -------------------------------------------------------------------
-	/** Flows retired from use: old key => the flow that replaced it. Labels stay for history. */
+	/** Flows retired from use: old key => the flow that replaced it. History names an old key through flow_label()'s fallback. */
 	const RETIRED = array( 'swipe' => 'swipe2' );
 
 	/** @return array flow key => label. */
@@ -68,8 +68,13 @@ class HD_DD_Experiments {
 	 */
 	public static function migrate_flows() {
 		$exp = self::current();
-		if ( $exp && ( array_key_exists( (string) $exp['control'], self::RETIRED ) || array_key_exists( (string) $exp['challenger'], self::RETIRED ) ) ) {
-			self::end( 'stopped' );
+		if ( $exp ) {
+			// A stored test can lack a key (hand-edited, or from an older version): treat it as no flow.
+			$control    = ( isset( $exp['control'] ) && is_string( $exp['control'] ) ) ? $exp['control'] : '';
+			$challenger = ( isset( $exp['challenger'] ) && is_string( $exp['challenger'] ) ) ? $exp['challenger'] : '';
+			if ( array_key_exists( $control, self::RETIRED ) || array_key_exists( $challenger, self::RETIRED ) ) {
+				self::end( 'stopped' );
+			}
 		}
 		$saved = get_option( 'hd_dd_settings', array() );
 		if ( is_array( $saved ) && isset( $saved['default_flow'] ) && is_string( $saved['default_flow'] ) && array_key_exists( $saved['default_flow'], self::RETIRED ) ) {

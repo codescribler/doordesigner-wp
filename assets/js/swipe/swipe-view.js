@@ -35,7 +35,9 @@
 			body = el('div', 'hd-sw-body');
 			cta = el('button', 'hd-sw-cta');
 			cta.type = 'button';
-			cta.addEventListener('animationend', function () { cta.classList.remove('is-pulse'); });
+			['animationend', 'animationcancel'].forEach(function (type) {
+				cta.addEventListener(type, function () { cta.classList.remove('is-pulse'); });
+			});
 			shell.appendChild(head); shell.appendChild(stage); shell.appendChild(body); shell.appendChild(cta);
 			app.root.appendChild(shell);
 			if (window.HD_DD_Preview && app.model) {
@@ -138,7 +140,7 @@
 				Array.prototype.forEach.call(strip.children, function (c, j) { c.classList.toggle('is-on', j === i); });
 				var on = strip.children[i];
 				if (on) { strip.scrollLeft = Math.max(0, on.offsetLeft - strip.clientWidth / 2 + on.clientWidth / 2); }
-				setCta('Choose this door: ' + list[i].name + ' →', function () { app.pickDesign(list[i]); });
+				setCta('Choose this door: ' + list[i].name + ' \u2192', function () { app.pickDesign(list[i]); });
 			}
 			carousel = window.HD_DD_Carousel.create(holder, {
 				count: list.length, index: app.showcaseAt, ariaLabel: 'Door designs',
@@ -278,11 +280,13 @@
 			if (!save) {
 				save = window.HD_DD_ReviewSave.create({
 					api: app.api, cfg: CFG, flow: app.flow, token: app.savedToken || null,
+					alreadySent: app.savedKind === 'enquiry',
 					getDesign: function () { return app.design(); },
 					getCanvas: function () { return stageCanvas; },
 					experiment: function () { return app.experiment; },
 					onSaved: function (result) {
-						setCta(null);
+						// A slow reply can land after they tapped Back: that screen's button stays.
+						if (app.screen === 'review') { setCta(null); }
 						app.savedToken = result.token;
 						app.funnel.step('saved');
 						app.track('door_saved');
@@ -302,6 +306,8 @@
 		// On phones the form can start below the fold: a floating button takes them to it,
 		// and steps aside once the form itself is on screen.
 		function floatingSave(box) {
+			// A link to a design we already have: there is nothing to press.
+			if (saver().alreadySent()) { setCta(null); return; }
 			// A returning saver is already saved: their button leads to the price step.
 			setCta(saver().saved() ? 'Get my exact price' : 'Email me my design', function () {
 				window.HD_DD_Enquiry.scrollToForm(box, app.root);
@@ -375,6 +381,7 @@
 				enquiryCtl().renderSuccess(body, app.lastResult, function () {
 					if (save) { save.reset(); }
 					app.savedToken = null;
+					app.savedKind = null;
 					enquiryCtl().reset();
 					app.reset();
 					v.render();

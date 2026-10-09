@@ -240,29 +240,59 @@ listener, cron), `class-hd-experiment-stats.php` (the maths),
 `assets/js/experiment.js` (browser assignment). Data: option `hd_dd_experiment`
 (the live test), `hd_dd_experiment_history`, table `wp_hd_dd_experiment_visitors`.
 
-## Review step: save your design and get a price
+## Review step: email me my design, then get an exact price
 
-**This is the swipe flow only.** The classic flow is the control in the Classic vs Swipe
-A/B test, so it keeps the original Review step ("Get my free quote") and the original quote
-form (`assets/js/enquiry-quote.js`: name, telephone, email, postcode and a consent tick, all
+**This is Swipe 2 only** (`swipe2`, funnel `door-designer-v3`; `?flow=swipe` is an alias of
+`swipe2`). The classic flow is the control in the Classic vs Swipe 2 A/B test, so it keeps the
+original Review step ("Get my free quote") and the original quote form
+(`assets/js/enquiry-quote.js`: name, telephone, email, postcode and a consent tick, all
 required; it posts `form=quote` so the server applies those original rules and sends the
 original customer email). `tests/js/control-arm.test.js` guards this: while an A/B test is
 running, new Review-step work goes into the swipe flow, not the classic one.
 
-Swipe 2 (`swipe2`, funnel `door-designer-v3`) shows the door, a one-line summary, a guide price (Door Enquiries → Settings → Review step) and a two-step form: an email-only save (`POST /save`, stored with `kind = save`, not a lead), then name and postcode for an exact price (`POST /save/{token}/quote`, the same row becomes an enquiry and counts as the A/B conversion). `?flow=swipe` is an alias of `swipe2`. Both flows report an `opened` step when the designer first draws.
+The Swipe 2 Review step shows, from the top:
+
+1. The door picture ("Your door is ready").
+2. A one-line summary of the choices, with "See all options / edit" opening the full list.
+3. The guide price (one line of text, set in Settings).
+4. Proof: the Checkatrade rating line and a customer quote.
+5. The two-step form (`assets/js/swipe/review-save.js`):
+   - **Step 1, "Email me my design"**: an email address only. `POST /save` stores the design
+     with `kind = save`, emails the customer a link back to it and sends the owner a note.
+     A save is **not a lead**: it does not fire `hd_dd_enquiry_submitted` and does not count
+     as an A/B conversion. At most 20 saves an hour are accepted from one connection.
+   - **Step 2, "Get my exact price"**: name and postcode (phone optional).
+     `POST /save/{token}/quote` turns the same row into an enquiry (`kind = enquiry`), sends
+     the usual enquiry emails and is the lead and the A/B conversion.
+
+   If the design is changed after step 1, the saved row is updated (`POST /save/{token}`)
+   rather than a second row being made. A link to a design that was already sent as an
+   enquiry shows "We already have this design." until the design is changed; a changed
+   design starts again at step 1 as a new one.
+
+On phones a floating button ("Email me my design", or "Get my exact price" for someone who has
+already saved) scrolls to the form and steps aside once the form is on screen. There is no
+button above the door picture.
+
+Clarity events: `door_saved` (step 1) and `door_quote_submitted` (step 2, the conversion).
+Funnel steps: `review`, then `saved`, then the lead. Both flows report an `opened` step when
+the designer first draws.
+
+In wp-admin, Door Enquiries lists saves and enquiries together, with filters for each; a save
+carries a "Saved, no price requested" badge.
 
 **Door Enquiries → Settings → Review step** holds the Checkatrade rating (out of 10), review count,
 profile link and customer quotes (one per line: `Quote text | Name, Town`). Leave the
-rating or count empty to hide the rating line; with no quotes, no quote is shown.
+rating or count empty to hide the rating line; with no quotes, no quote is shown. The same
+section holds the guide price text; leave it empty to hide the line.
 
-The same button also appears **above the door picture** when the
-customer arrives on the step ("Your door is ready", the button, then the rating and "Free,
-no obligation"). It opens the same form, counts as the same funnel step, and disappears once
-the form is open. Each press sends a Clarity event, `door_save_top` or `door_save_bottom`, so
-the two can be compared.
-
-Files: `includes/class-hd-trust-settings.php`, `assets/js/trust.js`, `assets/js/enquiry.js`.
-Design: `docs/superpowers/specs/2026-10-01-save-design-and-price-design.md`.
+Files: `assets/js/swipe/review-save.js` (the form), `assets/js/swipe/swipe-view.js` (the
+screen), `assets/js/trust.js` (proof), `includes/class-hd-save.php` (the three `/save`
+routes), `includes/class-hd-save-mailer.php` (the save emails),
+`includes/class-hd-trust-settings.php` (settings). `assets/js/enquiry.js` is the older form
+module: Swipe 2 still uses its thank-you screen and its snapshot and scroll helpers, not its form.
+Design: `docs/superpowers/specs/2026-10-09-swipe-2-review-and-swipe-helpers-design.md`
+(the earlier `2026-10-01-save-design-and-price-design.md` describes the release this replaced).
 
 ## Tests
 
@@ -282,7 +312,7 @@ node tests/js/flow-steps.test.js      # swipe screens per door type + funnel eve
 node tests/js/carousel.test.js        # cover-flow maths (settle, window, placement)
 node tests/js/design-shared.test.js   # finish/furniture rules shared by both flows
 node tests/js/trust.test.js           # Review-step rating / quote / benefits block
-node tests/js/enquiry-form.test.js    # save form: fields, default design name, POST body
+node tests/js/enquiry-form.test.js    # older form module (enquiry.js), kept for the thank-you screen and snapshot helpers
 node tests/js/copy-rule.test.js       # no customer-facing text promises we won't phone
 node tests/js/control-arm.test.js     # the classic flow (A/B control) stays the original designer
 node tests/js/notrack.test.js         # ?notrack: owner visits never reach analytics

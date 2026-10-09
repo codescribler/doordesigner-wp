@@ -112,8 +112,43 @@ hd_test_reset();
 $save = hd_new_save();
 $repo = new HD_Rigged_Repo();
 $repo->flip_after_read = true;
-hd_api( $repo )->rest_update( hd_req( $save['token'], '', array( 'design' => hd_design( 'Rich Red' ) ) ) );
+$res = hd_api( $repo )->rest_update( hd_req( $save['token'], '', array( 'design' => hd_design( 'Rich Red' ) ) ) );
 check( false === strpos( hd_rows()[0]['design'], 'Rich Red' ), 'update never writes to a row that became an enquiry' );
+check( is_wp_error( $res ) && 409 === $res->get_error_data()['status'] && 'hd_dd_already_enquiry' === $res->get_error_code(), 'and says so (409), not ok' );
+
+// (e2) The picture: stored only after the row is known to still be a save (B6)
+function hd_png( $tag ) { return 'data:image/png;base64,' . base64_encode( "\x89PNG\r\n\x1a\n" . $tag ); }
+function hd_png_file( $reference ) { return wp_upload_dir()['basedir'] . '/hd-door-designer/enquiries/' . $reference . '.png'; }
+function hd_save_with_picture() {
+	$res = hd_api()->rest_save( hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'jo@example.com', 'design' => hd_design(), 'flow' => 'swipe2', 'image' => hd_png( 'first' ) ) ) );
+	return $res->get_data();
+}
+hd_test_reset();
+$save = hd_save_with_picture();
+$file = hd_png_file( $save['reference'] );
+check( is_file( $file ) && false !== strpos( file_get_contents( $file ), 'first' ), 'the save stores its picture' );
+// A normal update replaces the picture and keeps its address in the payload.
+$res = hd_api()->rest_update( hd_req( $save['token'], '', array( 'design' => hd_design( 'Rich Red' ), 'image' => hd_png( 'second' ) ) ) );
+check( ! is_wp_error( $res ) && 200 === $res->get_status(), 'an update with a picture is accepted' );
+check( false !== strpos( file_get_contents( $file ), 'second' ), 'the picture follows the door' );
+$payload = json_decode( hd_rows()[0]['payload'], true );
+check( ! empty( $payload['image'] ) && false !== strpos( $payload['image'], $save['reference'] . '.png' ) && 'Rich Red' === $payload['design']['Door Colour (External)']['label'], 'payload has the picture address and the new design' );
+// The row became an enquiry between read and write: its picture is not replaced.
+$repo = new HD_Rigged_Repo();
+$repo->flip_after_read = true;
+$res  = hd_api( $repo )->rest_update( hd_req( $save['token'], '', array( 'design' => hd_design( 'Sage' ), 'image' => hd_png( 'third' ) ) ) );
+check( is_wp_error( $res ) && 409 === $res->get_error_data()['status'], 'a losing update is a 409' );
+check( false !== strpos( file_get_contents( $file ), 'second' ), 'and never replaces the picture of an enquiry' );
+check( false !== strpos( hd_rows()[0]['design'], 'Rich Red' ), 'or its design' );
+// A failed write: 500, and the picture is not replaced either.
+hd_test_reset();
+$save = hd_save_with_picture();
+$file = hd_png_file( $save['reference'] );
+$repo = new HD_Rigged_Repo();
+$repo->update_result = false;
+$res  = hd_api( $repo )->rest_update( hd_req( $save['token'], '', array( 'design' => hd_design( 'Rich Red' ), 'image' => hd_png( 'second' ) ) ) );
+check( is_wp_error( $res ) && 500 === $res->get_error_data()['status'], 'a database error is a 500' );
+check( false !== strpos( file_get_contents( $file ), 'first' ), 'and the picture is left alone' );
 
 // (f) Failure log on token routes
 function hd_fail( $route, $response, array $body ) {
@@ -140,6 +175,24 @@ $rows = hd_rows();
 check( 2 === count( $rows ) && 'failed' === $rows[1]['status'], 'a quote 422 records a failed row' );
 check( 'jo@example.com' === $rows[1]['customer_email'] && false !== strpos( $rows[1]['payload'], $save['reference'] ), 'carrying the saver email and reference' );
 check( false !== strpos( end( $GLOBALS['hd_test_mail'] )['message'], 'jo@example.com' ), 'and the owner email shows who it was' );
+
+// A failed background design update is not a lost customer: nothing is recorded or emailed (B5).
+hd_test_reset();
+$save  = hd_new_save();
+$tok   = $save['token'];
+$base  = count( hd_rows() );
+$mails = count( $GLOBALS['hd_test_mail'] );
+$r422  = hd_test_error_to_response( hd_api()->rest_update( hd_req( $tok, '', array( 'design' => array() ) ) ) );
+check( 422 === $r422->get_status(), 'an update without a design is a 422' );
+hd_fail( '/save/' . $tok, $r422, array( 'design' => array() ) );
+check( count( hd_rows() ) === $base, 'an update 422 records nothing' );
+$repo = new HD_Rigged_Repo();
+$repo->update_result = false;
+$r500 = hd_test_error_to_response( hd_api( $repo )->rest_update( hd_req( $tok, '', array( 'design' => hd_design( 'Rich Red' ) ) ) ) );
+check( 500 === $r500->get_status(), 'a failed update write is a 500' );
+hd_fail( '/save/' . $tok, $r500, array( 'design' => hd_design( 'Rich Red' ) ) );
+check( count( hd_rows() ) === $base && $mails === count( $GLOBALS['hd_test_mail'] ), 'an update 500 records nothing and emails nobody' );
+check( '' === hd_test_error_log(), 'and writes no FAILED line to the log' );
 
 hd_test_reset();
 $r = hd_test_error_to_response( hd_api()->rest_save( hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'bad', 'design' => hd_design() ) ) ) );

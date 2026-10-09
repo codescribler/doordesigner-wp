@@ -155,4 +155,38 @@ $fail = hd_test_error_to_response( hd_save( array( 'email' => 'bad' ) ) );
 $log->maybe_record( $fail, null, hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'bad', 'design' => hd_design() ) ) );
 check( 1 === count( hd_rows() ) && 'failed' === hd_rows()[0]['status'], 'a failed save is logged like a failed enquiry' );
 
+// --- 10) Throttle: 20 saves an hour per connection ------------------------------------------
+hd_test_reset();
+for ( $i = 0; $i < 25; $i++ ) {
+	hd_save( array( 'email' => 'not-an-email' ) );
+}
+check( ! is_wp_error( hd_save() ), 'rejected attempts do not use up the allowance' );
+hd_test_reset();
+for ( $i = 1; $i <= 20; $i++ ) {
+	$res = hd_save( array( 'email' => "jo$i@example.com" ) );
+	check( ! is_wp_error( $res ) && 201 === $res->get_status(), "save $i of 20 is accepted" );
+}
+$rows  = count( hd_rows() );
+$mails = count( $GLOBALS['hd_test_mail'] );
+$saves = 0;
+add_action( 'hd_dd_design_saved', function () use ( &$saves ) { $saves++; }, 10, 2 );
+$res = hd_save( array( 'email' => 'jo21@example.com' ) );
+check( is_wp_error( $res ) && 'hd_dd_rate_limited' === $res->get_error_code() && 429 === $res->get_error_data()['status'], 'the 21st save in the hour is a 429' );
+check( is_wp_error( $res ) && 'Too many saves from this connection. Please try again later.' === $res->get_error_message(), 'with a plain message' );
+check( $rows === count( hd_rows() ) && $mails === count( $GLOBALS['hd_test_mail'] ) && 0 === $saves, 'and nothing is stored or sent' );
+if ( is_wp_error( $res ) ) {
+	$log = new HD_DD_Failure_Log( new HD_DD_Repository() );
+	$log->maybe_record( hd_test_error_to_response( $res ), null, hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'jo21@example.com', 'design' => hd_design() ) ) );
+	check( $rows === count( hd_rows() ) && $mails === count( $GLOBALS['hd_test_mail'] ), 'a throttled save is not logged as a failed submission' );
+}
+$_SERVER['REMOTE_ADDR'] = '203.0.113.6';
+check( ! is_wp_error( hd_save() ), 'another connection is not affected' );
+$_SERVER['REMOTE_ADDR'] = '203.0.113.5';
+$key = 'hd_dd_save_' . md5( '203.0.113.5' );
+check( isset( $GLOBALS['hd_test_transients'][ $key ] ), 'the count is kept in a transient for that connection' );
+if ( isset( $GLOBALS['hd_test_transients'][ $key ] ) ) {
+	$GLOBALS['hd_test_transients'][ $key ]['value']['until'] = time() - 1; // the hour has passed.
+	check( ! is_wp_error( hd_save() ), 'a new hour starts a new allowance' );
+}
+
 hd_test_done( 'save-endpoints.test.php' );
