@@ -42,4 +42,11 @@ assert.deepStrictEqual(C.dotWindow(0, 5, 9), [0, 4]);
 assert.deepStrictEqual(C.dotWindow(50, 93, 9), [46, 54]);
 assert.deepStrictEqual(C.dotWindow(92, 93, 9), [84, 92]);
 
+// Arrow buttons hide at the ends of the list.
+assert.deepStrictEqual(C.arrowState(0, 5), { prev: false, next: true });
+assert.deepStrictEqual(C.arrowState(2, 5), { prev: true, next: true });
+assert.deepStrictEqual(C.arrowState(4, 5), { prev: true, next: false });
+assert.deepStrictEqual(C.arrowState(0, 1), { prev: false, next: false });
+assert.deepStrictEqual(C.arrowState(0, 0), { prev: false, next: false });
+
 console.log('carousel.test.js: all assertions passed');

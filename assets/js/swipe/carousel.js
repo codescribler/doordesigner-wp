@@ -9,6 +9,7 @@
 //     renderCard(i, el),   // paint item i into el (called when a card enters the window)
 //     label(i),            // accessible + visible name of item i
 //     onChange(i),         // the centre item changed (after a swipe settles / a tap)
+//     onUser(),            // the visitor (not the app) changed the centre item
 //     ariaLabel            // e.g. 'Door colours'
 //   });
 //   c.setIndex(i); c.refresh(); c.index(); c.destroy();
@@ -55,7 +56,9 @@
 		return [start, start + max - 1];
 	}
 
-	var math = { clamp: clamp, windowRange: windowRange, settle: settle, cardStyle: cardStyle, dotWindow: dotWindow };
+	function arrowState(index, count) { return { prev: index > 0, next: index < count - 1 }; }
+
+	var math = { clamp: clamp, windowRange: windowRange, settle: settle, cardStyle: cardStyle, dotWindow: dotWindow, arrowState: arrowState };
 
 	// ---- DOM component ---------------------------------------------------------
 	function el(tag, cls) { var n = document.createElement(tag); if (cls) { n.className = cls; } return n; }
@@ -77,6 +80,26 @@
 		root.appendChild(dots);
 		root.appendChild(live);
 		container.appendChild(root);
+
+		// ‹ › buttons: tapping works as well as swiping, and a mouse has something to press.
+		function arrow(dir, glyph, name) {
+			var b = el('button', 'hd-sw-carousel__arrow hd-sw-carousel__arrow--' + dir);
+			b.type = 'button';
+			b.textContent = glyph;
+			b.setAttribute('aria-label', name);
+			b.addEventListener('click', function () { user(index + (dir === 'prev' ? -1 : 1)); });
+			root.appendChild(b);
+			return b;
+		}
+		var prevBtn = arrow('prev', '‹', 'Previous');
+		var nextBtn = arrow('next', '›', 'Next');
+
+		// A change the visitor made themselves (not one the app set).
+		function user(i) {
+			var before = index;
+			setIndex(i);
+			if (index !== before && o.onUser) { o.onUser(); }
+		}
 
 		function spacing() { return Math.max(90, track.clientWidth * 0.36); }
 
@@ -106,6 +129,9 @@
 				c.setAttribute('aria-label', o.label(i));
 			}
 			renderDots();
+			var st = arrowState(index, count);
+			prevBtn.hidden = !st.prev;
+			nextBtn.hidden = !st.next;
 		}
 
 		function renderDots() {
@@ -116,7 +142,7 @@
 				d.type = 'button';
 				d.tabIndex = -1;
 				d.setAttribute('aria-label', o.label(i));
-				(function (j) { d.addEventListener('click', function () { setIndex(j); }); })(i);
+				(function (j) { d.addEventListener('click', function () { user(j); }); })(i);
 				// Shrink the dots at the window's edges when the list continues beyond them.
 				if ((i === w[0] && w[0] > 0) || (i === w[1] && w[1] < count - 1)) { d.className += ' is-edge'; }
 				dots.appendChild(d);
@@ -154,14 +180,14 @@
 			var d = drag; drag = null;
 			if (!d.moved) {
 				var card = d.target && d.target.closest ? d.target.closest('.hd-sw-card') : null;
-				if (card) { setIndex(+card.getAttribute('data-i')); }
+				if (card) { user(+card.getAttribute('data-i')); }
 				return;
 			}
-			setIndex(settle(index, d.dx, d.v, spacing(), count));
+			user(settle(index, d.dx, d.v, spacing(), count));
 		}
 		function onKey(e) {
-			if (e.key === 'ArrowRight') { e.preventDefault(); setIndex(index + 1); }
-			else if (e.key === 'ArrowLeft') { e.preventDefault(); setIndex(index - 1); }
+			if (e.key === 'ArrowRight') { e.preventDefault(); user(index + 1); }
+			else if (e.key === 'ArrowLeft') { e.preventDefault(); user(index - 1); }
 		}
 		function onResize() { layout(0); }
 
