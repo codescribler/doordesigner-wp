@@ -81,7 +81,7 @@
     var cfg = flowCfg || {};
     rand = typeof rand === 'function' ? rand : Math.random;
     now = typeof now === 'number' ? now : Date.now();
-    var result = { flow: cfg['default'] || 'classic', experimentId: null, arm: null, visitorId: null, counted: false, store: null, exposed: false };
+    var result = { flow: canonical(cfg['default']) || 'classic', experimentId: null, arm: null, visitorId: null, counted: false, store: null, exposed: false };
 
     if (forced && knownFlows(cfg)[forced]) { result.flow = forced; return result; }
 
@@ -101,7 +101,7 @@
       result.visitorId = hexFromRand(rand);
       result.store = { experimentId: exp.id, arm: result.arm, visitorId: result.visitorId, assignedAt: now };
     }
-    result.flow = exp[result.arm];
+    result.flow = canonical(exp[result.arm]);
     return result;
   }
 
@@ -144,7 +144,7 @@
       return a;
     } catch (e) {
       var cfg = flowCfg || {};
-      return { flow: cfg['default'] || 'classic', experimentId: null, arm: null, visitorId: null, counted: false, store: null, exposed: false };
+      return { flow: canonical(cfg['default']) || 'classic', experimentId: null, arm: null, visitorId: null, counted: false, store: null, exposed: false };
     }
   }
 

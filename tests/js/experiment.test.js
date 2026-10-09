@@ -25,7 +25,7 @@ var brokenStorage = {
 
 // 1) No experiment → the default flow, not counted.
 var a = X.assign({ 'default': 'swipe', experiment: null }, '', null, Math.random, NOW);
-assert.strictEqual(a.flow, 'swipe');
+assert.strictEqual(a.flow, 'swipe2');
 assert.strictEqual(a.counted, false);
 assert.strictEqual(a.store, null);
 assert.strictEqual(a.experimentId, null);
@@ -44,7 +44,7 @@ assert.strictEqual(X.assign(CFG, '', null, seq([0.5]), NOW).arm, 'control', 'ran
 
 // 3) A fresh assignment: counted, flow from the arm, a store record with a hex visitor id.
 a = X.assign(CFG, '', null, seq([0.1, 0.3, 0.7]), NOW);
-assert.strictEqual(a.flow, 'swipe');
+assert.strictEqual(a.flow, 'swipe2');
 assert.strictEqual(a.arm, 'challenger');
 assert.strictEqual(a.counted, true);
 assert.ok(HEX32.test(a.visitorId), 'visitor id is 32 lowercase hex');
@@ -127,8 +127,7 @@ assert.deepStrictEqual(X.enquiryRef(a), { experimentId: EXP.id, visitorId: a.vis
 assert.strictEqual(X.enquiryRef(X.assign(CFG, 'swipe2', null)), null, 'forced → no ref');
 assert.strictEqual(X.enquiryRef(null), null);
 
-// 12) expose(): posts once per visitor per experiment; never throws.
-// ---- Swipe 2: the old swipe key is an alias; saved designs reopen in their own flow ----
+// 12) Swipe 2: the old swipe key is an alias; saved designs reopen in their own flow.
 var EX = require('../../assets/js/experiment.js');
 assert.strictEqual(EX.canonical('swipe'), 'swipe2');
 assert.strictEqual(EX.canonical(' Swipe '), 'swipe2');
@@ -145,6 +144,16 @@ assert.strictEqual(EX.storedFlow({ flow: '' }, true), '', "old rows: caller keep
 assert.strictEqual(EX.storedFlow(null, true), '');
 assert.strictEqual(EX.storedFlow({ flow: 'made-up' }, true), '');
 
+// A config still naming the retired key resolves to swipe2, and is still counted.
+assert.strictEqual(X.assign({ 'default': 'swipe', experiment: null }, '', null, Math.random, NOW).flow, 'swipe2');
+assert.strictEqual(X.resolve({ 'default': 'swipe', experiment: null }, '', { storage: null }).flow, 'swipe2');
+var oldCfg = { 'default': 'classic', experiment: { id: EXP.id, control: 'classic', challenger: 'swipe', percent: 50 } };
+a = X.assign(oldCfg, '', null, seq([0.1]), NOW);
+assert.deepStrictEqual([a.flow, a.arm, a.counted], ['swipe2', 'challenger', true]);
+a = X.assign(oldCfg, '', null, seq([0.9]), NOW);
+assert.deepStrictEqual([a.flow, a.arm, a.counted], ['classic', 'control', true]);
+
+// 13) expose(): posts once per visitor per experiment; never throws.
 (async function () {
   var calls = [];
   function api(res) { return function (path, opts) { calls.push([path, opts]); return Promise.resolve(res); }; }
