@@ -16,7 +16,7 @@
 	function create(app) {
 		var v = {};
 		var shell = null, back, progressEl, counter, stage, stageCanvas, body, cta;
-		var carousel = null, compositor = null, enquiry = null, hint = null, save = null, watch = null;
+		var carousel = null, compositor = null, enquiry = null, hint = null, save = null, watch = null, saveBox = null;
 
 		function build() {
 			app.root.innerHTML = '';
@@ -345,12 +345,14 @@
 			else { box.textContent = 'Sorry, the form could not load. Please reload the page.'; setCta(null); }
 			body.appendChild(el('div', 'hd-dd__disclaimer', 'We make every effort to show your door accurately, but this preview is an impression, not a perfect representation of the finished product.'));
 
+			saveBox = box;
 			if (formOk) { floatingSave(box); }
-			if (app.focusSave) {
-				app.focusSave = false;
-				window.HD_DD_Enquiry.scrollToForm(box, app.root);
-			}
 		}
+
+		// Bring the save form into view (the app asks for this after rendering Review).
+		v.scrollToSave = function () {
+			if (saveBox) { window.HD_DD_Enquiry.scrollToForm(saveBox, app.root); }
+		};
 
 		v.loading = function () { if (!shell) { build(); } body.textContent = I18N.loadingDesign || 'Loading your saved design…'; };
 
@@ -360,6 +362,7 @@
 			if (hint) { hint.dismiss(); hint = null; }
 			if (watch) { watch.disconnect(); watch = null; }
 			body.innerHTML = '';
+			saveBox = null;
 			var scr = app.screen;
 			shell.className = 'hd-dd hd-sw hd-sw--' + (scr === 'design' || scr === 'review' || scr === 'done' ? scr : 'option');
 			back.hidden = scr === 'design' || scr === 'done';

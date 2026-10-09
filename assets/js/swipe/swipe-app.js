@@ -239,13 +239,14 @@
 		this.screen = key;
 		var sc = this.currentScreen();
 		if (sc) { this.ensureDefaults(sc); }
+		// Decided here, once, before rendering: arriving from the email's price button ends at the form.
+		var landOnForm = key === 'review' && this.focusSave;
+		this.focusSave = false;
 		this.render();
 		this.track('door_step_' + key);
 		if (key === 'review') { this.funnel.step('review'); }
-		// Landing on the price form: the view scrolls to the form, so do not scroll to the top.
-		if (!this.focusSave) {
-			try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
-		}
+		if (landOnForm) { this.view.scrollToSave(); return; }
+		try { this.root.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
 	};
 
 	SwipeApp.prototype.next = function () {
