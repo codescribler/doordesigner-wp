@@ -37,8 +37,8 @@ class HD_DD_Repository {
 		}
 	}
 
-	/** True when the stored schema version is this code's version. */
-	private static function schema_current() {
+	/** True when the stored schema version is this code's version (the new columns exist). */
+	public static function schema_current() {
 		return get_option( 'hd_dd_db_version' ) === self::DB_VERSION;
 	}
 

@@ -125,6 +125,12 @@ class HD_DD_Save {
 		if ( empty( $design ) ) {
 			return $this->no_design();
 		}
+		// The kind column is what makes a row a save. Until the database upgrade has added it, a
+		// save would be stored as an enquiry and its price request quietly ignored, so refuse
+		// instead: the failure log emails the business and the customer is asked to try again.
+		if ( ! HD_DD_Repository::schema_current() ) {
+			return new WP_Error( 'hd_dd_save_unavailable', __( 'Sorry, we could not save your design. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
+		}
 		// Only requests that would be stored count towards the limit; over it, nothing is stored or sent.
 		if ( ! $this->within_save_limit() ) {
 			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many saves from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );

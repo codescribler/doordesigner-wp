@@ -30,8 +30,9 @@ class HD_DD_Activator {
 			);
 		}
 
-		// Store the schema version so future activations can run migrations.
-		update_option( 'hd_dd_db_version', HD_DD_Repository::DB_VERSION );
+		// Store the schema version (only once the columns it needs exist) so later loads can
+		// run migrations.
+		HD_DD_Repository::maybe_upgrade();
 
 		flush_rewrite_rules();
 	}

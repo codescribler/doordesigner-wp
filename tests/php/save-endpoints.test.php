@@ -189,4 +189,25 @@ if ( isset( $GLOBALS['hd_test_transients'][ $key ] ) ) {
 	check( ! is_wp_error( hd_save() ), 'a new hour starts a new allowance' );
 }
 
+// --- 10) Database not upgraded yet: a save fails loudly instead of being stored as an enquiry ---
+hd_test_reset();
+update_option( 'hd_dd_db_version', '3' ); // the kind / flow columns are not there yet.
+$res = hd_save();
+check( is_wp_error( $res ) && 500 === $res->get_error_data()['status'], 'a save is refused while the database upgrade is pending' );
+check( array() === hd_rows() && array() === $GLOBALS['hd_test_mail'], 'nothing is stored or sent to the saver' );
+$log = new HD_DD_Failure_Log( new HD_DD_Repository() );
+$log->maybe_record( hd_test_error_to_response( $res ), null, hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'jo@example.com', 'design' => hd_design() ) ) );
+check( 1 === count( hd_rows() ) && 'failed' === hd_rows()[0]['status'] && 'jo@example.com' === hd_rows()[0]['customer_email'], 'and it is logged as a failed submission with their email, so the owner hears about it' );
+
+// Activation stamps the schema version only through the same column check.
+hd_test_reset();
+update_option( 'hd_dd_db_version', '3' );
+$GLOBALS['wpdb']->columns = array( 'id', 'reference', 'token' );
+require_once HD_DD_DIR . 'includes/class-hd-activator.php';
+if ( ! function_exists( 'flush_rewrite_rules' ) ) {
+	function flush_rewrite_rules() {}
+}
+HD_DD_Activator::activate();
+check( '3' === get_option( 'hd_dd_db_version' ), 'activation does not claim the new schema when the columns are missing' );
+
 hd_test_done( 'save-endpoints.test.php' );
