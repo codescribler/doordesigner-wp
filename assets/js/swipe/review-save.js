@@ -66,13 +66,18 @@
 		var savedKey = token ? designKey(o.getDesign()) : null;
 		var justSaved = false;   // saved in this visit (as opposed to opened from the emailed link)
 		var busy = false;
+		var pending = null;      // the design update in flight, if any
 		var box = null;
 		var first = null;        // the first input on screen, for focus()
 		var image = null;        // the door snapshot sent with the save, for the thank-you screen
 		var values = { email: '', name: '', postcode: '', telephone: '' };
 
 		function pageUrl() { return o.pageUrl || (window.location.origin + window.location.pathname); }
-		function post(path, body) { return o.api(path, { method: 'POST', body: JSON.stringify(body) }); }
+		// A throw from the api counts as a failed request.
+		function post(path, body) {
+			try { return Promise.resolve(o.api(path, { method: 'POST', body: JSON.stringify(body) })); }
+			catch (e) { return Promise.reject(e); }
+		}
 		function snapshot() {
 			var s = Enquiry.snapshot(o.getCanvas ? o.getCanvas() : null);
 			if (s) { image = s; }
@@ -117,18 +122,27 @@
 		}
 
 		// Send one request with the button locked, then hand the reply to done(ok, res).
-		function send(btn, statusEl, path, body, done) {
+		// prep (optional) returns a promise of true when the request may go ahead.
+		function send(btn, statusEl, path, body, done, prep) {
 			if (!cfg.restUrl) { statusEl.textContent = COPY.preview; return; }
 			busy = true;
 			btn.disabled = true;
-			statusEl.textContent = '\u2026';
+			statusEl.textContent = '…';
 			function finish(res) {
+				var ok = !!(res && res.ok && res.body && res.body.ok);
+				busy = false;
+				if (!ok) { btn.disabled = false; }   // on success the caller moves on; keep it locked
+				statusEl.textContent = '';
+				done(ok, res);
+			}
+			function go() { post(path, body).then(finish, function () { finish(null); }); }
+			if (!prep) { go(); return; }
+			prep().then(function (ready) {
+				if (ready) { go(); return; }
 				busy = false;
 				btn.disabled = false;
-				statusEl.textContent = '';
-				done(!!(res && res.ok && res.body && res.body.ok), res);
-			}
-			post(path, body).then(finish, function () { finish(null); });
+				statusEl.textContent = COPY.failed;
+			});
 		}
 
 		// ---- Step 1: email only -----------------------------------------------------------
@@ -148,6 +162,7 @@
 			f.addEventListener('submit', function (e) {
 				e.preventDefault();
 				if (busy) { return; }
+				if (token) { render(box); return; }   // already saved: never a second row
 				values.email = cleanEmail(email.input.value);
 				email.error.textContent = '';
 				if (!validEmail(values.email)) { email.error.textContent = COPY.badEmail; return; }
@@ -162,7 +177,7 @@
 					token = res.body.token;
 					savedKey = key;
 					justSaved = true;
-					if (o.onSaved) { o.onSaved(res.body); }
+					try { if (o.onSaved) { o.onSaved(res.body); } } catch (err) { /* the form still moves on */ }
 					if (box) { render(box); }
 				});
 			});
@@ -196,27 +211,33 @@
 				send(btn, statusEl, 'save/' + encodeURIComponent(token) + '/quote', body, function (ok, res) {
 					if (!ok) { fail(res, fields, statusEl); return; }
 					if (o.onQuoted) { o.onQuoted(res.body, image); }
-				});
+				}, ensureCurrent);
 			});
 			container.appendChild(f);
 		}
 
-		// The design was changed after it was saved: bring the saved record up to date.
-		function sync() {
+		// Make sure the saved record matches the design on screen. Resolves true when it does.
+		// One update at a time; a failed update resolves false and is retried by the next call.
+		function ensureCurrent() {
 			var key = designKey(o.getDesign());
-			if (key === savedKey || busy || !cfg.restUrl) { return; }
-			savedKey = key;
+			if (pending) { return pending.then(function (ok) { return ok ? ensureCurrent() : false; }); }
+			if (key === savedKey) { return Promise.resolve(true); }
 			var body = { design: Enquiry.cleanDesign(o.getDesign()) };
 			var shot = snapshot();
 			if (shot) { body.image = shot; }
-			function retryLater() { savedKey = null; }
-			post('save/' + encodeURIComponent(token), body).then(function (res) { if (!(res && res.ok)) { retryLater(); } }, retryLater);
+			var p = post('save/' + encodeURIComponent(token), body).then(function (res) {
+				pending = null;
+				if (res && res.ok) { savedKey = key; return true; }
+				return false;
+			}, function () { pending = null; return false; });
+			pending = p;
+			return p;
 		}
 
 		function render(container) {
 			box = container;
 			container.innerHTML = '';
-			if (token) { sync(); stepTwo(container); } else { stepOne(container); }
+			if (token) { if (cfg.restUrl && !busy) { ensureCurrent(); } stepTwo(container); } else { stepOne(container); }
 		}
 
 		return {

@@ -103,6 +103,7 @@ var OK_QUOTE = { ok: true, status: 200, body: { ok: true, reference: 'HD-1', tok
   // Empty name: a message, no request.
   submit(h.box);
   assert.strictEqual(h.calls.length, 1);
+  assert.ok(text(h.box).indexOf('Please enter your name.') !== -1, 'empty name gets a message');
 
   // Server rejects the postcode: the message lands on that field and the typed values stay.
   h.reply = { ok: false, status: 422, body: { message: 'Please check the highlighted fields.', data: { fields: { postcode: 'Please enter a valid UK postcode.' } } } };
@@ -181,6 +182,97 @@ var OK_QUOTE = { ok: true, status: 200, body: { ok: true, reference: 'HD-1', tok
   h.rs.render(h.box);
   assert.strictEqual(h.rs.saved(), false);
   assert.strictEqual(input(h.box, 'email').value, 'jo@example.com');
+
+  // ---- Edit, then ask for the price: the update goes first, then the quote ---------------------
+  async function savedOnStepTwo() {
+    var x = harness();
+    x.reply = OK_SAVE;
+    input(x.box, 'email').value = 'jo@example.com';
+    submit(x.box);
+    await tick();
+    return x;
+  }
+  function fillDetails(x) { input(x.box, 'name').value = 'Jo Bloggs'; input(x.box, 'postcode').value = 'AL1 1AA'; }
+  function paths(x) { return x.calls.map(function (c) { return c[0]; }); }
+  var UPDATE = 'save/tok1234567890', QUOTE = 'save/tok1234567890/quote';
+  var VINSON = { 'Door Design': { label: 'Vinson', id: 2 } };
+
+  h = await savedOnStepTwo();
+  var release;
+  var gate = new Promise(function (r) { release = r; });
+  h.design = VINSON;
+  h.reply = function (path) { return path === UPDATE ? gate : OK_QUOTE; };
+  h.rs.render(h.box);
+  fillDetails(h);
+  submit(h.box);
+  await tick();
+  assert.deepStrictEqual(paths(h), ['save', UPDATE], 'the quote waits for the update');
+  release({ ok: true, status: 200, body: { ok: true } });
+  await tick();
+  assert.deepStrictEqual(paths(h), ['save', UPDATE, QUOTE], 'update first, then quote');
+  assert.strictEqual(h.quoted.length, 1);
+  assert.strictEqual(find(h.box, 'hd-dd__submit').disabled, true, 'stays disabled after a successful quote');
+
+  // The update fails: no quote, a message, values kept; a second tap retries the update then quotes.
+  h = await savedOnStepTwo();
+  h.design = VINSON;
+  h.reply = function (path) { return path === UPDATE ? { ok: false, status: 500, body: {} } : OK_QUOTE; };
+  h.rs.render(h.box);
+  fillDetails(h);
+  submit(h.box);
+  await tick();
+  assert.deepStrictEqual(paths(h), ['save', UPDATE], 'no quote after a failed update');
+  assert.ok(text(h.box).indexOf(RS.COPY.failed) !== -1, 'the failed message shows');
+  assert.strictEqual(input(h.box, 'name').value, 'Jo Bloggs', 'typed values kept');
+  assert.strictEqual(find(h.box, 'hd-dd__submit').disabled, false, 'button re-enabled');
+  h.reply = function (path) { return path === UPDATE ? { ok: true, status: 200, body: { ok: true } } : OK_QUOTE; };
+  submit(h.box);
+  await tick();
+  assert.deepStrictEqual(paths(h), ['save', UPDATE, UPDATE, QUOTE], 'the retry sends the update, then the quote');
+  assert.strictEqual(h.quoted.length, 1);
+
+  // A double tap on the quote button sends one quote.
+  h = await savedOnStepTwo();
+  h.reply = OK_QUOTE;
+  fillDetails(h);
+  submit(h.box);
+  submit(h.box);
+  await tick();
+  assert.strictEqual(paths(h).filter(function (p) { return p === QUOTE; }).length, 1, 'one quote');
+
+  // ---- Step 1 when the network drops ------------------------------------------------------------
+  h = harness();
+  h.reply = new Error('offline');
+  input(h.box, 'email').value = 'jo@example.com';
+  submit(h.box);
+  await tick();
+  assert.ok(text(h.box).indexOf(RS.COPY.failed) !== -1);
+  assert.strictEqual(input(h.box, 'email').value, 'jo@example.com');
+  assert.strictEqual(h.rs.saved(), false);
+
+  // ---- An expired session -----------------------------------------------------------------------
+  global.window.HD_DD_ApiClient = { isNonceFailure: function () { return true; } };
+  h = harness();
+  h.reply = { ok: false, status: 403, body: {} };
+  input(h.box, 'email').value = 'jo@example.com';
+  submit(h.box);
+  await tick();
+  delete global.window.HD_DD_ApiClient;
+  assert.ok(text(h.box).indexOf(RS.COPY.expired) !== -1, 'expired-session message');
+
+  // ---- A throwing api, and a throwing onSaved, do not wedge the form -------------------------------
+  h = harness({ api: function () { throw new Error('boom'); } });
+  input(h.box, 'email').value = 'jo@example.com';
+  submit(h.box);
+  await tick();
+  assert.strictEqual(find(h.box, 'hd-dd__submit').disabled, false, 'button usable after a throw');
+  assert.ok(text(h.box).indexOf(RS.COPY.failed) !== -1);
+  h = harness({ onSaved: function () { throw new Error('boom'); } });
+  h.reply = OK_SAVE;
+  input(h.box, 'email').value = 'jo@example.com';
+  submit(h.box);
+  await tick();
+  assert.ok(input(h.box, 'name'), 'still moves to step 2');
 
   // ---- QA harness (no REST URL): nothing is posted -----------------------------------------
   h = harness({ cfg: {} });
