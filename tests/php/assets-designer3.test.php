@@ -67,7 +67,7 @@ $missing = array();
 hd_test_order( $H . '-boot', $order, $missing );
 check( array() === $missing, 'every dependency of boot is registered (missing: ' . implode( ', ', $missing ) . ')' );
 $pos = array_flip( $order );
-$d3  = array( 'd3defaults', 'd3frame', 'd3hotspots', 'd3nudge', 'd3save', 'd3screens', 'd3toolbox', 'd3framestep', 'd3callback', 'd3aftersave' );
+$d3  = array( 'd3defaults', 'd3frame', 'd3hotspots', 'd3nudge', 'd3save', 'd3typeart', 'd3screens', 'd3toolbox', 'd3framestep', 'd3callback', 'd3aftersave' );
 $use = array( 'trust', 'enquiry', 'reviewsave', 'swipeparts', 'shared', 'wizard', 'stepcfg', 'rendermodel', 'preview', 'funnel', 'apiclient' );
 foreach ( array_merge( $d3, $use ) as $k ) {
 	check( isset( $pos[ $H . '-' . $k ] ) && $pos[ $H . '-' . $k ] < $pos[ $H . '-d3app' ], "$k loads before d3app" );
@@ -78,6 +78,7 @@ foreach ( $d3 as $k ) {
 // Load-time needs: the hotspots read the render model, the save box reads review-save + enquiry.
 check( isset( $pos[ $H . '-rendermodel' ], $pos[ $H . '-d3hotspots' ] ) && $pos[ $H . '-rendermodel' ] < $pos[ $H . '-d3hotspots' ], 'render model before the hotspots' );
 check( isset( $pos[ $H . '-reviewsave' ], $pos[ $H . '-d3save' ] ) && $pos[ $H . '-reviewsave' ] < $pos[ $H . '-d3save' ], 'review-save before the save box' );
+check( isset( $pos[ $H . '-d3typeart' ], $pos[ $H . '-d3screens' ] ) && $pos[ $H . '-d3typeart' ] < $pos[ $H . '-d3screens' ], 'type art before the screens' );
 // The other flows still boot.
 foreach ( array( $H, $H . '-swipeapp', $H . '-experiment' ) as $h ) {
 	check( in_array( $h, $scripts[ $H . '-boot' ]['deps'], true ), "boot still depends on $h" );

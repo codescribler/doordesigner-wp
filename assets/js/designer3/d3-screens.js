@@ -42,11 +42,14 @@
 		if (help) { shell.appendChild(el('p', 'hd-d3-help', help)); }
 	}
 
+	// `img` is a picture URL, or { svg: '<svg…>' } for a drawn outline.
 	function card(label, sub, img, on, onPick) {
 		var b = el('button', 'hd-d3-card' + (on ? ' is-on' : ''));
 		b.type = 'button';
 		var media = el('span', 'hd-d3-card__media');
-		if (img) {
+		if (img && img.svg) {
+			media.innerHTML = img.svg;
+		} else if (img) {
 			var im = el('img');
 			im.alt = ''; im.loading = 'lazy';
 			im.onerror = function () { if (im.parentNode) { im.parentNode.removeChild(im); } };
@@ -65,8 +68,10 @@
 		header(app, shell, COPY.typeTitle, '', null);
 		var grid = el('div', 'hd-d3-grid hd-d3-grid--types');
 		app.types().forEach(function (t) {
+			// Style-neutral outlines (as Classic's first step), so Double and Stable do not look like a single slab.
+			var art = W.HD_DD_D3TypeArt && W.HD_DD_D3TypeArt.svg(t);
 			var first = (app.cv.byType[t].fields['Door Design'] || [])[0];
-			var img = first && P() ? P().blankThumb(app.assetBase(), app.model, t, first.label) : null;
+			var img = art ? { svg: art } : (first && P() ? P().blankThumb(app.assetBase(), app.model, t, first.label) : null);
 			grid.appendChild(card(short(t), P() ? P().TYPE_DESC[t] : '', img, t === app.type(), function () { app.select('Door Type', t); }));
 		});
 		shell.appendChild(grid);
