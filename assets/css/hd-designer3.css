@@ -42,7 +42,7 @@
 /* 2. Type and style cards ------------------------------------------------------- */
 .hd-d3-grid { display: grid; gap: 12px; margin: 8px 0 24px; }
 .hd-d3-grid--types { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.hd-d3-grid--styles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hd-d3-grid--styles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .hd-d3-card {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 10px 8px 12px; border: 1px solid var(--d3-line); border-radius: 10px;
@@ -52,7 +52,7 @@
 .hd-d3-card:hover { border-color: var(--muted, #8a8e96); }
 .hd-d3-card.is-on { border-color: var(--d3-accent); box-shadow: 0 0 0 2px var(--d3-accent); }
 .hd-d3-card__media { display: flex; align-items: center; justify-content: center; width: 100%; height: 150px; background: linear-gradient(#f7f6f3, #ebe9e4); border-radius: 6px; }
-.hd-d3-grid--styles .hd-d3-card__media { height: 130px; }
+.hd-d3-grid--styles .hd-d3-card__media { height: 260px; }
 .hd-d3-card__media img { max-width: 92%; max-height: 92%; object-fit: contain; }
 .hd-d3-card__label { font-weight: 700; font-size: .95rem; }
 .hd-d3-card__sub { font-size: .8rem; color: #5b6068; line-height: 1.3; }
@@ -175,7 +175,6 @@
 /* 6. Wider screens ------------------------------------------------------------------- */
 @media (min-width: 560px) {
   .hd-d3-grid--types { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .hd-d3-grid--styles { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
 @media (min-width: 720px) {
   .hd-d3-door { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 24px; align-items: start; }
@@ -255,6 +254,13 @@
   .hd-d3-framepick__drawing { flex-basis: 132px; }
 }
 
-/* Double-door style tile: both leaves composited from layers (see d3-screens.js doubleTile). */
+/* Double-door style tile: both leaves composited from layers (see d3-screens.js styleTile). */
 .hd-d3-card__door { position: relative; display: block; height: 92%; max-width: 92%; }
 .hd-d3-card__layer { position: absolute; max-width: none; max-height: none; object-fit: fill; pointer-events: none; }
+
+/* Style screen: big door pictures, 2 per row on phones, 3 on tablets, 4 on desktop. */
+@media (min-width: 600px) { .hd-d3-grid--styles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .hd-d3-grid--styles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hd-d3-grid--styles .hd-d3-card__media { height: 300px; }
+}
