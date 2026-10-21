@@ -19,9 +19,16 @@ function top(counts) {
 	return best;
 }
 
+// A pre-picked door is complete: an absent handle or letterplate is never popular data.
+var ABSENT = /^no (handle|letterplate)$/i;
+
 function tally(list, field) {
 	var c = {};
-	list.forEach(function (d) { var v = clean(d[field]); if (v) { c[v] = (c[v] || 0) + 1; } });
+	list.forEach(function (d) {
+		var v = clean(d[field]);
+		if (v && (field === 'handle' || field === 'letterplate') && ABSENT.test(v)) { return; }
+		if (v) { c[v] = (c[v] || 0) + 1; }
+	});
 	return c;
 }
 
@@ -83,6 +90,12 @@ function selfTest() {
 	assert.strictEqual(out.fallback.colour, 'Black', 'colour fallback = most popular overall');
 	var pulls = build([mk('A', 'Pull'), mk('A', 'Pull'), { type: 'Single Door', style: 'A', letterplate: 'No Letterplate', knocker: 'Bee' }, { type: 'Single Door', style: 'A', letterplate: 'No Letterplate', knocker: 'Bee' }], 'T');
 	assert.deepStrictEqual([pulls.fallback.handle, pulls.fallback.hardware, pulls.fallback.letterplate, pulls.fallback.knocker], ['Lever/Lever', 'Chrome', 'Letterplate', 'No Knocker'], 'fixed fallbacks ignore popularity');
+	var nl = function (lp) { return { type: 'Single Door', style: 'N', handle: 'No Handle ', letterplate: lp }; };
+	var absent = build([nl('No Letterplate'), nl('no letterplate '), nl('Letterplate')], 'T');
+	assert.strictEqual(absent['Single Door'], undefined, 'absent parts and singletons leave no entry');
+	var real = build([nl('No Letterplate'), nl('No Letterplate'), nl('Letterplate'), nl('Letterplate')], 'T');
+	assert.strictEqual(real['Single Door'].N.letterplate, 'Letterplate', 'next real part wins');
+	assert.strictEqual(real['Single Door'].N.handle, undefined);
 	var empty = build([], 'T');
 	assert.deepStrictEqual(empty.fallback, NO_DATA);
 	var cat = { 'Single Door': { fields: { Handle: { choices: [{ label: 'Pull' }] }, 'Door Colour (External)': { choices: [] } }, knockerByStyle: {} } };

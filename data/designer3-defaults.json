@@ -1,5 +1,5 @@
 {
-	"_builtAt": "2026-10-21T12:50:35.576Z",
+	"_builtAt": "2026-10-21T13:26:20.875Z",
 	"fallback": {
 		"colour": "Anthracite Grey",
 		"handle": "Lever/Lever",
@@ -31,7 +31,6 @@
 			"knocker": "No Knocker"
 		},
 		"Abbott": {
-			"letterplate": "No Letterplate",
 			"knocker": "No Knocker"
 		},
 		"Bredon": {
@@ -45,8 +44,7 @@
 		},
 		"Bruce": {
 			"colour": "White",
-			"hardware": "Chrome",
-			"letterplate": "No Letterplate"
+			"hardware": "Chrome"
 		}
 	}
 }

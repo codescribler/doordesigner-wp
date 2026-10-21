@@ -33,8 +33,12 @@
 	function firstLabel(choices) { return choices && choices[0] ? choices[0].label : ''; }
 
 	// Handle / letterplate go through pickFurniture so the hardware finish is honoured.
-	function furniture(model, type, design, stepKey, choices, candidates) {
+	function furniture(model, type, design, stepKey, allChoices, candidates) {
 		var S = shared();
+		// A pre-picked door is complete: never an absent handle or letterplate.
+		var real = allChoices.filter(function (c) { return !/^no /i.test(String(c.label).trim()); });
+		var choices = real.length ? real : allChoices;
+		candidates = candidates.filter(function (c) { return c && !/^no /i.test(String(c).trim()); });
 		for (var i = 0; i < candidates.length; i++) {
 			var want = labelIn(choices, candidates[i]);
 			if (want && (!S || S.pickFurniture(model, type, design, stepKey, choices, '', '', want, '') === want)) { return want; }

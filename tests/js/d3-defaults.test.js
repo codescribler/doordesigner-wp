@@ -39,10 +39,8 @@ assert.strictEqual(plain['Door Colour (External)'], 'Anthracite Grey');
 assert.strictEqual(plain['Handle'], 'Lever/Lever');
 assert.strictEqual(plain['Hardware Type'], 'Chrome');
 
-// no letterplate means no position
-var none = D.resolve(node, model, TYPE, 'Bruce', { fallback: table.fallback, 'Single Door': { Bruce: { letterplate: 'No Letterplate' } } });
-assert.strictEqual(none['Letterplate'], 'No Letterplate');
-assert.strictEqual(none['Letterplate Position'], undefined);
+// a real letterplate is always picked, so a bottom style always has its position
+assert.notStrictEqual(D.resolve(node, model, TYPE, 'Bruce', table)['Letterplate'], 'No Letterplate');
 
 // the rest: no frame, Satin glass, first hinge side, white inside
 assert.strictEqual(etna['Frame Design'], 'No Sidelights');
@@ -72,6 +70,17 @@ Object.keys(cv.byType).forEach(function (type) {
 		if (n.hingeSideField) { check(n.hingeSideField, n.fields[n.hingeSideField]); }
 	});
 });
+
+// never an absent handle or letterplate, even if the table asks for one
+var absentTable = { fallback: table.fallback, 'Single Door': { Etna: { handle: 'No Handle ', letterplate: 'No Letterplate' } } };
+Object.keys(cv.byType).forEach(function (type) {
+	var n = cv.byType[type];
+	Object.keys(n.knockerByStyle).forEach(function (style) {
+		var r = D.resolve(n, model, type, style, absentTable);
+		assert.ok(!/^no /i.test(r['Handle'].trim()) && !/^no /i.test(r['Letterplate'].trim()), type + '/' + style + ' picked an absent part');
+	});
+});
+assert.strictEqual(D.resolve(node, model, TYPE, 'Etna', absentTable)['Letterplate'], 'Letterplate');
 
 // the real built table resolves too, and its fallback is a complete door
 var real = require('../../data/designer3-defaults.json');
