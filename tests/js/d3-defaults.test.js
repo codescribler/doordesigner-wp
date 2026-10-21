@@ -73,7 +73,9 @@ Object.keys(cv.byType).forEach(function (type) {
 	});
 });
 
-// the real built table resolves too
+// the real built table resolves too, and its fallback is a complete door
 var real = require('../../data/designer3-defaults.json');
+assert.deepStrictEqual([real.fallback.handle, real.fallback.hardware, real.fallback.letterplate, real.fallback.knocker], ['Lever/Lever', 'Chrome', 'Letterplate', 'No Knocker']);
+assert.ok(real.fallback.colour);
 assert.ok(D.resolve(node, model, TYPE, 'Pentland', real)['Handle']);
 console.log('d3-defaults: ok');

@@ -27,7 +27,9 @@ function tally(list, field) {
 
 function build(designs, builtAt) {
 	var out = { _builtAt: builtAt || new Date().toISOString(), fallback: {} };
-	FIELDS.forEach(function (f) { out.fallback[f] = top(tally(designs, f)) || NO_DATA[f]; });
+	// Spec: too little data means a plain chrome lever, a chrome letterplate, no knocker and the
+	// most popular colour overall. Only the colour is learned; the rest are fixed.
+	out.fallback = { colour: top(tally(designs, 'colour')) || NO_DATA.colour, handle: NO_DATA.handle, hardware: NO_DATA.hardware, letterplate: NO_DATA.letterplate, knocker: NO_DATA.knocker };
 	var groups = {};
 	designs.forEach(function (d) {
 		if (!d.type || !d.style) { return; }
@@ -78,10 +80,9 @@ function selfTest() {
 	assert.strictEqual(out['Single Door'].A.colour, 'Black');
 	assert.strictEqual(out['Single Door'].B, undefined, 'seen once is not kept');
 	assert.strictEqual(out['Single Door'].C, undefined);
-	assert.strictEqual(out.fallback.handle, 'Lever/Lever', 'fallback = most common overall');
-	assert.strictEqual(out.fallback.colour, 'Black');
-	assert.strictEqual(out.fallback.letterplate, 'Letterplate', 'no data uses the stated fallback');
-	assert.strictEqual(out.fallback.knocker, 'No Knocker');
+	assert.strictEqual(out.fallback.colour, 'Black', 'colour fallback = most popular overall');
+	var pulls = build([mk('A', 'Pull'), mk('A', 'Pull'), { type: 'Single Door', style: 'A', letterplate: 'No Letterplate', knocker: 'Bee' }, { type: 'Single Door', style: 'A', letterplate: 'No Letterplate', knocker: 'Bee' }], 'T');
+	assert.deepStrictEqual([pulls.fallback.handle, pulls.fallback.hardware, pulls.fallback.letterplate, pulls.fallback.knocker], ['Lever/Lever', 'Chrome', 'Letterplate', 'No Knocker'], 'fixed fallbacks ignore popularity');
 	var empty = build([], 'T');
 	assert.deepStrictEqual(empty.fallback, NO_DATA);
 	var cat = { 'Single Door': { fields: { Handle: { choices: [{ label: 'Pull' }] }, 'Door Colour (External)': { choices: [] } }, knockerByStyle: {} } };
