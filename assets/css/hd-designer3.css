@@ -1,0 +1,207 @@
+/*
+ * HD Door Designer — Designer 3
+ * ------------------------------------------------------------------
+ * Scoped under .hd-d3 (inside .hd-dd, so the classic tokens + box-sizing reset apply).
+ * Mobile-first. Below 720px: the door on top, a strip of tabs under it, and a dock fixed to
+ * the bottom of the view holding the options sheet and the save box. From 720px: the door on
+ * the left, the toolbox column on the right with the save box always in view.
+ *
+ * Sections
+ *   1. Shell, header, titles
+ *   2. Type and style cards
+ *   3. Door stage and dots
+ *   4. Toolbox (rows, tabs, sections, tiles)
+ *   5. Dock: sheet, nudge, save
+ *   6. Wider screens
+ *   7. Motion (+ reduced motion)
+ */
+
+/* 1. Shell, header, titles ------------------------------------------------------ */
+.hd-d3 {
+  --d3-accent: var(--brand, #1d4f3f);
+  --d3-dot: #f07c1e;
+  --d3-soft: #eef5f1;
+  --d3-line: var(--line, #e6e6e6);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px;
+  overflow-x: clip;
+}
+.hd-d3-head { display: flex; align-items: center; gap: 10px; padding: 12px 0 6px; }
+.hd-d3-back {
+  flex: 0 0 34px; height: 34px; border-radius: 50%; border: 0;
+  background: #f0f0ee; color: var(--ink, #161616); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.hd-d3-title { font-size: 1.35rem; line-height: 1.2; margin: 0; font-weight: 700; }
+.hd-d3-help { margin: 0 0 12px; color: #4a4f57; font-size: .95rem; }
+.hd-d3-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hd-d3 .hd-dd__hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.hd-d3-loading { padding: 40px 16px; text-align: center; color: var(--muted, #8a8e96); }
+
+/* 2. Type and style cards ------------------------------------------------------- */
+.hd-d3-grid { display: grid; gap: 12px; margin: 8px 0 24px; }
+.hd-d3-grid--types { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hd-d3-grid--styles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hd-d3-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px 12px; border: 1px solid var(--d3-line); border-radius: 10px;
+  background: var(--paper, #fff); cursor: pointer; font: inherit; color: inherit; text-align: center;
+  transition: border-color .15s, box-shadow .15s;
+}
+.hd-d3-card:hover { border-color: var(--muted, #8a8e96); }
+.hd-d3-card.is-on { border-color: var(--d3-accent); box-shadow: 0 0 0 2px var(--d3-accent); }
+.hd-d3-card__media { display: flex; align-items: center; justify-content: center; width: 100%; height: 150px; background: linear-gradient(#f7f6f3, #ebe9e4); border-radius: 6px; }
+.hd-d3-grid--styles .hd-d3-card__media { height: 130px; }
+.hd-d3-card__media img { max-width: 92%; max-height: 92%; object-fit: contain; }
+.hd-d3-card__label { font-weight: 700; font-size: .95rem; }
+.hd-d3-card__sub { font-size: .8rem; color: #5b6068; line-height: 1.3; }
+.hd-d3-filters { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none; }
+.hd-d3-filter {
+  flex: 0 0 auto; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--d3-line);
+  background: var(--paper, #fff); font: inherit; font-size: .88rem; cursor: pointer;
+}
+.hd-d3-filter.is-on { background: var(--d3-accent); border-color: var(--d3-accent); color: #fff; }
+
+/* 3. Door stage and dots ---------------------------------------------------------- */
+.hd-d3-banner {
+  margin: 0 0 8px; padding: 8px 12px; border-radius: 10px;
+  background: var(--d3-soft); color: #33413b; font-size: .92rem;
+}
+.hd-d3-stage {
+  display: flex; justify-content: center; align-items: center;
+  margin: 0 -16px; padding: 14px 12px;
+  background: linear-gradient(#f7f6f3, #ebe9e4);
+}
+.hd-d3-frame { position: relative; width: 240px; max-width: 100%; transition: width .3s ease; }
+.hd-d3-canvas { display: block; width: 100%; height: auto; }
+.hd-d3-dots { position: absolute; inset: 0; pointer-events: none; }
+.hd-d3-dot {
+  position: absolute; width: 30px; height: 30px; margin: 0; padding: 0;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff; border-radius: 50%;
+  background: var(--d3-dot); color: #fff;
+  font: 700 20px/26px system-ui, sans-serif; text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+  cursor: pointer; pointer-events: auto;
+}
+.hd-d3.is-sheet .hd-d3-dot { width: 22px; height: 22px; font-size: 15px; line-height: 18px; }
+.hd-d3-dot:focus-visible { outline: 3px solid var(--ink, #161616); outline-offset: 2px; }
+
+/* 4. Toolbox --------------------------------------------------------------------- */
+.hd-d3-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 8px; scrollbar-width: none; }
+.hd-d3-tab {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start;
+  min-width: 96px; max-width: 150px; padding: 7px 12px; border-radius: 10px;
+  border: 1px solid var(--d3-line); background: var(--paper, #fff); font: inherit; cursor: pointer; text-align: left;
+}
+.hd-d3-tab.is-open { border-color: var(--d3-accent); box-shadow: 0 0 0 2px var(--d3-accent); }
+.hd-d3-tab__label { font-weight: 700; font-size: .85rem; }
+.hd-d3-tab__value { font-size: .75rem; color: #5b6068; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-d3-rows { display: none; }
+.hd-d3-row {
+  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  padding: 13px 14px; border: 0; border-bottom: 1px solid var(--d3-line);
+  background: var(--paper, #fff); font: inherit; cursor: pointer; text-align: left;
+}
+.hd-d3-row::after { content: '\203A'; margin-left: auto; font-size: 20px; line-height: 1; color: #8a8e96; transition: transform .2s; }
+.hd-d3-row.is-open::after { transform: rotate(90deg); }
+.hd-d3-row:hover { background: #fafaf8; }
+.hd-d3-row__label { font-weight: 700; flex: 0 0 110px; }
+.hd-d3-row__value { color: #4a4f57; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-d3-section { padding: 10px 2px 14px; }
+.hd-d3-group { padding: 6px 0 10px; }
+.hd-d3-group__title { font-weight: 700; font-size: .88rem; margin: 0 0 6px; }
+.hd-d3-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.hd-d3-tiles--tall .hd-d3-tile__media { height: 112px; }
+.hd-d3-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px;
+  border: 1px solid var(--d3-line); border-radius: 8px; background: var(--paper, #fff);
+  font: inherit; font-size: .78rem; line-height: 1.25; cursor: pointer; color: inherit;
+}
+.hd-d3-tile.is-on { border-color: var(--d3-accent); box-shadow: 0 0 0 2px var(--d3-accent); }
+.hd-d3-tile__media {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 76px;
+  border-radius: 6px; background: #f3f3f1; overflow: hidden; color: #8a8e96; font-size: 22px;
+}
+.hd-d3-tile__media img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.hd-d3-tile__label { text-align: center; overflow-wrap: anywhere; }
+.hd-d3-seg { display: inline-flex; border: 1px solid var(--d3-line); border-radius: 999px; overflow: hidden; }
+.hd-d3-seg__btn { padding: 8px 16px; border: 0; background: var(--paper, #fff); font: inherit; font-size: .88rem; cursor: pointer; }
+.hd-d3-seg__btn.is-on { background: var(--d3-accent); color: #fff; }
+
+/* 5. Dock: sheet, nudge, save --------------------------------------------------------- */
+.hd-d3-dock {
+  position: sticky; bottom: 0; z-index: 30;
+  margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--paper, #fff); box-shadow: 0 -4px 18px rgba(0, 0, 0, .12);
+  border-radius: 16px 16px 0 0;
+}
+.hd-d3-sheet { max-height: 38vh; overflow-y: auto; overscroll-behavior: contain; margin: 0 0 8px; }
+.hd-d3-sheet[hidden] { display: none; }
+.hd-d3-sheet__head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 2px 0 8px; background: var(--paper, #fff); }
+.hd-d3-sheet__title { font-weight: 700; font-size: 1.05rem; }
+.hd-d3-sheet__close { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--d3-line); background: #f6f6f4; font: inherit; font-weight: 600; cursor: pointer; }
+.hd-d3.is-sheet .hd-d3-banner { display: none; }
+.hd-d3-nudge {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 10px 8px 12px;
+  border-radius: 10px; background: #fff4e8; border: 1px solid #f7c99a; color: #5a3410; font-size: .9rem;
+}
+.hd-d3-nudge__text { flex: 1; }
+.hd-d3-nudge__x { flex: 0 0 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; font-size: 15px; cursor: pointer; color: inherit; }
+.hd-d3-save__row { display: flex; gap: 8px; }
+.hd-d3-save__label { flex: 1; min-width: 0; }
+.hd-d3-save__input {
+  width: 100%; height: 44px; padding: 0 12px; border: 1px solid #cfd2d6; border-radius: 8px;
+  font: inherit; font-size: 16px; background: #fff;
+}
+.hd-d3-save__btn {
+  flex: 0 0 auto; height: 44px; padding: 0 16px; border: 0; border-radius: 8px;
+  background: var(--d3-accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.hd-d3-save__btn:disabled { opacity: .6; cursor: default; }
+.hd-d3-save__note { margin: 6px 0 0; font-size: .8rem; color: #5b6068; }
+.hd-d3-save__error { color: #b3261e; font-size: .85rem; }
+.hd-d3-save__error:empty, .hd-d3-save__status:empty { display: none; }
+.hd-d3-save__status { font-size: .85rem; color: #4a4f57; margin-top: 4px; }
+.hd-d3-save--done { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hd-d3-save__done { flex: 1; font-size: .9rem; color: #1d4f3f; font-weight: 600; }
+
+/* Phone: let the dock stick to the bottom of the whole screen, not just the toolbox. */
+@media (max-width: 719px) {
+  .hd-d3-door, .hd-d3-side { display: contents; }
+}
+
+/* 6. Wider screens ------------------------------------------------------------------- */
+@media (min-width: 560px) {
+  .hd-d3-grid--types { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hd-d3-grid--styles { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+@media (min-width: 720px) {
+  .hd-d3-door { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 24px; align-items: start; }
+  .hd-d3-stage { margin: 0; border-radius: 14px; min-height: 420px; padding: 20px; }
+  .hd-d3-side {
+    position: sticky; top: 12px; display: flex; flex-direction: column;
+    max-height: calc(100vh - 72px); border: 1px solid var(--d3-line); border-radius: 14px; overflow: hidden;
+  }
+  .hd-d3-tools { flex: 1 1 auto; overflow-y: auto; }
+  .hd-d3-tabs { display: none; }
+  .hd-d3-rows { display: block; }
+  .hd-d3-section { padding: 10px 14px 16px; border-bottom: 1px solid var(--d3-line); background: #fcfcfb; }
+  .hd-d3-dock { position: static; margin: 0; border-radius: 0; box-shadow: none; border-top: 1px solid var(--d3-line); }
+  .hd-d3-sheet { display: none; }
+}
+
+/* 7. Motion ------------------------------------------------------------------------------ */
+@keyframes hd-d3-pulse {
+  0% { box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 0 0 0 rgba(240, 124, 30, .55); }
+  70% { box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 0 0 12px rgba(240, 124, 30, 0); }
+  100% { box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 0 0 0 rgba(240, 124, 30, 0); }
+}
+@keyframes hd-d3-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.hd-d3-dot { animation: hd-d3-pulse 2.4s ease-out infinite; }
+.hd-d3-sheet:not([hidden]) { animation: hd-d3-up .25s ease-out; }
+.hd-d3-nudge { animation: hd-d3-up .3s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .hd-d3-dot, .hd-d3-sheet:not([hidden]), .hd-d3-nudge { animation: none; }
+  .hd-d3-frame, .hd-d3-row::after, .hd-d3-card, .hd-d3-tile { transition: none; }
+}
