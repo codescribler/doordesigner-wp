@@ -6,7 +6,7 @@
 // sent: it says "Preview mode" and still moves on, so the flow can be walked.
 //
 //   var s = HD_DD_D3Save.create({ api, cfg, flow, token?, getDesign(), getCanvas(), experiment(), onSaved(body) });
-//   s.render(container); s.saved(); s.update() -> Promise<bool>; s.token()
+//   s.render(container); s.saved(); s.update() -> Promise<bool>; s.token(); s.setToken(t)
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory(require('../swipe/review-save.js'), require('../enquiry.js'));
@@ -156,6 +156,8 @@
 			render: render,
 			saved: function () { return !!token; },
 			token: function () { return token; },
+			// A saved link reopened after the saver was made: work on that record from now on.
+			setToken: function (t) { token = t || null; savedKey = token ? RS.designKey(o.getDesign()) : null; },
 			update: update
 		};
 	}

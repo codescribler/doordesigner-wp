@@ -94,6 +94,7 @@
 			var b = el('button', 'hd-d3-tile' + (sel ? ' is-on' : ''));
 			b.type = 'button';
 			b.setAttribute('aria-pressed', sel ? 'true' : 'false');
+			b.setAttribute('data-k', 'opt:' + heading + ':' + c.label);
 			var m = media(app, kind, heading, c);
 			var box = el('span', 'hd-d3-tile__media');
 			if (m.swatch) { box.style.background = m.swatch; }
@@ -122,6 +123,7 @@
 			b.type = 'button';
 			b.setAttribute('role', 'radio');
 			b.setAttribute('aria-checked', sel ? 'true' : 'false');
+			b.setAttribute('data-k', 'opt:' + heading + ':' + c.label);
 			b.addEventListener('click', function () { app.pick('more', heading, c.label); });
 			row.appendChild(b);
 		});
@@ -139,6 +141,7 @@
 
 	function section(app, key) {
 		var box = el('div', 'hd-d3-section hd-d3-section--' + key);
+		box.id = 'hd-d3-panel-' + key;
 		if (key === 'colour') { box.appendChild(tiles(app, key, 'Door Colour (External)', 'colour', app.stepFor('Door Colour (External)').choices)); }
 		else if (key === 'style') { box.appendChild(tiles(app, key, 'Door Design', 'style', app.styles())); }
 		else if (key === 'handle') { box.appendChild(tiles(app, key, 'Handle', 'part', usable(app, 'Handle', 'handle'))); }
@@ -157,22 +160,60 @@
 		return box;
 	}
 
+	// ---- Focus: every control carries data-k, so a redraw can put focus back on its twin ----
+	function inside(n, roots) {
+		for (; n; n = n.parentNode) { if (roots.indexOf(n) !== -1) { return true; } }
+		return false;
+	}
+	function findFirst(rootEl, test) {
+		if (!rootEl) { return null; }
+		if (test(rootEl)) { return rootEl; }
+		var kids = rootEl.children || [];
+		for (var i = 0; i < kids.length; i++) { var hit = findFirst(kids[i], test); if (hit) { return hit; } }
+		return null;
+	}
+	function attr(n, name) { return (n && n.getAttribute && n.getAttribute(name)) || ''; }
+	function findKey(rootEl, k) { return k ? findFirst(rootEl, function (n) { return attr(n, 'data-k') === k; }) : null; }
+	// The data-k of the focused control when it sits inside one of roots, else null.
+	function focusedKey(roots) {
+		var a = typeof document !== 'undefined' ? document.activeElement : null;
+		return (attr(a, 'data-k') && inside(a, roots)) ? attr(a, 'data-k') : null;
+	}
+	function focusEl(n) {
+		if (!n || !n.focus) { return false; }
+		try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
+		return true;
+	}
+	function restoreFocus(roots, k) {
+		for (var i = 0; k && i < roots.length; i++) { if (focusEl(findKey(roots[i], k))) { return true; } }
+		return false;
+	}
+	// The option to land on inside a panel: the selected one, else the first.
+	function firstOption(panel) {
+		var isOpt = function (n) { return attr(n, 'data-k').indexOf('opt:') === 0; };
+		return findFirst(panel, function (n) { return isOpt(n) && (' ' + n.className + ' ').indexOf(' is-on ') !== -1; }) || findFirst(panel, isOpt);
+	}
+
 	function create(app) {
-		var host = null, sheet = null, openKey = null, focus = null, onLayout = null, wasSheet = false;
+		var host = null, sheet = null, root = null, openKey = null, focus = null, onLayout = null, wasSheet = false;
+		var openedBy = null;   // data-k of the tab, row or dot that opened the section
 		function isPhone() { try { return !!(g().matchMedia && g().matchMedia(PHONE).matches); } catch (e) { return false; } }
 
-		function rowButton(r, cls) {
+		function rowButton(r, cls, kind) {
 			var b = el('button', cls + (r.key === openKey ? ' is-open' : ''));
 			b.type = 'button';
+			b.setAttribute('data-k', kind + ':' + r.key);
 			b.setAttribute('aria-expanded', r.key === openKey ? 'true' : 'false');
+			b.setAttribute('aria-controls', kind === 'tab' ? 'hd-d3-sheet' : 'hd-d3-panel-' + r.key);
 			b.appendChild(el('span', cls + '__label', r.label));
 			b.appendChild(el('span', cls + '__value', r.value ? short(r.value) : ''));
-			b.addEventListener('click', function () { if (openKey === r.key) { close(); } else { open(r.key); } });
+			b.addEventListener('click', function () { if (openKey === r.key) { close(); } else { open(r.key, kind + ':' + r.key); } });
 			return b;
 		}
 
 		function draw() {
 			if (!host) { return; }
+			var keep = focusedKey([host, sheet]);
 			var keepScroll = sheet ? sheet.scrollTop : 0;
 			host.innerHTML = '';
 			var list = rows(app);
@@ -182,8 +223,8 @@
 			var desk = el('div', 'hd-d3-rows');
 			var phone = isPhone();
 			list.forEach(function (r) {
-				tabs.appendChild(rowButton(r, 'hd-d3-tab'));
-				desk.appendChild(rowButton(r, 'hd-d3-row'));
+				tabs.appendChild(rowButton(r, 'hd-d3-tab', 'tab'));
+				desk.appendChild(rowButton(r, 'hd-d3-row', 'row'));
 				if (r.key === openKey && !phone) { desk.appendChild(section(app, r.key)); }
 			});
 			host.appendChild(tabs); host.appendChild(desk);
@@ -192,9 +233,12 @@
 				sheet.hidden = !(openKey && phone);
 				if (openKey && phone) {
 					var head = el('div', 'hd-d3-sheet__head');
-					head.appendChild(el('span', 'hd-d3-sheet__title', list.filter(function (r) { return r.key === openKey; })[0].label));
+					var title = el('span', 'hd-d3-sheet__title', list.filter(function (r) { return r.key === openKey; })[0].label);
+					title.id = 'hd-d3-sheet-title';
+					head.appendChild(title);
 					var done = el('button', 'hd-d3-sheet__close', 'Done');
 					done.type = 'button';
+					done.setAttribute('data-k', 'done');
 					done.addEventListener('click', close);
 					head.appendChild(done);
 					sheet.appendChild(head);
@@ -205,29 +249,54 @@
 			var isSheet = !!(openKey && phone);
 			if (app.shell && app.shell.classList) { app.shell.classList.toggle('is-sheet', isSheet); }
 			if (isSheet !== wasSheet) { wasSheet = isSheet; if (onLayout) { onLayout(isSheet); } }   // the door resizes
+			restoreFocus([host, sheet], keep);
 		}
 
-		function scrollToFocus() {
-			if (!focus) { return; }
-			var where = (isPhone() ? sheet : host);
-			var target = where && where.querySelector && where.querySelector('[data-group="' + focus + '"]');
+		// Bring a More options group (door glass, from the glass dot) into view; in the phone
+		// sheet, move focus into it: that group's option, or the section's, else Done.
+		function land(phone) {
+			var where = phone ? sheet : host;
+			var grp = focus ? findFirst(where, function (n) { return attr(n, 'data-group') === focus; }) : null;
 			focus = null;
-			if (!target) { return; }
-			try { target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* older browsers */ }
+			if (grp) { try { grp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* older browsers */ } }
+			if (phone) { focusEl(firstOption(grp || sheet) || findKey(sheet, 'done')); }
 		}
 
-		function open(key) {
+		// opener: data-k of what opened it ('tab:handle', 'row:handle', 'dot:glass'), for focus on close.
+		function open(key, opener) {
 			var to = DOT_TO[key] || [key];
+			var changed = openKey !== to[0];
 			openKey = to[0];
 			focus = to[1] || null;
+			openedBy = opener || openedBy;
 			if (sheet) { sheet.scrollTop = 0; }
 			draw();
-			scrollToFocus();
+			if (changed && app.opened) { app.opened(openKey); }
+			land(isPhone());
 		}
-		function close() { openKey = null; draw(); }
+		function close() {
+			var back = openedBy;
+			openKey = null; openedBy = null;
+			draw();
+			if (back) { restoreFocus([host, root], back); }
+		}
+		function onKey(e) { if (e && e.key === 'Escape' && openKey) { if (e.preventDefault) { e.preventDefault(); } close(); } }
 
 		return {
-			render: function (el2, slots) { host = el2; sheet = (slots && slots.sheet) || null; onLayout = (slots && slots.onLayout) || null; draw(); },
+			render: function (el2, slots) {
+				host = el2;
+				sheet = (slots && slots.sheet) || null;
+				root = (slots && slots.root) || null;
+				onLayout = (slots && slots.onLayout) || null;
+				host.addEventListener('keydown', onKey);
+				if (sheet) {
+					sheet.id = 'hd-d3-sheet';
+					sheet.setAttribute('role', 'dialog');
+					sheet.setAttribute('aria-labelledby', 'hd-d3-sheet-title');
+					sheet.addEventListener('keydown', onKey);
+				}
+				draw();
+			},
 			refresh: draw,
 			open: open,
 			close: close,
@@ -235,5 +304,5 @@
 		};
 	}
 
-	return { create: create, rows: rows, moreGroups: moreGroups, partImage: partImage };
+	return { create: create, rows: rows, moreGroups: moreGroups, partImage: partImage, focusedKey: focusedKey, restoreFocus: restoreFocus };
 }));

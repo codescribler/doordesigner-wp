@@ -77,6 +77,11 @@ var more = Toolbox.moreGroups(app).map(function (g) { return g.heading; });
 ['Door Hinged On', 'Door Colour (Internal)', 'Door Glass', 'Hardware Type'].forEach(function (h) { assert.ok(more.indexOf(h) !== -1, 'More options holds ' + h); });
 assert.ok(!more.some(function (h) { return /spy/i.test(h); }));
 
+// ---- opening a section fires its step with no choice (door style has no step) -------------
+var m0 = app.steps.length;
+app.opened('handle'); app.opened('style');
+assert.deepStrictEqual(app.steps.slice(m0), [['handle', undefined]]);
+
 // ---- a toolbox pick fires its section step with the label ---------------------------------
 var colours = app.stepFor('Door Colour (External)').choices.map(function (c) { return c.label; });
 var newColour = colours.filter(function (l) { return l !== got['Door Colour (External)']; })[0];

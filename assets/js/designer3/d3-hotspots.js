@@ -85,5 +85,28 @@
     return out;
   }
 
-  return { spots: spots, KEYS: KEYS, stageOf: stageOf };
+  // The dots as drawn on screen. opts must be what the preview gets ({toplights:true}).
+  //  - x is mirrored when RM.shouldFlip mirrors the whole drawn door;
+  //  - the knocker dot is dropped when show.knocker is false (the style offers none);
+  //  - the glass dot (the middle of all the glass) moves to the middle of one window when it
+  //    would sit on another dot, e.g. Abbott's row of small windows and its letterplate.
+  var GAP = 16; // stage units (a door is ~160 wide): about a dot's width on screen
+  function display(model, type, design, opts, show) {
+    var list = spots(model, type, design, opts);
+    if (!list.length) { return list; }
+    if (show && show.knocker === false) { list = list.filter(function (s) { return s.key !== 'knocker'; }); }
+    var layers = RM.assemble(model, type, design, opts);
+    var st = stageOf(layers, model.types[type]);
+    var glass = list.filter(function (s) { return s.key === 'glass'; })[0];
+    var others = list.filter(function (s) { return s !== glass; });
+    function clear(x, y) { return others.every(function (o) { return Math.abs(o.x - x) * st.width > GAP || Math.abs(o.y - y) * st.height > GAP; }); }
+    if (glass && !clear(glass.x, glass.y)) {
+      var pane = layers.filter(function (l) { return l.slot === 'DoorGlazing' && clear(l.cx / st.width, l.cy / st.height); })[0];
+      if (pane) { list = list.map(function (s) { return s === glass ? { key: 'glass', x: pane.cx / st.width, y: pane.cy / st.height } : s; }); }
+    }
+    var flip = !!RM.shouldFlip(model, type, design, opts);
+    return list.map(function (s) { return { key: s.key, x: flip ? 1 - s.x : s.x, y: s.y }; });
+  }
+
+  return { spots: spots, display: display, KEYS: KEYS, stageOf: stageOf, GAP: GAP };
 }));

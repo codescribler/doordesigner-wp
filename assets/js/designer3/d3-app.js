@@ -36,7 +36,7 @@
 		this.shown = false;      // `shown` fired this visit
 		this.nudgeOn = false;    // the save prompt is on screen
 		this.nudgeShown = 0;
-		this.savedToken = null;  // the saved-design record this visit works on
+		this._token = null;      // token a saved link opened, until the saver exists (see savedToken)
 		this.savedKind = null;   // kind of the row a saved link opened
 		this.lastResult = null;
 		this.doorView = null;    // the drawn door screen, refreshed in place on each change
@@ -75,9 +75,9 @@
 	// Build the door for a style from preferences {heading: [wanted, ...]} (first valid wins).
 	// Rebuilt from the type up, so the wizard prunes anything the style doesn't offer.
 	P.build = function (style, prefs) {
-		this.wiz.selectType(this.type());
 		var c = this.choiceFor('Door Design', style);
-		if (!c) { return false; }
+		if (!c) { return false; }   // an unknown style leaves the door as it is
+		this.wiz.selectType(this.type());
 		this.wiz.select('Door Design', c);
 		var tried = { 'Door Type': true, 'Door Design': true };
 		for (var guard = 0; guard < 60; guard++) {
@@ -170,7 +170,7 @@
 			if (h === 'Letterplate Position' && !mine[h]) { return; }
 			prefs[h] = [cur[h]].concat(prefs[h] || []);
 		});
-		this.build(style, prefs);
+		if (!this.build(style, prefs)) { return false; }
 		this.refresh();
 		return true;
 	};
@@ -188,36 +188,14 @@
 		return true;
 	};
 
+	// The toolbox opened a section: reported with no choice (the pick reports the label).
+	P.opened = function (section) { if (SECTIONS[section]) { this.funnel.step(section); } };
 	P.dismissNudge = function () { this.nudge.dismiss(); this.nudgeOn = false; this.refresh(); };
-
-	// Dots over the drawn door, mirrored with it when the hinge side flips the picture.
+	// Dots over the drawn door (mirrored with it, never on top of each other): d3-hotspots.js.
 	P.dots = function () {
-		var H = W.HD_DD_D3Hotspots, RM = W.HD_DD_RenderModel;
-		if (!H || !this.model) { return []; }
-		var d = this.design();
-		var list = H.spots(this.model, this.type(), d, OPTS);
-		var flip = !!(RM && RM.shouldFlip(this.model, this.type(), d, OPTS));
-		var hasKnocker = !!this.stepFor('Knocker');
-		list = list.filter(function (s) { return s.key !== 'knocker' || hasKnocker; });
-		list = this.unstackGlass(list, d);
-		return list.map(function (s) { return { key: s.key, x: flip ? 1 - s.x : s.x, y: s.y }; });
-	};
-
-	// The glass dot sits at the middle of all the glass, which on a door with a row of small
-	// windows can land on the letterplate's dot. Then use the middle of one window instead.
-	P.unstackGlass = function (list, d) {
-		var H = W.HD_DD_D3Hotspots, RM = W.HD_DD_RenderModel;
-		var glass = list.filter(function (s) { return s.key === 'glass'; })[0];
-		if (!glass || !RM) { return list; }
-		var layers = RM.assemble(this.model, this.type(), d, OPTS);
-		var st = H.stageOf(layers, this.model.types[this.type()]);
-		var others = list.filter(function (s) { return s !== glass; });
-		var GAP = 16; // stage units (a door is ~160 wide): about a dot's width on screen
-		function clear(x, y) { return others.every(function (o) { return Math.abs(o.x - x) * st.width > GAP || Math.abs(o.y - y) * st.height > GAP; }); }
-		if (clear(glass.x, glass.y)) { return list; }
-		var pane = layers.filter(function (l) { return l.slot === 'DoorGlazing' && clear(l.cx / st.width, l.cy / st.height); })[0];
-		if (!pane) { return list; }
-		return list.map(function (s) { return s === glass ? { key: 'glass', x: pane.cx / st.width, y: pane.cy / st.height } : s; });
+		var H = W.HD_DD_D3Hotspots;
+		if (!H || !H.display || !this.model) { return []; }
+		return H.display(this.model, this.type(), this.design(), OPTS, { knocker: !!this.stepFor('Knocker') });
 	};
 
 	// ---- Saving ---------------------------------------------------------------------------
@@ -226,7 +204,7 @@
 		if (!this._saver) {
 			var Save = W.HD_DD_D3Save;
 			this._saver = Save ? Save.create({
-				api: this.api, cfg: this.cfg(), flow: this.flow, token: this.savedToken,
+				api: this.api, cfg: this.cfg(), flow: this.flow, token: this._token,
 				getDesign: function () { return self.design(); },
 				getCanvas: function () { return self.canvas || null; },
 				experiment: function () { return self.experiment; },
@@ -238,13 +216,19 @@
 
 	P.onSaved = function (body) {
 		if (body && !body.preview && !body.again) {   // `again`: already saved, moving on once more
-			this.savedToken = body.token || this.savedToken;
 			this.funnel.step('saved');
 			this.track('door_saved');
 		}
 		this.nudgeOn = false;
 		this.go('saved');
 	};
+
+	// The saved-design record this visit works on. The saver owns it once it exists, so a 409
+	// (already sent as an enquiry) clears it everywhere.
+	Object.defineProperty(P, 'savedToken', {
+		get: function () { return this._saver ? this._saver.token() : this._token; },
+		set: function (t) { if (this._saver && this._saver.setToken) { this._saver.setToken(t); } else { this._token = t || null; } }
+	});
 
 	// ---- Navigation and drawing -------------------------------------------------------------
 	function muted() { return !!(W.HD_DD_Funnel && W.HD_DD_Funnel.muted && W.HD_DD_Funnel.muted()); }
@@ -276,6 +260,7 @@
 		}
 		var Sc = W.HD_DD_D3Screens || {};
 		var After = W.HD_DD_D3AfterSave || {};
+		if (this.doorView && this.doorView.destroy) { this.doorView.destroy(); }
 		this.doorView = null;
 		this.root.innerHTML = '';
 		var shell = document.createElement('div');

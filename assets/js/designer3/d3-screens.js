@@ -150,17 +150,22 @@
 			frame.style.width = Math.round(Math.max(90, Math.min(room, maxH * st.width / st.height))) + 'px';
 		}
 
+		// Rebuilt on every change; a focused dot gets its focus back on its new twin.
 		function dots() {
+			var TB = W.HD_DD_D3Toolbox;
+			var keep = TB.focusedKey([dotLayer]);
 			dotLayer.innerHTML = '';
 			app.dots().forEach(function (d) {
 				var b = el('button', 'hd-d3-dot hd-d3-dot--' + d.key, '+');
 				b.type = 'button';
-				b.setAttribute('aria-label', 'Change ' + DOT_NAMES[d.key]);
+				b.setAttribute('data-k', 'dot:' + d.key);
+				b.setAttribute('aria-label', 'Change ' + (DOT_NAMES[d.key] || 'this part'));
 				b.style.left = (d.x * 100) + '%';
 				b.style.top = (d.y * 100) + '%';
-				b.addEventListener('click', function () { tb.open(d.key); });
+				b.addEventListener('click', function () { tb.open(d.key, 'dot:' + d.key); });
 				dotLayer.appendChild(b);
 			});
+			TB.restoreFocus([dotLayer], keep);
 		}
 
 		function paint() {
@@ -189,17 +194,19 @@
 			paint(); tb.refresh(); drawNudge();
 		};
 
-		tb.render(tools, { sheet: sheet, onLayout: function () { paint(); } });
+		tb.render(tools, { sheet: sheet, root: shell, onLayout: function () { paint(); } });
 		app.saver().render(save);
 		drawNudge();
 		// After layout, so the stage has its width.
 		setTimeout(paint, 0);
 		var t = null;
-		W.addEventListener && W.addEventListener('resize', function onResize() {
-			if (app.doorView !== view) { W.removeEventListener('resize', onResize); return; }
+		function onResize() {
 			clearTimeout(t);
 			t = setTimeout(function () { tb.refresh(); paint(); }, 150);
-		});
+		}
+		if (W.addEventListener) { W.addEventListener('resize', onResize); }
+		// Called by the app when this screen is replaced.
+		view.destroy = function () { clearTimeout(t); if (W.removeEventListener) { W.removeEventListener('resize', onResize); } };
 		return view;
 	}
 
@@ -212,5 +219,5 @@
 		app.root.appendChild(el('div', 'hd-dd hd-d3 hd-d3-loading', COPY.loading));
 	}
 
-	W.HD_DD_D3Screens = { type: type, style: style, door: door, placeholder: placeholder, loading: loading, COPY: COPY };
+	W.HD_DD_D3Screens = { type: type, style: style, door: door, placeholder: placeholder, loading: loading, COPY: COPY, DOT_NAMES: DOT_NAMES };
 })(typeof window !== 'undefined' ? window : this);
