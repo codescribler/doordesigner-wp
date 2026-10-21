@@ -1,0 +1,466 @@
+{
+ "_capturedAt": "2026-10-21",
+ "_source": "wp-admin Door Enquiries, every stored enquiry/save design (failed rows and the owner test row excluded). Design labels only, no customer fields. Labels kept verbatim, including stray spaces.",
+ "designs": [
+  {
+   "type": "Single Door",
+   "style": "Etna",
+   "colour": "French Navy",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Berwyn",
+   "colour": "Anthracite Grey",
+   "handle": "Lever/Pad",
+   "hardware": "Black",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Etna",
+   "colour": "Raven Black",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Pen",
+   "colour": "Claystone",
+   "handle": "900mm Pull Handle",
+   "hardware": "Chrome",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Aneto",
+   "colour": "Anthracite Grey",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Vinson",
+   "colour": "Anthracite Grey",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Vinson",
+   "colour": "Anthracite Grey",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Lomond",
+   "colour": "Chartwell Green",
+   "handle": "Lever/Lever",
+   "hardware": "Black",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Pentland",
+   "colour": "Pearl Grey",
+   "handle": "Finger Pull",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "Heritage Brass Bee Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Ketu",
+   "colour": "Sage",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Chrome",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": "Bottom",
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Fuji",
+   "colour": "Anthracite Grey",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Abbott",
+   "colour": "Quartz Grey",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Wentwood",
+   "colour": "Sage",
+   "handle": " Touch Key Handle Chrome",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Lingmell",
+   "colour": "Rich Red",
+   "handle": " Touch Key Handle Chrome",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Sanford",
+   "colour": "Rich Red",
+   "handle": " Touch Key Handle Chrome",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": "Bottom",
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Bredon",
+   "colour": "Raven Black",
+   "handle": "Lever/Lever",
+   "hardware": "Bronze",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Bredon",
+   "colour": "Slate Grey",
+   "handle": "Heritage Finger pull with 900mm Pull Handle",
+   "hardware": "Pewter",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "McKinley",
+   "colour": "Quartz Grey",
+   "handle": "No Handle ",
+   "hardware": "Stainless Steel",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "Pewter Bull Ring"
+  },
+  {
+   "type": "Double Door",
+   "style": "Hope",
+   "colour": "Anthracite Grey",
+   "handle": "Lever/Pad",
+   "hardware": "Black",
+   "letterplate": "Forged Black Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "Black Bee Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Berwyn",
+   "colour": "Racing Green",
+   "handle": "Finger Pull",
+   "hardware": "Graphite",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Avantal",
+   "style": "Vega (Uni-Matt Black Cassette)",
+   "colour": "BlackUlti-Matt (Smooth)",
+   "handle": "1800mm Pull Handle",
+   "hardware": "Matt Black",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Sanford Georgian",
+   "colour": "Raven Black",
+   "handle": "Heritage Finger pull with 900mm Pull Handle",
+   "hardware": "Pewter",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Eiger Georgian",
+   "colour": "Chartwell Green",
+   "handle": "Lever/Pad",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Pentland",
+   "colour": "Brilliant Blue",
+   "handle": "Premium Stainless Lever Handles",
+   "hardware": "Satin Brass",
+   "letterplate": "Premium Satin Brass Letterplate ",
+   "letterplatePosition": null,
+   "knocker": "Brass Bee Ring Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Ben Nevis",
+   "colour": "Claystone",
+   "handle": "Finger Pull",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Alto",
+   "colour": "Anthracite Grey",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Abbott",
+   "colour": "Anthracite Grey",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Black",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Alto",
+   "colour": "Raven Black",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Black",
+   "letterplate": "Forged Black Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Olympus",
+   "colour": "Sage",
+   "handle": "Lever/Lever",
+   "hardware": "Antique Black",
+   "letterplate": "Forged Black Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Reynolds",
+   "colour": "Sage",
+   "handle": "Forged Black Noble Handle",
+   "hardware": "Forged Black",
+   "letterplate": "Forged Black Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "Black Bee Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Abbott",
+   "colour": "Pearl Grey",
+   "handle": "1800mm Pull Handle",
+   "hardware": "Antique Black",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Double Door",
+   "style": "Abbott",
+   "colour": "Pearl Grey",
+   "handle": "1800mm Pull Handle",
+   "hardware": "Black",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Pentland",
+   "colour": "Duck Egg Blue",
+   "handle": "Finger Pull",
+   "hardware": "Black",
+   "letterplate": "Forged Black Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Bredon",
+   "colour": "White",
+   "handle": "No Handle ",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Antero",
+   "colour": "Slate Grey",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Stainless Steel",
+   "letterplate": "Premium Stainless Steel Letterplate",
+   "letterplatePosition": null,
+   "knocker": "Forged Black Bull Ring"
+  },
+  {
+   "type": "Single Door",
+   "style": "Bruce",
+   "colour": "Anthracite Grey",
+   "handle": "Heritage Finger Pull with 1200mm Pull Handle",
+   "hardware": "Black",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": "Bottom",
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Bruce",
+   "colour": "White",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Holme",
+   "colour": "Sage",
+   "handle": "900mm Stainless Flat Pull Handle ",
+   "hardware": "Gold",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Ben Nevis",
+   "colour": "Anthracite Grey",
+   "handle": "Finger Pull",
+   "hardware": "Gold",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": "Bottom",
+   "knocker": "Chrome Doctors Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Etna",
+   "colour": "Racing Green",
+   "handle": "Lever/Lever",
+   "hardware": "Chrome",
+   "letterplate": "Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Bruce",
+   "colour": "White",
+   "handle": "900mm Pull Handle",
+   "hardware": "Chrome",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Pen",
+   "colour": "White",
+   "handle": "Heritage Finger pull with 900mm Pull Handle",
+   "hardware": "Stainless Steel",
+   "letterplate": "No Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  },
+  {
+   "type": "Single Door",
+   "style": "Alto",
+   "colour": "Racing Green",
+   "handle": "900mm Stainless Flat Pull Handle ",
+   "hardware": "Chrome",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Coombe",
+   "colour": "Slate Grey",
+   "handle": "Finger Pull",
+   "hardware": "Graphite",
+   "letterplate": "Pewter Architectural Letterplate",
+   "letterplatePosition": null,
+   "knocker": null
+  },
+  {
+   "type": "Single Door",
+   "style": "Etna",
+   "colour": "Slate Grey",
+   "handle": "Finger Pull",
+   "hardware": "Graphite",
+   "letterplate": "Architectural Letterplate",
+   "letterplatePosition": "Middle",
+   "knocker": "Slimline Urn"
+  },
+  {
+   "type": "Single Door",
+   "style": "Pentland",
+   "colour": "Rich Red",
+   "handle": "Stainless Lever/Lever Handles",
+   "hardware": "Matt Black",
+   "letterplate": "Premium Matt Black Letterplate",
+   "letterplatePosition": null,
+   "knocker": "No Knocker"
+  }
+ ]
+}

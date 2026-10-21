@@ -1,0 +1,52 @@
+{
+	"_builtAt": "2026-10-21T12:48:38.009Z",
+	"fallback": {
+		"colour": "Anthracite Grey",
+		"handle": "Lever/Lever",
+		"hardware": "Chrome",
+		"letterplate": "No Letterplate",
+		"knocker": "No Knocker"
+	},
+	"Single Door": {
+		"Etna": {
+			"handle": "Lever/Lever",
+			"hardware": "Chrome",
+			"letterplate": "Letterplate",
+			"knocker": "No Knocker"
+		},
+		"Berwyn": {
+			"knocker": "No Knocker"
+		},
+		"Pen": {
+			"knocker": "No Knocker"
+		},
+		"Vinson": {
+			"colour": "Anthracite Grey",
+			"handle": "Lever/Lever",
+			"hardware": "Chrome",
+			"knocker": "No Knocker"
+		},
+		"Pentland": {
+			"handle": "Finger Pull",
+			"knocker": "No Knocker"
+		},
+		"Abbott": {
+			"letterplate": "No Letterplate",
+			"knocker": "No Knocker"
+		},
+		"Bredon": {
+			"knocker": "No Knocker"
+		},
+		"Ben Nevis": {
+			"handle": "Finger Pull"
+		},
+		"Alto": {
+			"hardware": "Chrome"
+		},
+		"Bruce": {
+			"colour": "White",
+			"hardware": "Chrome",
+			"letterplate": "No Letterplate"
+		}
+	}
+}
