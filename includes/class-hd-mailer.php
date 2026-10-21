@@ -26,6 +26,9 @@ class HD_DD_Mailer {
 			$reference,
 			isset( $payload['customer']['name'] ) ? $payload['customer']['name'] : ''
 		);
+		if ( isset( $payload['kind'] ) && 'callback' === $payload['kind'] ) {
+			$subject .= ' ' . __( '(call back)', 'hd-door-designer' );
+		}
 		if ( ! empty( $payload['flags'] ) ) {
 			$subject = __( '[Possible bot] ', 'hd-door-designer' ) . $subject;
 		}
@@ -182,7 +185,7 @@ class HD_DD_Mailer {
 	}
 
 	/**
-	 * Designer 3's Frame Design labels repeat: 14/17/20 and 31/32/33 share names but differ in
+	 * Frame Design labels repeat: 14/17/20 and 31/32/33 share names but differ in
 	 * where the side glass meets the top light. Returns " (…)" saying which, or ''.
 	 */
 	public static function frame_note( $heading, $choice ) {
@@ -224,11 +227,10 @@ class HD_DD_Mailer {
 		$lines[] = '';
 		$lines[] = __( '— DESIGN —', 'hd-door-designer' );
 
-		$d3 = isset( $payload['flow'] ) && 'designer3' === $payload['flow'];
 		if ( ! empty( $payload['design'] ) && is_array( $payload['design'] ) ) {
 			foreach ( $payload['design'] as $heading => $choice ) {
 				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
-				if ( $d3 && 'Frame Design' === $heading && is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) {
+				if ( 'Frame Design' === $heading && is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) {
 					$label = trim( $label ) . ' — id ' . (int) $choice['id'] . self::frame_note( $heading, $choice );
 				}
 				$lines[] = sprintf( '%-26s %s', $heading . ':', $label );

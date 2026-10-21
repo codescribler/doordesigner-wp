@@ -45,7 +45,7 @@ check( 'callback' === $payload['kind'] && '01234 567890' === $payload['customer'
 check( isset( $payload['flow'] ) && 'designer3' === $payload['flow'], 'a Designer 3 row marks its payload flow designer3 (for the frame ids in the email)' );
 $mail = $GLOBALS['hd_test_mail'];
 check( 2 === count( $mail ), 'exactly two mails (got ' . count( $mail ) . ')' );
-check( 0 === strpos( $mail[0]['subject'], 'New door enquiry ' ) && false !== strpos( $mail[0]['subject'], '— Jo Bloggs' ), 'owner subject keeps the enquiry format' );
+check( 0 === strpos( $mail[0]['subject'], 'New door enquiry ' ) && 'New door enquiry ' . $payload['reference'] . ' — Jo Bloggs (call back)' === $mail[0]['subject'], 'owner subject says call back (got "' . $mail[0]['subject'] . '")' );
 check( 0 === strpos( $mail[0]['message'], 'Call back requested — 01234 567890' ), 'owner body leads with the call-back line' );
 check( 0 === strpos( $mail[1]['subject'], 'Your Hertfordshire Doors design (' ) && 'jo@example.com' === $mail[1]['to'], 'customer subject and address' );
 check( false === strpos( $mail[1]['message'], 'price is on its way' ) && false !== strpos( $mail[1]['message'], 'call back about your Ketu door' ) && false !== strpos( $mail[1]['message'], 'Thanks Jo.' ), 'customer ack copy' );

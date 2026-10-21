@@ -422,14 +422,14 @@ class HD_DD_Admin {
 	}
 
 	/**
-	 * One design-specification cell: the label and its catalogue id. On a Designer 3 row a
+	 * One design-specification cell: the label and its catalogue id. On any row a
 	 * Frame Design whose label repeats (ids 14/17/20 vs 31/32/33) also says which it is. Escaped.
 	 */
 	public static function choice_cell( $flow, $heading, $choice ) {
 		$html = esc_html( is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '' );
 		if ( is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) {
 			$html .= ' <small style="color:#8a8e96;">(#' . (int) $choice['id'] . ')</small>';
-			if ( 'designer3' === $flow && class_exists( 'HD_DD_Mailer' ) ) {
+			if ( class_exists( 'HD_DD_Mailer' ) ) {
 				$html .= esc_html( HD_DD_Mailer::frame_note( $heading, $choice ) );
 			}
 		}

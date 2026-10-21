@@ -37,9 +37,10 @@ foreach ( array( 14, 17, 20 ) as $id ) {
 }
 $l = hd_frame_line( 2, 'designer3' );
 check( 'Toplight with Half Flag Left — id 2' === $l, 'other frames show the id with no note (got "' . $l . '")' );
-// Not Designer 3 (Classic, Swipe 2): the line is exactly as before.
-check( 'Toplight with Half Flag Left ' === hd_frame_line( 31, '' ), 'no flow: label only, unchanged' );
-check( 'Toplight with Half Flag Left ' === hd_frame_line( 14, 'swipe2' ), 'swipe2: label only, unchanged' );
+// Every flow (Classic, Swipe 2, no flow key) now shows the id and note; other frames are unchanged.
+check( 'Toplight with Half Flag Left — id 31 (glass runs to the top, no side transom)' === hd_frame_line( 31, '' ), 'no flow: id 31 note shown' );
+check( 'Toplight with Half Flag Left — id 14 (bar level with the top of the door)' === hd_frame_line( 14, 'swipe2' ), 'swipe2: id 14 note shown' );
+check( 'Toplight with Half Flag Left — id 2' === hd_frame_line( 2, 'classic' ), 'classic: other frames show id, no note' );
 
 // --- wp-admin design specification ---------------------------------------------------------
 $c31 = array( 'label' => 'Toplight with Half Flag Left', 'id' => 31 );
@@ -49,7 +50,9 @@ check( false !== strpos( $a, '(#31)' ) && false !== strpos( $a, '(glass runs to 
 $a = HD_DD_Admin::choice_cell( 'designer3', 'Frame Design', $c14 );
 check( false !== strpos( $a, '(#14)' ) && false !== strpos( $a, '(bar level with the top of the door)' ), 'admin: id 14 on a Designer 3 row' );
 $a = HD_DD_Admin::choice_cell( 'classic', 'Frame Design', $c31 );
-check( 'Toplight with Half Flag Left <small style="color:#8a8e96;">(#31)</small>' === $a, 'admin: other flows unchanged (got ' . $a . ')' );
+check( false !== strpos( $a, '(#31)' ) && false !== strpos( $a, '(glass runs to the top, no side transom)' ), 'admin: Classic rows show the note too (got ' . $a . ')' );
+$a = HD_DD_Admin::choice_cell( 'classic', 'Frame Design', array( 'label' => 'Plain', 'id' => 2 ) );
+check( 'Plain <small style="color:#8a8e96;">(#2)</small>' === $a, 'admin: other frames unchanged (got ' . $a . ')' );
 check( 'A &amp; B' === HD_DD_Admin::choice_cell( 'designer3', 'Door Design', array( 'label' => 'A & B', 'id' => null ) ), 'admin: escaped, no id' );
 
 hd_test_done( 'mailer-frame-ids.test.php' );
