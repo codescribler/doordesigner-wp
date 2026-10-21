@@ -58,7 +58,10 @@
 	}
 	function layerBox(img) {
 		var sw = img.stage.width, sh = img.stage.height, box = el('span', 'hd-d3-card__door');
-		box.style.aspectRatio = sw + ' / ' + sh;
+		// The box takes the stage's exact shape (CSS fits it inside the media box), so every layer's
+		// % position lands where it does on the stage: frame, slab and drip bar share one box.
+		var ratio = String(sw / sh);
+		if (box.style.setProperty) { box.style.setProperty('--hd-d3-ratio', ratio); } else { box.style['--hd-d3-ratio'] = ratio; }
 		img.layers.forEach(function (l) {
 			var im = el('img', 'hd-d3-card__layer');
 			im.alt = ''; im.loading = 'lazy';
