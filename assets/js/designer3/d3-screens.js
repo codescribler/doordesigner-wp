@@ -42,13 +42,13 @@
 		if (help) { shell.appendChild(el('p', 'hd-d3-help', help)); }
 	}
 
-	// A double door tile: both leaves composited from the same layers Classic's style tiles use
+	// A style tile for any door type: all leaves composited from the same layers Classic's style tiles use
 	// (RenderModel.assemble, the "no glass" cassettes so the design shows), placed as % of the stage.
-	function doubleTile(app, label) {
-		var RM = W.HD_DD_RenderModel, base = app.assetBase(), T = app.model && app.model.types && app.model.types['Double Door'];
+	function styleTile(app, label) {
+		var type = app.type(), RM = W.HD_DD_RenderModel, base = app.assetBase(), T = app.model && app.model.types && app.model.types[type];
 		if (!RM || !base || !T) { return null; }
-		var dd = { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: label }, 'Door Colour (External)': { label: T.baselineColour } };
-		var raw = RM.assemble(app.model, 'Double Door', dd), maxX = 0, maxY = 0;
+		var dd = { 'Door Type': { label: type }, 'Door Design': { label: label }, 'Door Colour (External)': { label: T.baselineColour } };
+		var raw = RM.assemble(app.model, type, dd), maxX = 0, maxY = 0;
 		var layers = raw.map(function (l) {
 			maxX = Math.max(maxX, (l.cx || 0) + (l.w || 0) / 2);
 			maxY = Math.max(maxY, (l.cy || 0) + (l.h || 0) / 2);
@@ -123,7 +123,7 @@
 		function fill() {
 			grid.innerHTML = '';
 			styles.filter(function (s) { return app.styleFilter === 'All' || !app.styleFilter || cats[s.label] === app.styleFilter; }).forEach(function (s) {
-				var img = (app.type() === 'Double Door' && doubleTile(app, s.label)) || (P() ? P().blankThumb(app.assetBase(), app.model, app.type(), s.label) : null);
+				var img = styleTile(app, s.label) || (P() ? P().blankThumb(app.assetBase(), app.model, app.type(), s.label) : null);
 				grid.appendChild(card(short(s.label), '', img, s.label === app.style(), function () { app.select('Door Design', s.label); }));
 			});
 		}
