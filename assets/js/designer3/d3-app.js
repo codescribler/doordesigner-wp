@@ -291,7 +291,9 @@
 			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design') { self.mine[h] = saved[h].label; } });
 			self.savedKind = res.body.kind || null;
 			if (res.body.kind === 'save') { self.savedToken = token; }
-			self.go('saved');
+			// The saved screen; ?price=1 opens the quote form; a sent design says so (d3-after-save.js).
+			var After = W.HD_DD_D3AfterSave;
+			self.go(After && After.landing ? After.landing(self, W.location && W.location.search) : 'saved');
 		}).catch(function () { self.render(); });
 	};
 

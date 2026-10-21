@@ -14,6 +14,7 @@
  *   5. Dock: sheet, nudge, save
  *   6. Wider screens
  *   7. Motion (+ reduced motion)
+ *   8. After saving: lights, quote, call back
  */
 
 /* 1. Shell, header, titles ------------------------------------------------------ */
@@ -204,4 +205,52 @@
 @media (prefers-reduced-motion: reduce) {
   .hd-d3-dot, .hd-d3-sheet:not([hidden]), .hd-d3-nudge { animation: none; }
   .hd-d3-frame, .hd-d3-row::after, .hd-d3-card, .hd-d3-tile { transition: none; }
+}
+
+/* 8. After saving: lights, quote, call back ------------------------------------------------ */
+.hd-d3-savedline { margin: 12px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--d3-soft); color: #1d4f3f; font-weight: 600; font-size: .95rem; }
+.hd-d3-after { display: grid; gap: 14px; margin-bottom: 24px; }
+.hd-d3-stage--after .hd-d3-frame { width: 220px; max-width: 100%; }
+.hd-d3-just {
+  display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 12px 14px;
+  border: 1px solid var(--d3-line); border-radius: 12px; background: var(--paper, #fff); font: inherit; cursor: pointer; text-align: left;
+}
+.hd-d3-just:hover { border-color: var(--d3-accent); }
+.hd-d3-just__label { font-weight: 700; }
+.hd-d3-just__note { font-size: .82rem; color: #5b6068; }
+.hd-d3-framepick { display: flex; gap: 12px; align-items: flex-start; margin-top: 4px; }
+.hd-d3-framepick__chips { flex: 1; min-width: 0; }
+.hd-d3-framepick__drawing { flex: 0 0 112px; margin: 30px 0 0; text-align: center; font-size: .75rem; color: #5b6068; }
+.hd-d3-framepick__drawing img { display: block; width: 100%; height: auto; border: 1px solid var(--d3-line); border-radius: 8px; background: #fff; }
+.hd-d3-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.hd-d3-chip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 12px;
+  border: 1px solid var(--d3-line); border-radius: 999px; background: var(--paper, #fff); font: inherit; font-size: .88rem; cursor: pointer; color: inherit;
+}
+.hd-d3-chip.is-on { background: var(--d3-accent); border-color: var(--d3-accent); color: #fff; }
+.hd-d3-chip:disabled { opacity: .4; cursor: not-allowed; }
+.hd-d3-chip--pic { border-radius: 10px; flex: 1 1 100px; max-width: 170px; text-align: center; }
+.hd-d3-chip--pic img { width: 100%; max-width: 120px; height: auto; border-radius: 6px; background: #fff; }
+.hd-d3-chip:focus-visible, .hd-d3-just:focus-visible, .hd-d3-cta:focus-visible { outline: 3px solid var(--ink, #161616); outline-offset: 2px; }
+.hd-d3-cta {
+  display: block; width: 100%; min-height: 48px; margin: 12px 0 0; padding: 0 18px; border: 0; border-radius: 10px;
+  background: var(--d3-accent); color: #fff; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer;
+}
+.hd-d3-cta:disabled { opacity: .45; cursor: default; }
+.hd-d3-cta--secondary { background: var(--paper, #fff); color: var(--d3-accent); border: 2px solid var(--d3-accent); }
+.hd-d3-textlink { display: inline-block; margin: 14px 0 0; padding: 4px 0; border: 0; background: none; font: inherit; font-size: .92rem; color: var(--d3-accent); text-decoration: underline; cursor: pointer; }
+.hd-d3 .hd-sw-price { margin: 0 0 10px; padding: 12px 14px; border-radius: 12px; background: var(--d3-soft); font-weight: 600; line-height: 1.45; text-align: center; }
+.hd-d3 .hd-sw-savebox { margin: 12px 0 0; padding: 0; border: 0; }
+.hd-d3 .hd-sw-save__title { font-weight: 700; font-size: 1.05rem; line-height: 1.35; margin-bottom: 8px; }
+.hd-d3 .hd-sw-save__hint { display: block; margin-top: 4px; font-size: .82rem; color: var(--muted, #8a8e96); }
+.hd-d3 .hd-dd__submit { width: 100%; }
+.hd-d3-callback { margin-top: 4px; }
+.hd-d3-callback__intro { margin: 0 0 10px; font-size: .92rem; color: #4a4f57; }
+.hd-d3-thanks { margin: 24px 0; padding: 18px 16px; border-radius: 14px; background: var(--d3-soft); text-align: center; }
+.hd-d3-thanks__title { font-weight: 700; font-size: 1.1rem; color: #1d4f3f; }
+@media (min-width: 720px) {
+  .hd-d3-after { grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); gap: 24px; align-items: start; }
+  .hd-d3-stage--after { position: sticky; top: 12px; }
+  .hd-d3-stage--after .hd-d3-frame { width: 340px; }
+  .hd-d3-framepick__drawing { flex-basis: 132px; }
 }
