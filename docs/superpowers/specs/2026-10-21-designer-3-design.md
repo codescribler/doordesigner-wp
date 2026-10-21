@@ -78,23 +78,58 @@ Fire a funnel step for each toolbox section the visitor opens (`colour`, `handle
 
 The saved screen confirms "Saved. We've emailed you a link to your design." It then asks: "Does your doorway have glass at the side or top? It helps us price it properly." Fire `frame`.
 
-All 21 Endurance frame layouts are offered, as three small choices:
+All **24** Endurance frame layouts are offered (Single, Stable and Avantal doors), as small choices.
 
-| 1 · Where | 2 · Side panel style | Endurance layout |
-|---|---|---|
-| Left / Right | Full glass · Midrail · Half flag | Sidelight Left/Right · …with Midrail · Half Flag Sidelight Left/Right |
-| Both sides | Full glass · Midrails · Half flags | Double Sidelight · …with Midrails · …with Half Flags |
-| Top + left / right | same three | Toplight with Sidelight Left/Right · …with Midrail · Toplight with Half Flag Left/Right |
-| Top + both | same three | Toplight with Sidelight Both · …with Midrails · Toplight with Half Flag Both |
-| Top only | (style row hidden) | Toplight, or Toplight (full) shown as "Full-width top light" |
-| Just the door | — | No Sidelights |
+Endurance lists "Toplight with Half Flag Left / Right / Both" twice, and they are **different frames** (confirmed from the manager app's survey drawings, 2026-10-21):
+- ids 14, 17, 20 have a bar across the side glass, level with the top of the door
+- ids 31, 32, 33 are "no side transom": the side glass runs straight up to the top
 
-- The "Where" choice is two rows of chips: sides (just the door / left / right / both) and top (none / top light / full-width).
-- **Glass:** the side-light glass choice, plus glazed or solid panels where the catalogue offers both. These are Classic's `Sidelight type` and `Sidelight glass` fields.
+They must be offered and stored as separate layouts, picked by **id**, never by label.
+
+| id | Endurance layout | Sides | Top | Side panel | Half-flag top joint |
+|---|---|---|---|---|---|
+| 1 | No Sidelights | none | none | — | — |
+| 2 | Sidelight Left | left | none | full glass | — |
+| 3 | Sidelight Left with Midrail | left | none | midrail | — |
+| 4 | Half Flag Sidelight Left | left | none | half flag | — |
+| 5 | Sidelight Right | right | none | full glass | — |
+| 6 | Sidelight Right with Midrail | right | none | midrail | — |
+| 7 | Half Flag Sidelight Right | right | none | half flag | — |
+| 8 | Double Sidelight | both | none | full glass | — |
+| 9 | Double Sidelight with Midrails | both | none | midrail | — |
+| 10 | Double Sidelight with Half Flags | both | none | half flag | — |
+| 11 | Toplight | none | top | — | — |
+| 12 | Toplight with Sidelight Left | left | top | full glass | — |
+| 13 | Toplight with Sidelight Left with Midrail | left | top | midrail | — |
+| 14 | Toplight with Half Flag Left | left | top | half flag | bar at door height |
+| 15 | Toplight with Sidelight Right | right | top | full glass | — |
+| 16 | Toplight with Sidelight Right with Midrail | right | top | midrail | — |
+| 17 | Toplight with Half Flag Right | right | top | half flag | bar at door height |
+| 18 | Toplight with Sidelight Both | both | top | full glass | — |
+| 19 | Toplight with Sidelights Both with Midrails | both | top | midrail | — |
+| 20 | Toplight with Half Flag Both | both | top | half flag | bar at door height |
+| 30 | Toplight (full) | none | full width | — | — |
+| 31 | Toplight with Half Flag Left | left | top | half flag | glass runs to the top |
+| 32 | Toplight with Half Flag Right | right | top | half flag | glass runs to the top |
+| 33 | Toplight with Half Flag Both | both | top | half flag | glass runs to the top |
+
+The "id" column is the catalogue choice id, checked against `data/endurance-catalogue-full.json` on 2026-10-21. Stable and Avantal use the same list.
+
+How the visitor picks:
+1. **Where:** two rows of chips: sides (just the door / left / right / both) and top (none / top light / full-width top light). Full width is offered only with no side lights.
+2. **Side panel style** (only when a side is chosen): full glass, glass with a midrail, or half flag (glass top, solid bottom).
+3. **Half-flag top joint** (only for half flag with a top light): "Bar level with the top of the door" or "Glass runs up to the top". Each is shown with its drawing.
+4. **Glass:** the side-light glass choice, plus glazed or solid panels where the catalogue offers both. These are Classic's `Sidelight type` and `Sidelight glass` fields.
+
+Every combination maps to exactly one of the 24 layouts.
+
+- **Drawings on the choices.** The manager app already has a drawing of each layout: `manager-app/scripts/survey-frames/frame-NN-*.png` (246×220 grey line drawings, id in the file name). Copy them into the plugin (for example `assets/img/frames/`) and show the matching drawing for the current combination next to the chips, and on the half-flag joint choice.
+  - There is no drawing for id 30, "Toplight (full)". Draw one in the same style.
+  - These drawings explain the choice. They do not replace the door picture.
 - **"Just the door" acts as Next.** Tapping it saves the answer and moves straight to the quote.
 - Nothing is pre-selected.
 - The door picture updates as they choose, and the saved design is updated with `POST /save/{token}`.
-- **Drawing top lights (Daniel's choice).** `data/render-model.json` has side-panel artwork for only 9 layouts and no top-light artwork at all. Capture the real top-light artwork and geometry from the logged-in Endurance designer, the same way the style slabs were captured (see the endurance-is-source-of-truth memory). Extend `tools/build-render-model.js` so all 21 layouts render.
+- **Drawing top lights (Daniel's choice).** `data/render-model.json` has side-panel artwork for only 9 layouts and no top-light artwork at all. Capture the real top-light artwork and geometry from the logged-in Endurance designer, the same way the style slabs were captured (see the endurance-is-source-of-truth memory). Extend `tools/build-render-model.js` so all 24 layouts render, including both half-flag joints.
   - Classic's rendering must not change. Either keep the new layers out of the paths Classic uses, or prove with a test that Classic's output is identical.
   - **Stopgap only if the capture fails:** draw an approximate glazed top light in Designer 3 only, from the frame geometry, and say so in the release notes.
 - Double doors skip this step, because the catalogue offers only No Sidelights for them.
@@ -145,7 +180,7 @@ The emailed `?design=` link reopens **Designer 3**, whatever arm the visitor wou
 - `canRunSwipe`-style fallback: if Designer 3 can't run (for example, no canvas), fall back to Classic and say so in the console.
 - Tests in the plugin's existing style (`node tests/js/*.test.js`, `php tests/php/run.php`). At minimum, cover:
   - the defaults resolver, including the position rules
-  - the frame mapping (all 21 layouts reachable, each "Where" and "Style" pair mapping to exactly one layout)
+  - the frame mapping (all 24 layouts reachable by id, each combination of choices mapping to exactly one layout, ids 14/17/20 and 31/32/33 kept distinct)
   - the callback route
   - flow registration and return-link flow
   - the copy rule extended to the new folder
@@ -214,7 +249,7 @@ Daniel's decisions:
 - Dots on the door plus a toolbox (colour, door style, handle, letterplate, knocker). No spy hole.
 - Most popular furniture per style, or a best guess, respecting glass and positions.
 - A gentle nudge after a few changes.
-- After saving: side and top lights as an encouraged extra (all options, including half flags), with "Just the door" moving on.
+- After saving: side and top lights as an encouraged extra (all 24 layouts, including both kinds of half flag with a top light), with "Just the door" moving on.
 - Quote as the priority, call back as the other option.
 - Phone layout B.
 - Stop Swipe 2, capture all its data, start Classic vs Designer 3.
