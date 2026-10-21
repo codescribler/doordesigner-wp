@@ -46,7 +46,7 @@ class HD_DD_Assets {
 		$this->enqueued = true;
 
 		$ver_css = $this->asset_version( 'assets/css/hd-door-designer.css' );
-		$ver_js  = $this->asset_version( 'assets/js/hd-door-designer.js' );
+		$ver_js  = $this->js_version();
 
 		wp_register_style( self::HANDLE, HD_DD_URL . 'assets/css/hd-door-designer.css', array(), $ver_css );
 
@@ -118,53 +118,125 @@ class HD_DD_Assets {
 			true
 		);
 		wp_register_script( self::HANDLE . '-swipeapp', HD_DD_URL . 'assets/js/swipe/swipe-app.js', array( self::HANDLE . '-swipeview', self::HANDLE . '-wizard' ), $ver_js, true );
+		$this->register_designer3( $ver_js );
 
 		// Entry point: picks the flow (forced / A/B arm / default) and starts it.
 		wp_register_script(
 			self::HANDLE . '-boot',
 			HD_DD_URL . 'assets/js/boot.js',
-			array( self::HANDLE, self::HANDLE . '-swipeapp', self::HANDLE . '-experiment', self::HANDLE . '-funnel', self::HANDLE . '-apiclient' ),
+			array( self::HANDLE, self::HANDLE . '-swipeapp', self::HANDLE . '-d3app', self::HANDLE . '-experiment', self::HANDLE . '-funnel', self::HANDLE . '-apiclient' ),
 			$ver_js,
 			true
 		);
 		wp_register_style( self::HANDLE . '-swipe', HD_DD_URL . 'assets/css/hd-swipe.css', array( self::HANDLE ), $this->asset_version( 'assets/css/hd-swipe.css' ) );
+		wp_register_style( self::HANDLE . '-d3', HD_DD_URL . 'assets/css/hd-designer3.css', array( self::HANDLE ), $this->asset_version( 'assets/css/hd-designer3.css' ) );
 
 		wp_enqueue_style( self::HANDLE );
 		wp_enqueue_style( self::HANDLE . '-swipe' );
+		wp_enqueue_style( self::HANDLE . '-d3' );
 		wp_enqueue_script( self::HANDLE . '-boot' );
 
 		// Localised onto the render model — the first script in every flow's dependency chain —
 		// so HD_DD_CONFIG exists before any module that reads it at load time.
-		wp_localize_script(
-			self::HANDLE . '-rendermodel',
-			'HD_DD_CONFIG',
-			array(
-				'restUrl'        => esc_url_raw( rest_url( HD_DD_REST_NS . '/' ) ),
-				// Cache-bust the data fetches with the plugin version: the REST responses set a
-				// 1-hour Cache-Control, so without this the browser keeps serving the OLD
-				// catalogue/render-model for up to an hour after a plugin update.
-				'catalogueUrl'   => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/catalogue' ) ) ),
-				'renderModelUrl' => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/render-model' ) ) ),
-				'categoriesUrl'  => esc_url_raw( HD_DD_URL . 'data/style-categories.json' ),
-				'nonce'          => wp_create_nonce( 'wp_rest' ),
-				// Stamped on every funnel event (see wizard/funnel.js) so the manager
-				// dashboard can compare completion per release.
-				'version'        => HD_DD_VERSION,
-				// Which designer flow to boot: { default, experiment: null | { id, control, challenger, percent } }.
-				'flow'           => HD_DD_Experiments::front_config(),
-				'catalogueReady' => $this->catalogue->is_available(),
-				'renderReady'    => $this->catalogue->render_model_available(),
-				// Asset base for preview images: a setting override, else the model's own
-				// captured origin (Endurance host). Empty during dev = use model._assetBase.
-				'assetBase'      => $this->get_asset_base(),
-				// Hero image for the opening screen (before a door type is chosen). Override
-				// with the `hd_dd_hero_image` filter or set it empty to show nothing.
-				'heroImage'      => esc_url_raw( apply_filters( 'hd_dd_hero_image', 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' ) ),
-				// Review-step social proof: { rating, count, url, quotes: [{ text, by }] } (assets/js/trust.js).
-				'trust'          => HD_DD_Trust_Settings::front_config(),
-				'i18n'           => $this->i18n_strings(),
-			)
+		wp_localize_script( self::HANDLE . '-rendermodel', 'HD_DD_CONFIG', $this->front_config() );
+	}
+
+	/** HD_DD_CONFIG: everything the browser modules read. */
+	private function front_config() {
+		$cfg = array(
+			'restUrl'        => esc_url_raw( rest_url( HD_DD_REST_NS . '/' ) ),
+			// Cache-bust the data fetches with the plugin version: the REST responses set a
+			// 1-hour Cache-Control, so without this the browser keeps serving the OLD
+			// catalogue/render-model for up to an hour after a plugin update.
+			'catalogueUrl'   => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/catalogue' ) ) ),
+			'renderModelUrl' => esc_url_raw( add_query_arg( 'v', HD_DD_VERSION, rest_url( HD_DD_REST_NS . '/render-model' ) ) ),
+			'categoriesUrl'  => esc_url_raw( HD_DD_URL . 'data/style-categories.json' ),
+			'nonce'          => wp_create_nonce( 'wp_rest' ),
+			// Stamped on every funnel event (see wizard/funnel.js) so the manager
+			// dashboard can compare completion per release.
+			'version'        => HD_DD_VERSION,
+			// Which designer flow to boot: { default, experiment: null | { id, control, challenger, percent } }.
+			'flow'           => HD_DD_Experiments::front_config(),
+			'catalogueReady' => $this->catalogue->is_available(),
+			'renderReady'    => $this->catalogue->render_model_available(),
+			// Asset base for preview images: a setting override, else the model's own
+			// captured origin (Endurance host). Empty during dev = use model._assetBase.
+			'assetBase'      => $this->get_asset_base(),
+			// Hero image for the opening screen (before a door type is chosen). Override
+			// with the `hd_dd_hero_image` filter or set it empty to show nothing.
+			'heroImage'      => esc_url_raw( apply_filters( 'hd_dd_hero_image', 'https://hertfordshiredoors.co.uk/wp-content/uploads/2024/02/AVANTAL.jpg' ) ),
+			// Review-step social proof: { rating, count, url, quotes: [{ text, by }] } (assets/js/trust.js).
+			'trust'          => HD_DD_Trust_Settings::front_config(),
+			'i18n'           => $this->i18n_strings(),
+			// The plugin folder's URL (Designer 3 resolves its frame drawings against it).
+			'pluginUrl'      => HD_DD_URL,
 		);
+		// Designer 3's pre-picked furniture per style (assets/js/designer3/d3-defaults.js).
+		$d3 = $this->designer3_defaults();
+		if ( null !== $d3 ) {
+			$cfg['d3Defaults'] = $d3;
+		}
+		return $cfg;
+	}
+
+	/**
+	 * Designer 3 modules (assets/js/designer3/). Like the swipe flow they always load, so an A/B
+	 * arm, ?flow=designer3 or a saved Designer 3 link can start it straight away.
+	 */
+	private function register_designer3( $ver_js ) {
+		$h   = self::HANDLE . '-';
+		$d3  = array(
+			'd3defaults'  => array( 'd3-defaults.js', array( 'shared' ) ),
+			'd3frame'     => array( 'd3-frame.js', array() ),
+			'd3hotspots'  => array( 'd3-hotspots.js', array( 'rendermodel' ) ),
+			'd3nudge'     => array( 'd3-nudge.js', array() ),
+			'd3save'      => array( 'd3-save.js', array( 'reviewsave', 'enquiry', 'apiclient' ) ),
+			'd3toolbox'   => array( 'd3-toolbox.js', array( 'swipeparts', 'shared', 'rendermodel' ) ),
+			'd3screens'   => array( 'd3-screens.js', array( 'd3hotspots', 'd3toolbox', 'swipeparts', 'preview' ) ),
+			'd3framestep' => array( 'd3-frame-step.js', array( 'd3frame', 'stepcfg' ) ),
+			'd3callback'  => array( 'd3-callback.js', array( 'apiclient' ) ),
+			'd3aftersave' => array( 'd3-after-save.js', array( 'd3framestep', 'd3callback', 'd3toolbox', 'reviewsave', 'enquiry', 'trust', 'preview', 'wizard', 'stepcfg' ) ),
+			'd3app'       => array( 'd3-app.js', array( 'd3defaults', 'd3nudge', 'd3hotspots', 'd3save', 'd3screens', 'd3aftersave', 'd3framestep', 'shared', 'wizard', 'stepcfg', 'funnel', 'preview' ) ),
+		);
+		foreach ( $d3 as $key => $def ) {
+			$deps = array_map(
+				function ( $k ) use ( $h ) {
+					return $h . $k;
+				},
+				$def[1]
+			);
+			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer3/' . $def[0], $deps, $ver_js, true );
+		}
+	}
+
+	/** Decoded data/designer3-defaults.json, or null when it is missing or not valid JSON. */
+	private function designer3_defaults() {
+		static $cache = array();
+		$path = HD_DD_DATA_DIR . 'designer3-defaults.json';
+		if ( ! is_readable( $path ) ) {
+			return null;
+		}
+		$key = filemtime( $path ) . ':' . filesize( $path );
+		if ( ! array_key_exists( $key, $cache ) ) {
+			$data          = json_decode( (string) file_get_contents( $path ), true );
+			$cache[ $key ] = is_array( $data ) ? $data : null;
+		}
+		return $cache[ $key ];
+	}
+
+	/** One version for every script: the newest mtime under assets/js, so editing any module busts the cache. */
+	private function js_version() {
+		$dir    = HD_DD_DIR . 'assets/js';
+		$newest = 0;
+		if ( is_dir( $dir ) ) {
+			$files = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) );
+			foreach ( $files as $f ) {
+				if ( 'js' === strtolower( $f->getExtension() ) ) {
+					$newest = max( $newest, $f->getMTime() );
+				}
+			}
+		}
+		return $newest ? (string) $newest : HD_DD_VERSION;
 	}
 
 	/** File-mtime-based cache busting; falls back to plugin version. */
