@@ -25,6 +25,12 @@
     sidelighttype: 14, sidelightglass: 15, review: 16, saved: 17
   };
 
+  // Designer 3 reports as 'door-designer-v4'. The lead is funnel.lead(), not a step.
+  var ORDER_V4 = {
+    opened: 0, type: 1, style: 2, shown: 3, colour: 4, handle: 5, letterplate: 6, knocker: 7,
+    more: 8, saved: 9, frame: 10, quoteform: 11, callback: 12
+  };
+
   // "Don't count me": ?notrack=1 switches every designer analytics call off in this browser
   // and remembers it (localStorage), so the owner can use the live designer without skewing
   // the stats; ?notrack=0 switches it back on. Covers hdAnalytics funnel events and leads,
@@ -86,5 +92,5 @@
 
   var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, ORDER_V3: ORDER_V3, create: create, step: classic.step, lead: classic.lead, muted: muted };
+  return { ORDER: ORDER, ORDER_V3: ORDER_V3, ORDER_V4: ORDER_V4, create: create, step: classic.step, lead: classic.lead, muted: muted };
 }));

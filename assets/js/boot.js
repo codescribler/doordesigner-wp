@@ -4,16 +4,17 @@
 //   • ?flow= or the shortcode's data-flow force a flow (testing — never counted in experiments)
 //   • else a running A/B experiment assigns the visitor to an arm (sticky, see experiment.js)
 //   • else the site's default flow (wp-admin setting)
-// Each flow reports to its own analytics funnel: classic -> 'door-designer', swipe2 -> 'door-designer-v3'.
+// Each flow reports to its own analytics funnel: classic -> 'door-designer', swipe2 -> 'door-designer-v3', designer3 -> 'door-designer-v4'.
 (function () {
 	'use strict';
 
 	var CFG = window.HD_DD_CONFIG || {};
-	var FUNNELS = { classic: 'door-designer', swipe2: 'door-designer-v3' };
+	var FUNNELS = { classic: 'door-designer', swipe2: 'door-designer-v3', designer3: 'door-designer-v4' };
 
 	function funnelFor(flow) {
 		var F = window.HD_DD_Funnel;
 		if (!F || !F.create) { return { step: function () {}, lead: function () {} }; }
+		if (flow === 'designer3') { return F.create(FUNNELS.designer3, F.ORDER_V4); }
 		return flow === 'swipe2' ? F.create(FUNNELS.swipe2, F.ORDER_V3) : F.create(FUNNELS.classic, F.ORDER);
 	}
 
@@ -21,7 +22,7 @@
 		var E = window.HD_DD_Experiment;
 		var flowCfg = CFG.flow || { 'default': 'classic', experiment: null };
 		if (!E) { return { flow: flowCfg['default'] || 'classic', counted: false }; }
-		var forced = E.forcedFlow(window.location.search, root);
+		var forced = E.forcedFlow(window.location.search, root, flowCfg);
 		return E.resolve(flowCfg, forced) || { flow: flowCfg['default'] || 'classic', counted: false };
 	}
 
@@ -57,6 +58,7 @@
 			// Swipe 2 needs the render model and all of its scripts (experiment.js canRunSwipe).
 			var X = window.HD_DD_Experiment;
 			var canSwipe = !!(X && X.canRunSwipe && X.canRunSwipe(window, rm));
+			var canD3 = !!(X && X.canRunDesigner3 && X.canRunDesigner3(window, rm));
 			var saved = null;
 			try { saved = new URLSearchParams(window.location.search).get('design'); } catch (e) { saved = null; }
 			var doorType = root.getAttribute('data-door-type') || '';
@@ -67,7 +69,10 @@
 				root.innerHTML = '';
 				if (muted) { showMutedBadge(); }
 				var funnel = funnelFor(flow);
-				if (flow === 'swipe2') {
+				if (flow === 'designer3') {
+					var d3 = new window.HD_DD_Designer3App(root, cv, rm, res[2], { api: api, funnel: funnel, experiment: assignment, doorType: doorType, flow: flow });
+					if (saved) { d3.loadSaved(saved); } else { d3.render(); }
+				} else if (flow === 'swipe2') {
 					var sw = new window.HD_DD_SwipeApp(root, cv, rm, res[2], { api: api, funnel: funnel, experiment: assignment, doorType: doorType, flow: flow });
 					if (saved) { sw.loadSaved(saved); } else { sw.render(); }
 				} else {
@@ -86,6 +91,9 @@
 				// The swipe flow draws every card from the render model; without it, or without
 				// one of its scripts, fall back to classic (not counted in the test).
 				var flow = (a.flow === 'swipe2' && canSwipe) ? 'swipe2' : 'classic';
+				if (a.flow === 'designer3') {
+					if (canD3) { flow = 'designer3'; } else { console.warn('[HD DD] Designer 3 unavailable, showing Classic'); }
+				}
 				var assignment = (!muted && a.counted && flow === a.flow) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
 				if (assignment && window.HD_DD_Experiment) { window.HD_DD_Experiment.expose(api, a); }
 				launch(flow, assignment);
@@ -95,7 +103,7 @@
 			// the arm recorded when it was saved is what a later quote request converts for.
 			if (saved && window.HD_DD_Experiment && window.HD_DD_Experiment.storedFlow) {
 				api('design/' + encodeURIComponent(saved), { method: 'GET' }).then(function (r) {
-					var flow = (r && r.ok) ? window.HD_DD_Experiment.storedFlow(r.body, canSwipe) : '';
+					var flow = (r && r.ok) ? window.HD_DD_Experiment.storedFlow(r.body, { swipe2: canSwipe, designer3: canD3 }) : '';
 					if (flow) { launch(flow, null); } else { launchAssigned(); }
 				}, function () { launchAssigned(); });
 				return;

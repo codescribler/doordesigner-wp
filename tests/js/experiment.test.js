@@ -209,3 +209,13 @@ Object.keys(ALL).forEach(function (k) {
 
   console.log('experiment.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });
+
+// Designer 3 flow
+assert.strictEqual(EX.storedFlow({ flow: 'designer3' }, { swipe2: true, designer3: true }), 'designer3');
+assert.strictEqual(EX.storedFlow({ flow: 'designer3' }, { swipe2: true, designer3: false }), 'classic');
+assert.strictEqual(EX.storedFlow({ flow: 'swipe2' }, true), 'swipe2', 'boolean form still works');
+assert.strictEqual(EX.storedFlow({ flow: 'swipe2' }, { swipe2: false, designer3: true }), 'classic');
+assert.strictEqual(EX.forcedFlow('?flow=designer3', null, { 'default': 'classic', experiment: null }), 'designer3');
+assert.strictEqual(EX.canRunDesigner3({ HD_DD_Designer3App: 1, HD_DD_Preview: 1 }, {}), true);
+assert.strictEqual(EX.canRunDesigner3({ HD_DD_Designer3App: 1 }, {}), false);
+assert.strictEqual(EX.canRunDesigner3({ HD_DD_Designer3App: 1, HD_DD_Preview: 1 }, null), false);

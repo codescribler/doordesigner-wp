@@ -6,7 +6,9 @@
 require __DIR__ . '/experiment-helpers.php';
 
 hd_exp_reset();
-check( array( 'classic', 'swipe2' ) === array_keys( HD_DD_Experiments::flows() ), 'live flows are classic and swipe2' );
+check( array( 'classic', 'swipe2', 'designer3' ) === array_keys( HD_DD_Experiments::flows() ), 'live flows are classic, swipe2 and designer3' );
+check( 'Designer 3' === HD_DD_Experiments::flows()['designer3'], 'designer3 is labelled Designer 3' );
+check( 'designer3' === HD_DD_Experiments::canonical_flow( 'designer3' ), 'designer3 is canonical' );
 check( 'Swipe 2' === HD_DD_Experiments::flow_label( 'swipe2' ), 'swipe2 is labelled Swipe 2' );
 check( 'Swipe' === HD_DD_Experiments::flow_label( 'swipe' ), 'the retired flow still has a label for history' );
 check( 'swipe2' === HD_DD_Experiments::canonical_flow( 'swipe' ), 'swipe is an alias of swipe2' );

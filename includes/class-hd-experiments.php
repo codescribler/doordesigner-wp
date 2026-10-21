@@ -40,7 +40,7 @@ class HD_DD_Experiments {
 
 	/** @return array flow key => label. */
 	public static function flows() {
-		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe2' => 'Swipe 2' ) );
+		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe2' => 'Swipe 2', 'designer3' => 'Designer 3' ) );
 	}
 
 	public static function is_flow( $flow ) {

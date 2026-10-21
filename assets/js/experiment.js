@@ -26,10 +26,13 @@
 
   // The flow a saved design should reopen in, from GET design/{token}. '' = not recorded
   // (rows saved before this was stored): the caller falls back to the normal assignment.
-  function storedFlow(body, canSwipe) {
+  // `caps` is a boolean (can run swipe2, the old form) or {swipe2:bool, designer3:bool}.
+  function storedFlow(body, caps) {
     var f = canonical(body && body.flow);
+    var c = (caps && typeof caps === 'object') ? caps : { swipe2: !!caps, designer3: false };
     if (f === 'classic') { return 'classic'; }
-    if (f === 'swipe2') { return canSwipe ? 'swipe2' : 'classic'; }
+    if (f === 'swipe2') { return c.swipe2 ? 'swipe2' : 'classic'; }
+    if (f === 'designer3') { return c.designer3 ? 'designer3' : 'classic'; }
     return '';
   }
 
@@ -40,9 +43,14 @@
     return !!(renderModel && win && win.HD_DD_SwipeApp && win.HD_DD_ReviewSave && win.HD_DD_SwipeHint);
   }
 
+  // Designer 3 needs the render model and its app and preview scripts (same fallback rule as Swipe 2).
+  function canRunDesigner3(win, renderModel) {
+    return !!(renderModel && win && win.HD_DD_Designer3App && win.HD_DD_Preview);
+  }
+
   // Flows a forced value may name: the built-in ones plus whatever the config mentions.
   function knownFlows(cfg) {
-    var known = { classic: true, swipe2: true };
+    var known = { classic: true, swipe2: true, designer3: true };
     cfg = cfg || {};
     if (cfg['default']) { known[cfg['default']] = true; }
     if (cfg.experiment) {
@@ -196,5 +204,5 @@
     return (a && a.counted && a.experimentId) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
   }
 
-  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
+  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, canRunDesigner3: canRunDesigner3, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
 }));
