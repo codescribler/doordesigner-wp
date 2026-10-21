@@ -19,7 +19,7 @@ class HD_DD_Experiments {
 	const OPTION      = 'hd_dd_experiment';
 	const HISTORY     = 'hd_dd_experiment_history';
 	const DB_OPTION   = 'hd_dd_experiments_db_version';
-	const DB_VERSION  = '2';
+	const DB_VERSION  = '3';
 	const CRON        = 'hd_dd_experiment_evaluate';
 	const RATE_LIMIT  = 30;   // exposes per IP …
 	const RATE_WINDOW = 3600; // … per hour.
@@ -28,6 +28,7 @@ class HD_DD_Experiments {
 	public function register() {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_action( 'hd_dd_enquiry_submitted', array( $this, 'on_enquiry' ), 10, 2 );
+		add_action( 'hd_dd_callback_requested', array( $this, 'on_callback' ), 10, 2 );
 		add_action( self::CRON, array( $this, 'evaluate_current' ) );
 		add_action( 'init', array( __CLASS__, 'schedule' ) );
 	}
@@ -390,6 +391,19 @@ class HD_DD_Experiments {
 		}
 	}
 
+	/** hd_dd_callback_requested listener: note the call back once. Never a conversion (converted_at is untouched). */
+	public function on_callback( $payload, $id = 0 ) {
+		if ( empty( $payload['experiment'] ) || ! is_array( $payload['experiment'] ) ) {
+			return;
+		}
+		$ref = $payload['experiment'];
+		global $wpdb;
+		$table = self::table();
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+		$wpdb->query( $wpdb->prepare( "UPDATE {$table} SET callback_at = %s WHERE experiment_id = %s AND visitor_id = %s AND arm = %s AND callback_at IS NULL", gmdate( 'Y-m-d H:i:s' ), $ref['experimentId'], $ref['visitorId'], $ref['arm'] ) );
+		// phpcs:enable
+	}
+
 	// -------------------------------------------------------------------
 	// Schema
 	// -------------------------------------------------------------------
@@ -419,6 +433,7 @@ class HD_DD_Experiments {
 			arm VARCHAR(20) NOT NULL,
 			exposed_at DATETIME NOT NULL,
 			converted_at DATETIME NULL DEFAULT NULL,
+			callback_at DATETIME NULL DEFAULT NULL,
 			PRIMARY KEY  (experiment_id, visitor_id),
 			KEY experiment_arm (experiment_id, arm)
 		) {$charset};"

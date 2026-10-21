@@ -35,8 +35,16 @@ class HD_Test_Exp_WPDB extends HD_Test_WPDB {
 			if ( isset( $this->visitors[ $key ] ) ) {
 				return 0;
 			}
-			$this->visitors[ $key ] = array( 'experiment_id' => $m[1], 'visitor_id' => $m[2], 'arm' => $m[3], 'exposed_at' => $m[4], 'converted_at' => null );
+			$this->visitors[ $key ] = array( 'experiment_id' => $m[1], 'visitor_id' => $m[2], 'arm' => $m[3], 'exposed_at' => $m[4], 'converted_at' => null, 'callback_at' => null );
 			return 1;
+		}
+		if ( preg_match( "/^UPDATE wp_hd_dd_experiment_visitors SET callback_at = '([^']*)' WHERE experiment_id = '([^']*)' AND visitor_id = '([^']*)' AND arm = '([^']*)' AND callback_at IS NULL$/", $q, $m ) ) {
+			$key = $m[2] . '|' . $m[3];
+			if ( isset( $this->visitors[ $key ] ) && $m[4] === $this->visitors[ $key ]['arm'] && empty( $this->visitors[ $key ]['callback_at'] ) ) {
+				$this->visitors[ $key ]['callback_at'] = $m[1];
+				return 1;
+			}
+			return 0;
 		}
 		if ( preg_match( "/^UPDATE wp_hd_dd_experiment_visitors SET converted_at = '([^']*)' WHERE experiment_id = '([^']*)' AND visitor_id = '([^']*)' AND arm = '([^']*)' AND converted_at IS NULL$/", $q, $m ) ) {
 			$key = $m[2] . '|' . $m[3];

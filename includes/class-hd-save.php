@@ -36,6 +36,7 @@ class HD_DD_Save {
 			'/save'                           => 'rest_save',
 			'/save/' . self::TOKEN            => 'rest_update',
 			'/save/' . self::TOKEN . '/quote' => 'rest_quote',
+			'/save/' . self::TOKEN . '/callback' => 'rest_callback',
 		);
 		foreach ( $routes as $route => $method ) {
 			register_rest_route(
@@ -276,5 +277,60 @@ class HD_DD_Save {
 		do_action( 'hd_dd_enquiry_submitted', $payload, (int) $row->id );
 
 		return new WP_REST_Response( $done, 200 );
+	}
+
+	/** POST /save/{token}/callback — the saver asks us to ring them. A lead, but not an A/B conversion. */
+	public function rest_callback( WP_REST_Request $request ) {
+		$row = $this->repository->get_by_token( (string) $request['token'] );
+		if ( ! $row ) {
+			return $this->not_found();
+		}
+		if ( 'save' !== ( isset( $row->kind ) ? $row->kind : 'enquiry' ) ) {
+			return $this->already_enquiry();
+		}
+		if ( ! $this->within_save_limit() ) {
+			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many requests. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );
+		}
+
+		$p         = $this->params( $request );
+		$name      = self::cut( sanitize_text_field( wp_unslash( $this->text( $p, 'name' ) ) ), 190 );
+		$telephone = $this->enquiry->sanitize_phone( $this->text( $p, 'telephone' ) );
+		$errors    = array();
+		if ( '' === $name ) {
+			$errors['name'] = __( 'Please enter your name.', 'hd-door-designer' );
+		}
+		if ( '' === $telephone ) {
+			$errors['telephone'] = __( 'Please enter a contact number.', 'hd-door-designer' );
+		}
+		if ( $errors ) {
+			return $this->invalid( $errors );
+		}
+
+		$payload = json_decode( (string) $row->payload, true );
+		$payload = is_array( $payload ) ? $payload : array();
+		$payload['kind']        = 'callback';
+		$payload['submittedAt'] = gmdate( 'c' );
+		$payload['customer']    = array( 'name' => $name, 'telephone' => $telephone, 'email' => (string) $row->customer_email, 'postcode' => '' );
+
+		$claimed = $this->repository->claim_as_kind(
+			$row->id,
+			'callback',
+			array( 'customer_name' => $name, 'customer_phone' => $telephone, 'payload' => $payload )
+		);
+		if ( false === $claimed ) {
+			return $this->write_failed();
+		}
+		if ( 1 !== (int) $claimed ) {
+			return $this->already_enquiry();
+		}
+
+		$note = sprintf( /* translators: %s: telephone number */ __( 'Call back requested — %s', 'hd-door-designer' ), $telephone );
+		HD_DD_Mailer::send( $payload, HD_DD_Plugin::settings()['recipient_email'], $this->attachments( $row->reference ), $note );
+		HD_DD_Save_Mailer::send_callback_ack( $payload, $this->enquiry->build_reload_url( $this->text( $p, 'pageUrl' ), $row->token ) );
+
+		/** A lead for the business, deliberately not hd_dd_enquiry_submitted (that is the A/B conversion). */
+		do_action( 'hd_dd_callback_requested', $payload, (int) $row->id );
+
+		return new WP_REST_Response( array( 'ok' => true, 'reference' => $row->reference ), 201 );
 	}
 }

@@ -87,7 +87,7 @@ class HD_DD_Enquiry {
 				// Which designer this was saved from, so the link reopens it there; and whether
 				// a price has been asked for yet. Still no personal details.
 				'flow'   => isset( $row->flow ) ? (string) $row->flow : '',
-				'kind'   => ( isset( $row->kind ) && 'save' === $row->kind ) ? 'save' : 'enquiry',
+				'kind'   => ( isset( $row->kind ) && in_array( $row->kind, array( 'save', 'callback' ), true ) ) ? $row->kind : 'enquiry',
 			),
 			200
 		);

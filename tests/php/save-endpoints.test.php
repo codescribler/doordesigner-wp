@@ -145,7 +145,7 @@ check( array( 'design', 'flow', 'kind' ) === array_keys( $data ) && false === st
 hd_test_reset();
 hd_api()->register_routes();
 $routes = array_keys( $GLOBALS['hd_test_routes'] );
-check( in_array( '/save', $routes, true ) && 3 === count( $routes ), 'three routes are registered' );
+check( in_array( '/save', $routes, true ) && 4 === count( $routes ) && in_array( '/save/(?P<token>[A-Za-z0-9]{10,64})/callback', $routes, true ), 'four routes are registered, including call back' );
 foreach ( $GLOBALS['hd_test_routes'] as $args ) {
 	check( is_array( $args['permission_callback'] ) && 'check_nonce' === $args['permission_callback'][1], 'every save route checks the nonce' );
 }

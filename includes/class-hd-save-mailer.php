@@ -117,4 +117,38 @@ class HD_DD_Save_Mailer {
 		}
 		return wp_mail( $recipient, $subject, implode( "\n", $lines ), $headers, $attachments );
 	}
+
+	/** Customer's note after a call-back request. Plain wording, one link back to the design. */
+	public static function send_callback_ack( array $payload, $reload_url ) {
+		$to = isset( $payload['customer']['email'] ) ? sanitize_email( $payload['customer']['email'] ) : '';
+		if ( ! is_email( $to ) ) {
+			return false;
+		}
+		$full  = isset( $payload['customer']['name'] ) ? trim( (string) $payload['customer']['name'] ) : '';
+		$first = '' !== $full ? preg_split( '/\s+/', $full )[0] : __( 'there', 'hd-door-designer' );
+		$style = ( isset( $payload['design']['Door Design']['label'] ) && '' !== trim( (string) $payload['design']['Door Design']['label'] ) ) ? trim( (string) $payload['design']['Door Design']['label'] ) : __( 'new', 'hd-door-designer' );
+		$ref   = isset( $payload['reference'] ) ? (string) $payload['reference'] : '';
+		/* translators: %s: enquiry reference */
+		$subject = sprintf( __( 'Your Hertfordshire Doors design (%s)', 'hd-door-designer' ), $ref );
+
+		$text = sprintf(
+			/* translators: 1: first name, 2: door style */
+			esc_html__( "Thanks %1\$s. We've got your request for a call back about your %2\$s door, and we'll be in touch within one working day. Your design is saved here: ", 'hd-door-designer' ),
+			esc_html( $first ),
+			esc_html( $style )
+		);
+		$link = '' !== (string) $reload_url ? '<a href="' . esc_url( $reload_url ) . '">' . esc_html( $reload_url ) . '</a>' : '';
+		$body = '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#161616;"><p>' . $text . $link . '</p><p style="color:#8a8e96;">Hertfordshire Doors</p></body></html>';
+
+		$host    = preg_replace( '/^www\./', '', (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		$headers = array( 'Content-Type: text/html; charset=UTF-8', 'From: ' . ( $host ? 'Hertfordshire Doors <noreply@' . $host . '>' : 'Hertfordshire Doors' ) );
+		$settings = HD_DD_Plugin::settings();
+		if ( ! empty( $settings['recipient_email'] ) ) {
+			$reply = sanitize_email( trim( preg_split( '/[\s,]+/', trim( $settings['recipient_email'] ) )[0] ) );
+			if ( $reply ) {
+				$headers[] = 'Reply-To: ' . $reply;
+			}
+		}
+		return wp_mail( $to, $subject, $body, $headers );
+	}
 }

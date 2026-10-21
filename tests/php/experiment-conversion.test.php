@@ -82,6 +82,29 @@ $enq = new HD_DD_Enquiry( new HD_DD_Repository(), new HD_DD_Catalogue() );
 $enq->rest_submit( hd_test_request( 'POST', '/x', array( 'hd_hp' => 'autofill', 'consent' => true, 'name' => 'A', 'email' => 'a@example.com', 'telephone' => '0123', 'postcode' => 'AL1 1AA', 'design' => array( 'Door Type' => array( 'label' => 'Single Door', 'id' => null ) ), 'experiment' => array( 'experimentId' => $exp['id'], 'visitorId' => $vid2, 'arm' => 'control' ) ) ) );
 check( null !== $wpdb->visitors[ $exp['id'] . '|' . $vid2 ]['converted_at'], 'a flagged (honeypot) enquiry still converts' );
 
+// --- A call back is a lead for the business, not a conversion -------------------------------------
+hd_exp_reset();
+( new HD_DD_Experiments() )->register();
+$exp = hd_exp_start();
+$vid = md5( 'visitor-cb' );
+$ref = array( 'experimentId' => $exp['id'], 'visitorId' => $vid, 'arm' => 'challenger' );
+hd_exp_expose( $ref );
+$repo = new HD_DD_Repository();
+$api  = new HD_DD_Save( $repo, new HD_DD_Enquiry( $repo, new HD_DD_Catalogue() ) );
+$saved = $api->rest_save( hd_test_request( 'POST', '/hd-door-designer/v1/save', array( 'email' => 'cb@example.com', 'hd_hp' => '', 'flow' => 'designer3', 'experiment' => $ref, 'design' => array( 'Door Type' => array( 'label' => 'Single Door', 'id' => null ) ) ) ) )->get_data();
+$r = hd_test_request( 'POST', '/x', array( 'name' => 'Cal Back', 'telephone' => '01234 567890' ) );
+$r->set_param( 'token', $saved['token'] );
+$res = $api->rest_callback( $r );
+check( ! is_wp_error( $res ) && 201 === $res->get_status(), 'call back accepted' );
+$v = $wpdb->visitors[ $exp['id'] . '|' . $vid ];
+check( ! empty( $v['callback_at'] ) && null === $v['converted_at'], 'callback_at is set and converted_at stays NULL' );
+$first = $v['callback_at'];
+do_action( 'hd_dd_callback_requested', array( 'experiment' => $ref ), 0 );
+check( $first === $wpdb->visitors[ $exp['id'] . '|' . $vid ]['callback_at'], 'callback_at is set once' );
+$arms = HD_DD_Experiments::arms( HD_DD_Experiments::current() );
+check( 1 === $arms['challenger']['visitors'] && 0 === $arms['challenger']['leads'], 'arms(): a call back adds no lead' );
+check( 0 === (int) HD_DD_Experiments::current()['unattributed'], 'and nothing unattributed' );
+
 // --- Daily evaluation: winner emailed once --------------------------------------------------------
 hd_exp_reset();
 $exp = hd_exp_start( 30 );

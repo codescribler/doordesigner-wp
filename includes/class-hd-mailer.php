@@ -15,9 +15,10 @@ class HD_DD_Mailer {
 	 * @param array  $payload     The full structured payload (reference, customer, design, derived).
 	 * @param string $recipient   Recipient email.
 	 * @param array  $attachments Absolute file paths to attach (e.g. the door preview PNG).
+	 * @param string $note        Optional first line of the body.
 	 * @return bool wp_mail result.
 	 */
-	public static function send( array $payload, $recipient, array $attachments = array() ) {
+	public static function send( array $payload, $recipient, array $attachments = array(), $note = '' ) {
 		$reference = isset( $payload['reference'] ) ? $payload['reference'] : '';
 		$subject   = sprintf(
 			/* translators: 1: reference, 2: customer name */
@@ -30,6 +31,11 @@ class HD_DD_Mailer {
 		}
 
 		$body = self::build_body( $payload );
+		if ( '' !== (string) $note ) {
+			$body = $note . "
+
+" . $body; // first line, e.g. "Call back requested — 01234 …".
+		}
 
 		$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
 
