@@ -19,6 +19,9 @@ class HD_DD_Assets {
 	/** @var bool Guard so we only enqueue once per request. */
 	private $enqueued = false;
 
+	/** @var string|null The JS version, worked out once (it walks assets/js). */
+	private $js_ver = null;
+
 	public function __construct( HD_DD_Catalogue $catalogue ) {
 		$this->catalogue = $catalogue;
 	}
@@ -226,15 +229,31 @@ class HD_DD_Assets {
 
 	/** One version for every script: the newest mtime under assets/js, so editing any module busts the cache. */
 	private function js_version() {
-		$dir    = HD_DD_DIR . 'assets/js';
+		if ( null === $this->js_ver ) {
+			$this->js_ver = self::js_version_of( HD_DD_DIR . 'assets/js' );
+		}
+		return $this->js_ver;
+	}
+
+	/**
+	 * The newest .js mtime under $dir, or HD_DD_VERSION. A folder that can't be read (the
+	 * iterator throws) falls back to the plugin version rather than breaking every designer page.
+	 */
+	public static function js_version_of( $dir ) {
 		$newest = 0;
-		if ( is_dir( $dir ) ) {
-			$files = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) );
-			foreach ( $files as $f ) {
-				if ( 'js' === strtolower( $f->getExtension() ) ) {
-					$newest = max( $newest, $f->getMTime() );
+		try {
+			if ( is_dir( $dir ) ) {
+				$files = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) );
+				foreach ( $files as $f ) {
+					if ( 'js' === strtolower( $f->getExtension() ) ) {
+						$newest = max( $newest, $f->getMTime() );
+					}
 				}
 			}
+		} catch ( Exception $e ) {
+			$newest = 0;
+		} catch ( Throwable $e ) {
+			$newest = 0;
 		}
 		return $newest ? (string) $newest : HD_DD_VERSION;
 	}

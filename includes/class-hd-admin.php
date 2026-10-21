@@ -374,10 +374,7 @@ class HD_DD_Admin {
 									<tr>
 										<th style="width:200px;"><?php echo esc_html( $heading ); ?></th>
 										<td>
-											<?php echo esc_html( is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '' ); ?>
-											<?php if ( is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) : ?>
-												<small style="color:#8a8e96;">(#<?php echo (int) $choice['id']; ?>)</small>
-											<?php endif; ?>
+											<?php echo self::choice_cell( isset( $row->flow ) ? $row->flow : '', $heading, $choice ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside. ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -422,6 +419,21 @@ class HD_DD_Admin {
 			}
 		}
 		return $label;
+	}
+
+	/**
+	 * One design-specification cell: the label and its catalogue id. On a Designer 3 row a
+	 * Frame Design whose label repeats (ids 14/17/20 vs 31/32/33) also says which it is. Escaped.
+	 */
+	public static function choice_cell( $flow, $heading, $choice ) {
+		$html = esc_html( is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '' );
+		if ( is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) {
+			$html .= ' <small style="color:#8a8e96;">(#' . (int) $choice['id'] . ')</small>';
+			if ( 'designer3' === $flow && class_exists( 'HD_DD_Mailer' ) ) {
+				$html .= esc_html( HD_DD_Mailer::frame_note( $heading, $choice ) );
+			}
+		}
+		return $html;
 	}
 
 	/** The list's label for a save or a call back, or '' for an enquiry. Escaped. */

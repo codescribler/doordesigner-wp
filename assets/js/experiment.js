@@ -43,9 +43,11 @@
     return !!(renderModel && win && win.HD_DD_SwipeApp && win.HD_DD_ReviewSave && win.HD_DD_SwipeHint);
   }
 
-  // Designer 3 needs the render model and its app and preview scripts (same fallback rule as Swipe 2).
+  // Designer 3 needs the render model, its app and preview scripts, and the modules the app
+  // reaches for after the first screen (same fallback rule as Swipe 2).
+  var D3_NEEDS = ['HD_DD_Designer3App', 'HD_DD_Preview', 'HD_DD_D3AfterSave', 'HD_DD_D3Save', 'HD_DD_D3Toolbox', 'HD_DD_D3FrameStep'];
   function canRunDesigner3(win, renderModel) {
-    return !!(renderModel && win && win.HD_DD_Designer3App && win.HD_DD_Preview);
+    return !!(renderModel && win) && D3_NEEDS.every(function (k) { return !!win[k]; });
   }
 
   // Flows a forced value may name: the built-in ones plus whatever the config mentions.

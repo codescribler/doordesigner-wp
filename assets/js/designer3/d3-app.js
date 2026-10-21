@@ -204,6 +204,7 @@
 				api: this.api, cfg: this.cfg(), flow: this.flow, token: this._token,
 				getDesign: function () { return self.design(); },
 				getCanvas: function () { return self.canvas || null; },
+				whenPainted: function () { return self.whenPainted(); },
 				experiment: function () { return self.experiment; },
 				onSaved: function (body) { self.onSaved(body); }
 			}) : { render: noop, saved: function () { return false; }, token: function () { return null; }, update: function () { return Promise.resolve(false); } };
@@ -272,7 +273,12 @@
 	};
 
 	// Redraw the door, dots, toolbox and save prompt in place (no rebuild, the open section stays).
-	P.refresh = function () { if (this.screen === 'door' && this.doorView && this.doorView.refresh) { this.doorView.refresh(); } };
+	P.refresh = function () { return (this.screen === 'door' && this.doorView && this.doorView.refresh) ? this.doorView.refresh() : this.whenPainted(); };
+
+	// The door picture: screens record each paint; saves snapshot only once the latest is done.
+	P.painted = function (p) { this._paint = Promise.resolve(p).then(noop, noop); return this._paint; };
+	P.paintSoon = function (paint) { return this.painted(new Promise(function (r) { setTimeout(function () { r(paint()); }, 0); })); };
+	P.whenPainted = function () { var self = this, p = this._paint; return p ? p.then(function () { return self._paint === p ? null : self.whenPainted(); }) : Promise.resolve(); };
 
 	// ---- Saved design ("revisit your design" link) ---------------------------------------------
 	P.loadSaved = function (token) {
@@ -285,7 +291,9 @@
 			if (!t || !self.cv.byType[t]) { self.render(); return; }
 			self.wiz.selectType(t);
 			if (!s || !self.build(s, prefsFrom(saved))) { self.go('style'); return; }
-			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design') { self.mine[h] = saved[h].label; } });
+			// Theirs, unless it is the style's default (else a restyle keeps, say, Middle where Bottom belongs).
+			var defs = self.defaultsFor(s);
+			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design' && !(defs[h] != null && trim(defs[h]) === trim(saved[h].label))) { self.mine[h] = saved[h].label; } });
 			self.savedKind = res.body.kind || null;
 			if (res.body.kind === 'save') { self.savedToken = token; }
 			// The saved screen; ?price=1 opens the quote form; a sent design says so (d3-after-save.js).

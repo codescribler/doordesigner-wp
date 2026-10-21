@@ -184,4 +184,35 @@ var later = make();
 later.go('saved');
 assert.strictEqual(later.screen, 'saved', 'screens after saving route through go()');
 
-console.log('d3-app.test.js: all assertions passed');
+// ---- a saved link: choices equal to the style's defaults are not "theirs" ----------------------
+// (else a restyle keeps the old style's letterplate position, e.g. Middle where Bottom belongs)
+function opened(design) {
+  var o = make({ api: function () { return Promise.resolve({ ok: true, body: { design: JSON.parse(JSON.stringify(design)), kind: 'save' } }); } });
+  o.loadSaved('tok');
+  return new Promise(function (r) { setImmediate(r); }).then(function () { return o; });
+}
+(async function () {
+  var src = make();
+  src.select('Door Type', 'Single Door');
+  src.select('Door Design', middle);
+  assert.strictEqual(src.design()['Letterplate Position'].label, 'Middle', 'the middle style defaults to Middle');
+  var l1 = await opened(src.design());
+  assert.strictEqual(l1.style(), middle);
+  assert.ok(!l1.mine['Letterplate Position'], 'the default position is not marked as theirs');
+  l1.go('door');
+  l1.restyle(bottom);
+  assert.strictEqual(l1.design()['Letterplate Position'].label, 'Bottom', 'a restyle after a saved link takes the new style\'s position');
+
+  // A position they did choose is still kept.
+  var src2 = make();
+  src2.select('Door Type', 'Single Door');
+  src2.select('Door Design', bottom);
+  var mids = src2.stepFor('Letterplate Position').choices.filter(function (c) { return c.label.trim() === 'Middle'; });
+  assert.ok(mids.length, "bottom style offers Middle");
+  if (mids.length) {
+    src2.pick('letterplate', 'Letterplate Position', mids[0].label);
+    var l2 = await opened(src2.design());
+    assert.strictEqual(l2.mine['Letterplate Position'], mids[0].label, 'a chosen position is theirs');
+  }
+  console.log('d3-app.test.js: all assertions passed');
+})().catch(function (e) { console.error(e); process.exit(1); });

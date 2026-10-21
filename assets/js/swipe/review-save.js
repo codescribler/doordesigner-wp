@@ -9,7 +9,8 @@
 // it" state until the design is changed; a changed design is saved as a new one.
 //
 //   var rs = HD_DD_ReviewSave.create({ api, cfg, flow, token, alreadySent, getDesign(), getCanvas(),
-//     experiment(), onSaved(result), onQuoted(result, imageDataUrl) });
+//     experiment(), onSaved(result), onQuoted(result, imageDataUrl), beforeQuote?() });
+//   beforeQuote (Designer 3 only): waited for before the price request's own update.
 //   rs.render(container); rs.saved(); rs.alreadySent(); rs.focus(); rs.reset();
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) { module.exports = factory(require('../enquiry.js')); }
@@ -218,9 +219,17 @@
 				send(btn, statusEl, 'save/' + encodeURIComponent(token) + '/quote', body, function (ok, res) {
 					if (!ok) { fail(res, fields, statusEl); return; }
 					if (o.onQuoted) { o.onQuoted(res.body, image); }
-				}, ensureCurrent);
+				}, beforeQuote);
 			});
 			container.appendChild(f);
+		}
+
+		// Swipe 2 goes straight to ensureCurrent; Designer 3 first lets its own saver catch up.
+		function beforeQuote() {
+			if (!o.beforeQuote) { return ensureCurrent(); }
+			var wait;
+			try { wait = Promise.resolve(o.beforeQuote()); } catch (e) { wait = Promise.resolve(); }
+			return wait.then(function () { return ensureCurrent(); }, function () { return ensureCurrent(); });
 		}
 
 		// Make sure the saved record matches the design on screen. Resolves true when it does.

@@ -77,8 +77,12 @@
 		shell.appendChild(wrap);
 		app.canvas = canvas;   // the snapshot sent with save updates and shown on the thank-you
 		var comp = (W.HD_DD_Preview && app.model) ? W.HD_DD_Preview.create(canvas, { model: app.model, assetBase: app.assetBase() }) : null;
-		function paint() { if (comp) { try { comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } } }
-		setTimeout(paint, 0);
+		function paint() {
+			var p = null;
+			if (comp) { try { p = comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
+			return app.painted(p);   // saves wait for it before they snapshot the canvas
+		}
+		app.paintSoon(paint);
 		return { side: side, paint: paint };
 	}
 
@@ -124,6 +128,9 @@
 			api: app.api, cfg: app.cfg(), flow: app.flow, token: app.savedToken || null, alreadySent: false,
 			getDesign: function () { return app.design(); },
 			getCanvas: function () { return app.canvas || null; },
+			// The design saver's update first: it waits for the latest paint, so the record holds
+			// the door on screen before the price request turns it into an enquiry.
+			beforeQuote: function () { return app.saver().update(); },
 			experiment: function () { return app.experiment; },
 			// Only when the record was closed (a 409) and they give their email again here.
 			onSaved: function (r) { app.savedToken = r.token; app.savedKind = 'save'; st.rsToken = app.savedToken; },

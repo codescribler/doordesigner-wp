@@ -115,6 +115,17 @@ class HD_DD_Save {
 		return is_file( $file ) ? array( $file ) : array();
 	}
 
+	/**
+	 * Designer 3 rows say so on the payload (from the row's flow column), so the business email
+	 * can tell its repeated Frame Design labels apart. Other flows' payloads are left as they are.
+	 */
+	private function with_flow( array $payload, $row ) {
+		if ( isset( $row->flow ) && 'designer3' === $row->flow ) {
+			$payload['flow'] = 'designer3';
+		}
+		return $payload;
+	}
+
 	/** POST /save — store a design against an email address. */
 	public function rest_save( WP_REST_Request $request ) {
 		$p     = $this->params( $request );
@@ -231,7 +242,11 @@ class HD_DD_Save {
 			return $this->not_found();
 		}
 		$done = array( 'ok' => true, 'reference' => $row->reference, 'token' => $row->token, 'message' => __( 'Thank you. Your price is on its way.', 'hd-door-designer' ) );
-		if ( 'save' !== ( isset( $row->kind ) ? $row->kind : 'enquiry' ) ) {
+		$kind = isset( $row->kind ) ? $row->kind : 'enquiry';
+		if ( 'callback' === $kind ) {
+			return $this->already_enquiry(); // a call back was asked for: no price is on its way.
+		}
+		if ( 'save' !== $kind ) {
 			return new WP_REST_Response( $done, 200 ); // a second tap: already an enquiry.
 		}
 
@@ -256,6 +271,7 @@ class HD_DD_Save {
 		$payload = is_array( $payload ) ? $payload : array();
 		$payload['kind']        = 'enquiry';
 		$payload['submittedAt'] = gmdate( 'c' );
+		$payload                = $this->with_flow( $payload, $row );
 		$payload['customer']    = array( 'name' => $name, 'telephone' => $telephone, 'email' => (string) $row->customer_email, 'postcode' => $postcode );
 
 		// Atomic: only one request can turn this save into an enquiry.
@@ -310,6 +326,7 @@ class HD_DD_Save {
 		$payload = is_array( $payload ) ? $payload : array();
 		$payload['kind']        = 'callback';
 		$payload['submittedAt'] = gmdate( 'c' );
+		$payload                = $this->with_flow( $payload, $row );
 		$payload['customer']    = array( 'name' => $name, 'telephone' => $telephone, 'email' => (string) $row->customer_email, 'postcode' => '' );
 
 		$claimed = $this->repository->claim_as_kind(

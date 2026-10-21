@@ -28,7 +28,8 @@ function byTag(n, t) { return walk(n, function (x) { return x.tag === t; }); }
 function input(n, name) { return walk(n, function (x) { return x.tag === 'input' && x.name === name; }); }
 function fire(n, type) { assert.ok(n, 'element to ' + type); (n.listeners[type] || []).forEach(function (fn) { fn({ preventDefault: function () {} }); }); }
 function tick() { return new Promise(function (r) { setImmediate(r); }); }
-async function settle() { for (var i = 0; i < 6; i++) { await tick(); } }
+// Saves wait for the door's paint, which is scheduled with setTimeout: let timers run too.
+async function settle() { for (var i = 0; i < 6; i++) { await tick(); await new Promise(function (r) { setTimeout(r, 0); }); } }
 
 var model = require('../../data/render-model.json');
 var fx = require('./fixtures/customer-view.js');

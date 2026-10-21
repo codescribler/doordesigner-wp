@@ -132,4 +132,21 @@ touch( $probe, $was );
 clearstatcache();
 check( (string) ( $newest + 1000 ) === $moved, 'editing a designer3 file changes the JS version' );
 
+// --- 5) A folder that can't be read falls back to the plugin version (no fatal) -------------
+// A stream wrapper that says "a folder" but refuses to open it: the directory iterator throws.
+class HD_Test_Unreadable_Dir {
+	public $context;
+	public function url_stat( $path, $flags ) { return array( 'mode' => 040755 ); }
+	public function dir_opendir( $path, $options ) { return false; }
+}
+stream_wrapper_register( 'hdunreadable', 'HD_Test_Unreadable_Dir' );
+check( is_dir( 'hdunreadable://assets/js' ), 'the test folder looks like a folder' );
+$fallback = null;
+try {
+	$fallback = HD_DD_Assets::js_version_of( 'hdunreadable://assets/js' );
+} catch ( Throwable $e ) {
+	$fallback = 'threw ' . get_class( $e );
+}
+check( HD_DD_VERSION === $fallback, 'an unreadable assets/js gives HD_DD_VERSION (got ' . var_export( $fallback, true ) . ')' );
+
 hd_test_done( 'assets-designer3' );

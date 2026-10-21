@@ -181,6 +181,24 @@ class HD_DD_Mailer {
 			. '</table></td></tr></table></body></html>';
 	}
 
+	/**
+	 * Designer 3's Frame Design labels repeat: 14/17/20 and 31/32/33 share names but differ in
+	 * where the side glass meets the top light. Returns " (…)" saying which, or ''.
+	 */
+	public static function frame_note( $heading, $choice ) {
+		if ( 'Frame Design' !== $heading || ! is_array( $choice ) || ! isset( $choice['id'] ) ) {
+			return '';
+		}
+		$id = (int) $choice['id'];
+		if ( in_array( $id, array( 31, 32, 33 ), true ) ) {
+			return ' ' . __( '(glass runs to the top, no side transom)', 'hd-door-designer' );
+		}
+		if ( in_array( $id, array( 14, 17, 20 ), true ) ) {
+			return ' ' . __( '(bar level with the top of the door)', 'hd-door-designer' );
+		}
+		return '';
+	}
+
 	/** Plain-text body: readable summary, then a copyable JSON block. */
 	private static function build_body( array $payload ) {
 		$c     = isset( $payload['customer'] ) ? $payload['customer'] : array();
@@ -206,9 +224,13 @@ class HD_DD_Mailer {
 		$lines[] = '';
 		$lines[] = __( '— DESIGN —', 'hd-door-designer' );
 
+		$d3 = isset( $payload['flow'] ) && 'designer3' === $payload['flow'];
 		if ( ! empty( $payload['design'] ) && is_array( $payload['design'] ) ) {
 			foreach ( $payload['design'] as $heading => $choice ) {
 				$label = is_array( $choice ) && isset( $choice['label'] ) ? $choice['label'] : '';
+				if ( $d3 && 'Frame Design' === $heading && is_array( $choice ) && isset( $choice['id'] ) && null !== $choice['id'] ) {
+					$label = trim( $label ) . ' — id ' . (int) $choice['id'] . self::frame_note( $heading, $choice );
+				}
 				$lines[] = sprintf( '%-26s %s', $heading . ':', $label );
 			}
 		}

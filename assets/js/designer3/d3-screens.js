@@ -169,9 +169,11 @@
 		}
 
 		function paint() {
+			var p = null;
 			size();
-			if (comp) { try { comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
+			if (comp) { try { p = comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
 			dots();
+			return app.painted(p);   // saves wait for it before they snapshot the canvas
 		}
 
 		function drawNudge() {
@@ -191,14 +193,15 @@
 		view.refresh = function () {
 			var title = shell.querySelector && shell.querySelector('.hd-d3-title');
 			if (title) { title.textContent = short(app.style()) + ' ' + short(app.type()).toLowerCase() + ' door'; }
-			paint(); tb.refresh(); drawNudge();
+			var p = paint(); tb.refresh(); drawNudge();
+			return p;
 		};
 
 		tb.render(tools, { sheet: sheet, root: shell, onLayout: function () { paint(); } });
 		app.saver().render(save);
 		drawNudge();
 		// After layout, so the stage has its width.
-		setTimeout(paint, 0);
+		app.paintSoon(paint);
 		var t = null;
 		function onResize() {
 			clearTimeout(t);

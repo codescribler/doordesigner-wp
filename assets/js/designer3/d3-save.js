@@ -5,7 +5,9 @@
 // afterwards with `save/{token}` (update()). With no cfg.restUrl (the QA harness) nothing is
 // sent: it says "Preview mode" and still moves on, so the flow can be walked.
 //
-//   var s = HD_DD_D3Save.create({ api, cfg, flow, token?, getDesign(), getCanvas(), experiment(), onSaved(body) });
+//   var s = HD_DD_D3Save.create({ api, cfg, flow, token?, getDesign(), getCanvas(), whenPainted?(), experiment(), onSaved(body) });
+//   whenPainted(): a promise for the latest paint of the canvas; update() waits for it (after the
+//   caller's own redraw has started) so the picture it sends is the design it sends.
 //   s.render(container); s.saved(); s.update() -> Promise<bool>; s.token(); s.setToken(t)
 (function (root, factory) {
 	if (typeof module === 'object' && module.exports) {
@@ -13,6 +15,8 @@
 	} else { root.HD_DD_D3Save = factory(root.HD_DD_ReviewSave, root.HD_DD_Enquiry); }
 }(typeof self !== 'undefined' ? self : this, function (RS, Enquiry) {
 	'use strict';
+
+	var PAINT_WAIT = 4000;   // never hold a save longer than this for a picture
 
 	var COPY = {
 		button: 'Save my design',
@@ -131,11 +135,26 @@
 			container.appendChild(f);
 		}
 
+		// The latest paint, waited for after the current task (the caller redraws after calling
+		// update()), and never for longer than PAINT_WAIT.
+		function painted() {
+			if (!o.whenPainted) { return Promise.resolve(); }
+			return new Promise(function (done) {
+				var t = setTimeout(done, PAINT_WAIT);
+				function fin() { clearTimeout(t); done(); }
+				Promise.resolve().then(function () { return o.whenPainted(); }).then(fin, fin);
+			});
+		}
+
 		// Bring the saved record in line with the design on screen. Resolves true when it matches.
 		// One update at a time. A 409 means it was already sent as an enquiry: that record is
 		// closed, so the next save starts a new one.
 		function update() {
 			if (!token || !cfg.restUrl) { return Promise.resolve(false); }
+			return painted().then(send);
+		}
+		function send() {
+			if (!token) { return false; }
 			if (pending) { return pending.then(function (ok) { return ok ? update() : false; }); }
 			var key = RS.designKey(o.getDesign());
 			if (key === savedKey) { return Promise.resolve(true); }

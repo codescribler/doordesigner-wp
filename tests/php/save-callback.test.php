@@ -42,6 +42,7 @@ check( ! is_wp_error( $res ) && 201 === $res->get_status() && true === $res->get
 check( 'callback' === hd_row()['kind'] && '01234 567890' === hd_row()['customer_phone'] && 'Jo Bloggs' === hd_row()['customer_name'], 'row is a callback with the phone stored' );
 $payload = json_decode( hd_row()['payload'], true );
 check( 'callback' === $payload['kind'] && '01234 567890' === $payload['customer']['telephone'], 'payload carries kind and customer' );
+check( isset( $payload['flow'] ) && 'designer3' === $payload['flow'], 'a Designer 3 row marks its payload flow designer3 (for the frame ids in the email)' );
 $mail = $GLOBALS['hd_test_mail'];
 check( 2 === count( $mail ), 'exactly two mails (got ' . count( $mail ) . ')' );
 check( 0 === strpos( $mail[0]['subject'], 'New door enquiry ' ) && false !== strpos( $mail[0]['subject'], '— Jo Bloggs' ), 'owner subject keeps the enquiry format' );
@@ -72,6 +73,21 @@ $token = hd_save();
 hd_api()->rest_quote( ( function () use ( $token ) { $r = hd_test_request( 'POST', '/x', array( 'name' => 'Jo', 'postcode' => 'AL1 1AA', 'telephone' => '' ) ); $r->set_param( 'token', $token ); return $r; } )() );
 $res = hd_callback( $token );
 check( is_wp_error( $res ) && 409 === $res->get_error_data()['status'], 'an enquiry row refuses a call back with 409' );
+
+// A Swipe 2 row's quote payload is left without a flow key (its email is unchanged).
+hd_test_reset();
+$sw = hd_api()->rest_save( hd_test_request( 'POST', '/x', array( 'email' => 'jo@example.com', 'hd_hp' => '', 'design' => hd_design(), 'flow' => 'swipe2', 'pageUrl' => 'https://example.test/door-designer/' ) ) )->get_data()['token'];
+hd_api()->rest_quote( ( function () use ( $sw ) { $r = hd_test_request( 'POST', '/x', array( 'name' => 'Jo', 'postcode' => 'AL1 1AA', 'telephone' => '' ) ); $r->set_param( 'token', $sw ); return $r; } )() );
+check( ! array_key_exists( 'flow', json_decode( hd_row()['payload'], true ) ), 'a Swipe 2 quote payload has no flow key' );
+
+// A price request on a call-back row is refused (409), never "your price is on its way".
+hd_test_reset();
+$token = hd_save();
+hd_callback( $token );
+$mails = count( $GLOBALS['hd_test_mail'] );
+$res   = hd_api()->rest_quote( ( function () use ( $token ) { $r = hd_test_request( 'POST', '/x', array( 'name' => 'Jo', 'postcode' => 'AL1 1AA', 'telephone' => '' ) ); $r->set_param( 'token', $token ); return $r; } )() );
+check( is_wp_error( $res ) && 'hd_dd_already_enquiry' === $res->get_error_code() && 409 === $res->get_error_data()['status'], 'a quote on a call-back row is a 409 (got ' . ( is_wp_error( $res ) ? $res->get_error_code() : $res->get_status() ) . ')' );
+check( 'callback' === hd_row()['kind'] && $mails === count( $GLOBALS['hd_test_mail'] ), 'the row stays a call back and nothing more is sent' );
 
 $res = hd_callback( 'doesnotexist12345' );
 check( is_wp_error( $res ) && 404 === $res->get_error_data()['status'], 'unknown token: 404' );
