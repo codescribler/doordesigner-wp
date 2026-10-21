@@ -26,6 +26,7 @@ preserved exactly.
 | Sidelight rendering | ✅ built — door shifts into the centre, frame swaps to the wide variant, side panels drawn (Left/Right/Double + midrail/half-flag). Approximation: side glass uses the captured representative pattern (per-glass/solid-slab fidelity is a fast-follow); toplight shapes not yet captured |
 | Image mirroring (download Endurance assets, serve locally) | ✅ built (`tools/mirror-images.js`) — downloads all captured image URLs to `assets/img/endurance/`; set **Preview image base URL** in Settings to the mirror |
 | Handle/knocker hardware-colour recolour | ⚙️ best-effort (uses captured baseline colour); full recolour is a fast-follow |
+| Designer 3 (`designer3`, funnel `door-designer-v4`) | ✅ built (v0.5.0) — type and style, then the finished door with "+" dots and a toolbox; email save; then side/top lights, the quote or a call back. See **Designer 3** below |
 | Brand styling (fonts/colours of hertfordshiredoors.co.uk) | ⚙️ brand accent colour + Glazed/Contemporary category split are tunables in `assets/css`; base templates shipped |
 
 ## Installation
@@ -161,7 +162,7 @@ filled the anti-spam field and the server answered with a fake success:
 Flagged and failed rows carry a coloured badge in **Door Enquiries** and a notice on the
 detail view.
 
-## The two designer flows
+## The designer flows
 
 - **Classic** (`assets/js/hd-door-designer.js` + `assets/js/wizard/`): door type → frame → style
   → … one step at a time. Reports to the analytics funnel **`door-designer`**.
@@ -173,16 +174,21 @@ detail view.
   `HD_DD_Funnel.ORDER_V3`), so the manager's per-funnel "started" and step order stay correct
   for both. Choices go through the same wizard controller and step rules as classic, so the
   enquiry payload is identical.
+- **Designer 3** (`assets/js/designer3/`, `assets/css/hd-designer3.css`): door type, then
+  style, then the finished door straight away. Reports to funnel **`door-designer-v4`**. See
+  **Designer 3** below.
 
 `assets/js/boot.js` starts whichever flow a visitor gets (forced by `?flow=` / shortcode
-`flow=""`, else the running A/B test's arm, else the default flow). Shared by both:
+`flow=""`, else the running A/B test's arm, else the default flow). Shared by all of them:
 `design-shared.js` (finish/furniture rules), `enquiry.js` (form, submit, thank-you).
 
 **QA without WordPress** (`python -m http.server 8000` from the plugin root):
 - `tools/swipe-test.html` — the swipe flow; `tools/phone.html` shows it at 390 and 360px.
 - `tools/preview-test.html` — the classic flow.
 - `tools/boot-test.html` — the real entry point with a stubbed WordPress and a running 50/50
-  test; REST calls (exposure, enquiry) are logged to `window.__rest` instead of sent.
+  test; REST calls (exposure, enquiry) are logged to `window.__rest` instead of sent. It loads
+  Classic and Swipe 2; Designer 3's scripts come from `includes/class-hd-assets.php` (the
+  `-d3*` handles), which `tests/php/assets-designer3.test.php` checks.
 
 ### Keeping your own visits out of the stats
 
@@ -195,8 +201,8 @@ site-wide analytics plugin counting you.
 
 ## A/B experiments
 
-The designer has more than one flow (`classic`, `swipe2`; add more with the `hd_dd_flows`
-filter). **Door Enquiries → Settings → Default designer flow** is what everyone sees
+The designer has more than one flow (`classic`, `swipe2`, `designer3`; add more with the
+`hd_dd_flows` filter). **Door Enquiries → Settings → Default designer flow** is what everyone sees
 when no test is running.
 
 **Start a test** under **Door Enquiries → Experiments**: pick the control (usually the
@@ -294,6 +300,66 @@ module: Swipe 2 still uses its thank-you screen and its snapshot and scroll help
 Design: `docs/superpowers/specs/2026-10-09-swipe-2-review-and-swipe-helpers-design.md`
 (the earlier `2026-10-01-save-design-and-price-design.md` describes the release this replaced).
 
+## Designer 3
+
+**Flow** `designer3` (label "Designer 3"), funnel **`door-designer-v4`**. Open it yourself with
+`?flow=designer3` (never counted in a test). The journey:
+
+1. **Door type**, then **style** (a grid with Glazed / Solid / Contemporary / Georgian filters).
+2. **The finished door** straight away: colour, handle, letterplate, knocker and the rest are
+   pre-picked from what customers chose most for that style (`data/designer3-defaults.json`,
+   handed to the browser as `HD_DD_CONFIG.d3Defaults`). Orange "+" dots on the door, and a
+   toolbox (Colour, Door style, Handle, Letterplate, Knocker, More options), change any part.
+   On phones the toolbox is a strip of tabs with a bottom sheet. After the 3rd change a
+   dismissible "save it?" nudge shows once per visit. The **Save my design** box (email only:
+   "Just your email. We'll send you a link to it.") is always on screen.
+3. **After saving**: "Does your doorway have glass at the side or top?" Small chips pick one of
+   Endurance's 24 `Frame Design` layouts, always by id (labels repeat), with the survey drawing
+   (`assets/img/frames/`, resolved against `HD_DD_CONFIG.pluginUrl`). Nothing is pre-selected;
+   "Just the door" moves on. Double Door skips the question.
+4. **Quote or call back**: the guide price, the Checkatrade proof, then either
+   **Get a no-obligation quote** (Swipe 2's form: the lead and the A/B conversion) or
+   **Request a call back about this door** (name and phone).
+
+A saved link reopens Designer 3 on the saved screen, even in a browser that is in the Classic arm.
+
+**Funnel steps** (`HD_DD_Funnel.ORDER_V4`, lower case): `opened, type, style, shown, colour,
+handle, letterplate, knocker, more, saved, frame, quoteform, callback`. The lead is the usual
+`funnel.lead()` on a sent quote, not a step. Clarity events: `door_saved`,
+`door_quote_submitted` (the conversion), `door_callback_requested`.
+
+**Call back.** `POST /save/{token}/callback` turns the saved row into `kind = callback`, emails
+the owner ("Call back requested — phone") and the customer, and fires
+`hd_dd_callback_requested($payload, $id)`. It is a lead for the business, **not** an A/B
+conversion: it does not fire `hd_dd_enquiry_submitted`, does not set `converted_at` and does not
+call `funnel.lead()`. Each arm's call backs are counted on their own (in the test snapshot and
+export below), never as leads. A design that was already sent returns 409, so nothing is
+counted twice. Door Enquiries has a call-back filter and badge.
+
+**Test data.** `HD_DD_Experiments::snapshot()` is the shape the manager app reads (each arm's
+visitors, leads and call backs, the split changes and the decision); the HD Analytics plugin
+carries it to the dashboard on its nightly push, or straight away with **Settings → HD Analytics
+→ Push to dashboard now**. **Door Enquiries → Experiments → Download test data** saves the full
+raw JSON (no names, emails or phones).
+
+**Data and tools.**
+- Top lights: `data/endurance-toplights.json` and the frame and glass images come from
+  `node tools/build-toplights-data.js` (a capture of the Endurance page). The render model
+  draws top lights only when asked (`{ toplights: true }`), so Classic and Swipe 2 draw the
+  door exactly as before.
+- Defaults: in wp-admin → Door Enquiries, paste `tools/capture-enquiry-designs.js` into the
+  browser console; save the copied JSON as `tools/data/enquiry-designs.json`; run
+  `node tools/build-designer3-defaults.js` (`--test` checks the rules). A missing or broken
+  `data/designer3-defaults.json` is left out of the config, and the designer falls back to
+  plain defaults.
+
+Files: `assets/js/designer3/` (`d3-app.js` the controller; `d3-screens.js`, `d3-toolbox.js`,
+`d3-save.js`, `d3-after-save.js`, `d3-frame-step.js`, `d3-callback.js` the screens;
+`d3-defaults.js`, `d3-frame.js`, `d3-hotspots.js`, `d3-nudge.js` the rules),
+`assets/css/hd-designer3.css`, `includes/class-hd-save.php` (the call-back route),
+`includes/class-hd-assets.php` (loads it all; the JS version is the newest file under `assets/js`).
+Design: `docs/superpowers/specs/2026-10-21-designer-3-design.md`.
+
 ## Tests
 
 No framework — plain Node and PHP scripts that exit non-zero on failure:
@@ -318,14 +384,30 @@ node tests/js/control-arm.test.js     # the classic flow (A/B control) stays the
 node tests/js/notrack.test.js         # ?notrack: owner visits never reach analytics
 node tests/js/door-card.test.js       # close-up box for the door card
 node tests/js/furniture-pick.test.js  # hardware colour change never strands the handle pick
+node tests/js/designer3-wiring.test.js # boot starts Designer 3 with funnel door-designer-v4
+node tests/js/funnel-v4.test.js       # Designer 3 funnel order (ORDER_V4)
+node tests/js/d3-defaults.test.js     # pre-picked furniture per style, never one the style lacks
+node tests/js/d3-frame.test.js        # side/top light chips <-> the 24 Frame Design ids
+node tests/js/d3-hotspots.test.js     # where the "+" dots sit on the door
+node tests/js/d3-nudge.test.js        # the save nudge: 3rd change, once per visit
+node tests/js/d3-save.test.js         # Designer 3 save box: email only, then updates
+node tests/js/d3-toolbox.test.js      # toolbox rows, phone sheet, focus through redraws
+node tests/js/d3-app.test.js          # type -> style -> complete door, restyling, funnel
+node tests/js/d3-after-save.test.js   # lights, quote, call back, saved links
+node tests/js/render-toplight.test.js # top-light artwork drawn only on request
+node tools/build-designer3-defaults.js --test  # the defaults table rules
 node tools/tests/test-*.js            # wizard, render model, step config…
 php tests/php/run.php                 # all PHP tests below, run together:
 #   enquiry-save, enquiry-honeypot, quote-form-control, nonce-endpoint, failure-log
 #   repository-kind, save-mailer, save-emails, save-endpoints, save-claim
 #   admin-kind, admin-status, trust-settings
-#   experiment-flows, -admin, -conversion, -expose, -stats
+#   experiment-flows, -admin, -conversion, -expose, -stats, -snapshot
+#   save-callback, assets-designer3
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
+
+Run every JS test at once with `for f in tests/js/*.test.js; do node "$f" || echo FAIL $f; done`,
+and `node tools/build-render-model.js --test` for the render model.
 
 The PHP tests run the real enquiry pipeline against small WordPress stand-ins in
 `tests/php/wp-stubs.php` — no WordPress install needed.
@@ -336,12 +418,33 @@ Updates surface in wp-admin via [`YahnisElsts/plugin-update-checker`](https://gi
 
 1. Make changes; bump the **Version** header in `hd-door-designer.php` **and** the
    `HD_DD_VERSION` constant (keep them in sync).
-2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
-3. Create a **GitHub release** for that tag (attach a built zip if you use release assets).
+2. Commit the version bump on its own (`chore(release): vX.Y.Z`), then tag and push:
+   `git tag vX.Y.Z && git push origin main vX.Y.Z`.
+3. Create a **GitHub release** for that tag, with notes and no asset:
+   `gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."`.
 4. Within the check interval, wp-admin → Plugins shows the update.
 5. Nothing to note for the stats: each release becomes its own cohort on the manager's
    Marketing page from the first day the site serves it (design:
    `hertsdoorsmanager/docs/superpowers/specs/2026-09-15-designer-version-cohorts-design.md`).
+
+### Changeover: Classic vs Swipe 2 → Classic vs Designer 3 (v0.5.0)
+
+Release in this order, so nothing reads data before it can understand it:
+
+1. **The manager app** (it shows `door-designer-v4` and the call backs).
+2. **The HD Analytics plugin** (it carries the experiment snapshot to the dashboard).
+3. **This plugin**, v0.5.0 (tag, release, then update it in wp-admin → Plugins).
+
+Then, on the live site:
+
+4. **Phone check**: open `/door-designer/?flow=designer3&notrack=1` on a phone and walk type,
+   style, the door, save, lights, quote and call back (use your own email; it is not counted).
+5. **Door Enquiries → Experiments → Download test data**, and keep the file: the final record
+   of Classic vs Swipe 2.
+6. **Settings → HD Analytics → Push to dashboard now**, so the manager has the final numbers.
+7. **Stop test** on the Experiments page (the default flow stays Classic).
+8. **Start a test**: control Classic, challenger Designer 3, 50%.
+9. **Push to dashboard now** again, so the new test shows straight away.
 
 ## Privacy / GDPR
 
