@@ -1,7 +1,6 @@
 // assets/js/designer3/d3-app.js
 // Designer 3's controller: state, navigation and analytics. Drawing lives in d3-screens.js
-// (type, style and door screens), d3-toolbox.js and d3-save.js; the screens after saving are
-// HD_DD_D3AfterSave's (Task 10) and show a placeholder until it is loaded.
+// (type, style and door screens), d3-toolbox.js, d3-save.js and d3-after-save.js (after saving).
 //
 // Journey: type -> style -> door (complete, pre-picked) -> saved -> frame -> quote / callback -> done.
 // Choices are stored through the classic HD_DD_Wizard, so validity, pruning and the enquiry
@@ -120,13 +119,11 @@
 			if (!empty) { break; }
 			this.wiz.select(empty.heading, this.choiceFor(empty.heading, empty.defaultLabel) || empty.choices[0]);
 		}
+		// Top-light frames never keep side glass "Matches the door" (d3-frame-step.js).
+		if (W.HD_DD_D3FrameStep) { W.HD_DD_D3FrameStep.fixSideGlass(this); }
 	};
 
-	function prefsFrom(map) {
-		var out = {};
-		Object.keys(map || {}).forEach(function (h) { out[h] = [map[h]]; });
-		return out;
-	}
+	function prefsFrom(map) { var out = {}; Object.keys(map || {}).forEach(function (h) { out[h] = [map[h]]; }); return out; }
 
 	// ---- Choosing -------------------------------------------------------------------------
 	P.chooseType = function (label) {

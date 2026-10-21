@@ -5,13 +5,17 @@
 // complete combination is one Endurance `Frame Design`, selected BY ID (labels repeat, see
 // d3-frame.js), redrawn and saved with the saver's update(). Nothing is pre-selected.
 //
-//   HD_DD_D3FrameStep.state(app); .offered(app); .chips(app, host, redraw); .justTheDoor(app)
+// While the chips are half-made (say a joint is still needed) the design keeps its last complete
+// layout, which is also what the saved record holds; sync() puts the chips back to it on leaving.
+//
+//   HD_DD_D3FrameStep.state(app); .offered(app); .chips(app, host, redraw); .justTheDoor(app);
+//   .sync(app); .fixSideGlass(app)
 (function (W) {
 	'use strict';
 
 	var COPY = {
 		next: 'Next: get my quote',
-		pickMore: 'Choose the side panel style to see your frame.',
+		pickMore: 'Finish your choice to see the frame.',
 		groups: { sides: 'At the side', top: 'At the top', panel: 'Side panel style', joint: 'Where the side glass meets the top light' }
 	};
 	var LABELS = {
@@ -47,13 +51,21 @@
 	// brings back a frame they chose before.
 	function state(app) {
 		if (!app.after) {
-			var cur = current(app);
-			var parts = (cur && Number(cur.id) !== 1 && F()) ? F().partsOf(cur.id) : null;
-			var sel = {};
-			if (parts) { Object.keys(parts).forEach(function (k) { if (parts[k]) { sel[k] = parts[k]; } }); }
-			app.after = { sel: sel, quoteOpen: false, rs: null, rsToken: undefined, cb: null, cbToken: undefined, doneKind: null };
+			var sel = selFrom((current(app) || {}).id);
+			app.after = { sel: sel, quoteOpen: false, rs: null, rsToken: undefined, cb: null, cbToken: undefined, doneKind: null, closed: false };
 		}
 		return app.after;
+	}
+	function selFrom(id) {
+		var parts = (id != null && Number(id) !== 1 && F()) ? F().partsOf(id) : null, sel = {};
+		if (parts) { Object.keys(parts).forEach(function (k) { if (parts[k]) { sel[k] = parts[k]; } }); }
+		return sel;
+	}
+	// Half-made chips go back to the layout the design (and the saved record) actually has.
+	function sync(app) {
+		var st = state(app);
+		if (!F() || F().layoutFor(st.sel, choices(app))) { return; }
+		st.sel = selFrom((current(app) || {}).id);
 	}
 
 	function isTop(id) { var p = F() && F().partsOf(id); return !!(p && p.top !== 'none'); }
@@ -72,10 +84,11 @@
 		return step.choices.filter(function (c) { return !(top && heading === 'Sidelight Glass' && trim(c.label) === MATCHES); });
 	}
 	function fixSideGlass(app) {
+		if (!F() || !isTop((current(app) || {}).id)) { return; }
 		var g = app.design()['Sidelight Glass'];
 		if (!g || trim(g.label) !== MATCHES) { return; }
 		var ok = sideChoices(app, 'Sidelight Glass')[0];
-		if (ok) { app.select('Sidelight Glass', ok.label); }
+		if (ok) { app.wiz.select('Sidelight Glass', ok); }   // not app.select: settle() calls this
 	}
 	// They told us there is glass at the side: glazed side panels unless they pick solid.
 	function glazeSides(app) {
@@ -184,5 +197,5 @@
 		host.appendChild(next);
 	}
 
-	W.HD_DD_D3FrameStep = { state: state, offered: offered, chips: chips, justTheDoor: justTheDoor, COPY: COPY, LABELS: LABELS };
+	W.HD_DD_D3FrameStep = { state: state, offered: offered, chips: chips, justTheDoor: justTheDoor, sync: sync, fixSideGlass: fixSideGlass, COPY: COPY, LABELS: LABELS };
 })(typeof window !== 'undefined' ? window : this);

@@ -24,7 +24,9 @@
 		quoteTitle: 'Get a price for this exact door',
 		quote: 'Get a no-obligation quote',
 		callback: 'Request a call back about this door',
-		sentCallback: 'We’ll call you about it within one working day. Change anything and you can send us the new version.'
+		sentCallback: 'We’ll call you about it within one working day. Change anything and you can send us the new version.',
+		needSave: 'Save your design first, then we can call you about it.',
+		save: 'Save my design'
 	};
 	var SENT = { enquiry: 1, callback: 1 };
 
@@ -53,7 +55,8 @@
 	}
 
 	// ---- Pieces -----------------------------------------------------------------------------
-	function keepLink(app) { return button('hd-d3-textlink', COPY.keep, function () { app.go('door'); }); }
+	// Back to the door with the design as it is (half-made chips fall back to the frame on it).
+	function keepLink(app) { return button('hd-d3-textlink', COPY.keep, function () { FS().sync(app); app.go('door'); }); }
 
 	function title(shell, text, help) {
 		var head = el('div', 'hd-d3-head');
@@ -166,15 +169,37 @@
 	function frame(app, shell) { if (FS().offered(app)) { frameBody(app, shell); } else { quoteBody(app, shell); } }
 	function quote(app, shell) { quoteBody(app, shell); }
 
+	// No record to ask about: closed elsewhere (already with us), or never saved (save first).
+	function noRecord(app, st, side) {
+		if (st.closed || sentKind(app)) {
+			if (sentKind(app)) { sentState(app, side); }
+			else {
+				var wrap = el('div', 'hd-sw-save__sent');
+				wrap.appendChild(el('div', 'hd-sw-save__title', W.HD_DD_D3Callback.COPY.already));
+				side.appendChild(wrap);
+			}
+			side.appendChild(keepLink(app));
+			return;
+		}
+		side.appendChild(el('p', 'hd-d3-help', COPY.needSave));
+		side.appendChild(button('hd-d3-cta', COPY.save, function () { app.go('door'); }));
+	}
+
 	function callback(app, shell) {
 		var st = state(app), C = W.HD_DD_D3Callback;
+		title(shell, COPY.callback);
 		var side = layout(app, shell).side;
+		if (!app.savedToken) { noRecord(app, st, side); return; }
+		st.closed = false;
 		if (!st.cb || st.cbToken !== app.savedToken) {
 			st.cbToken = app.savedToken;
 			st.cb = C.create({
 				api: app.api, cfg: app.cfg(), token: app.savedToken,
 				getDesign: function () { return app.design(); },
 				ensure: function () { return app.saver().update(); },
+				closed: function () { return !app.savedToken; },   // a 409 on update clears the token
+				onClosed: function () { st.closed = true; app.savedToken = null; app.render(); },
+				onNoToken: function () { app.render(); },
 				onDone: function (result) {
 					app.funnel.step('callback');   // a lead for the business, NOT the A/B conversion: never lead()
 					app.track('door_callback_requested');

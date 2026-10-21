@@ -3,9 +3,12 @@
 // It posts `save/{token}/callback` (a lead for the business, NOT the A/B conversion: the caller
 // fires the funnel step `callback` from onDone and never calls funnel.lead()). Field errors
 // from the server (422 hd_dd_validation) show under their field; a 409 means the design was
-// already sent to us. What was typed survives redraws.
+// already sent to us. What was typed survives redraws. The screen gives the heading.
+// A record closed elsewhere (a 409 from the update in ensure(), or from this route) calls
+// onClosed(); no token at all calls onNoToken(), so the caller can send them back to save.
 //
-//   var cb = HD_DD_D3Callback.create({ api, token, getDesign, onDone(result), ensure?(), cfg?, pageUrl? });
+//   var cb = HD_DD_D3Callback.create({ api, token, getDesign, onDone(result), ensure?(), closed?(),
+//     onClosed?(), onNoToken?(), cfg?, pageUrl? });
 //   cb.render(container); cb.focus();
 (function (W) {
 	'use strict';
@@ -74,7 +77,6 @@
 			first = null;
 			var f = el('form', 'hd-dd__form hd-d3-callback');
 			f.setAttribute('novalidate', 'novalidate');
-			f.appendChild(el('div', 'hd-sw-save__title', COPY.title));
 			f.appendChild(el('p', 'hd-d3-callback__intro', COPY.intro));
 			var fields = {
 				name: field(f, values, COPY.name, 'text', 'name', 'name'),
@@ -107,17 +109,20 @@
 				if (!values.name) { fields.name.error.textContent = COPY.noName; return; }
 				if (!values.telephone) { fields.telephone.error.textContent = COPY.noPhone; return; }
 				if (o.cfg && !o.cfg.restUrl) { status.textContent = COPY.preview; return; }
-				if (!o.token) { status.textContent = COPY.failed; return; }
+				if (!o.token) { if (o.onNoToken) { o.onNoToken(); } else { status.textContent = COPY.failed; } return; }
 				busy = true; btn.disabled = true; status.textContent = '…';
 				function finish(res) {
 					busy = false;
 					status.textContent = '';
 					var ok = !!(res && res.ok && res.body && res.body.ok);
+					if (!ok && res && res.status === 409 && o.onClosed) { o.onClosed(); return; }
 					if (!ok) { btn.disabled = false; fail(res); return; }
 					if (o.onDone) { o.onDone(res.body); }
 				}
 				// The saved record must match the door on screen before we ask about it.
 				ready().then(function (current) {
+					// The update found the record already sent (409): the design is with us.
+					if (!current && o.closed && o.closed() && o.onClosed) { busy = false; o.onClosed(); return; }
 					if (!current) { finish(null); return; }
 					post('save/' + encodeURIComponent(o.token) + '/callback', { name: values.name, telephone: values.telephone, pageUrl: pageUrl() })
 						.then(finish, function () { finish(null); });

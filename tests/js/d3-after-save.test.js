@@ -216,6 +216,67 @@ function chip(h, k) { return byKey(shell(h), k); }
   assert.strictEqual(ce.app.screen, 'callback');
   assert.ok(!ce.steps.some(function (s) { return s[0] === 'callback'; }));
 
+  // ---- call back screen has its heading ------------------------------------------------------
+  assert.ok(walk(shell(ce), function (x) { return x.tag === 'h2' && x.textContent === 'Request a call back about this door'; }), 'call back h2');
+
+  // ---- call back after a 409 on the update: the design is already with us, not a dead end ---
+  var CB = window.HD_DD_D3Callback;
+  var c4 = harness('Single Door', 'Abbott', [[/^save\/tok$/, { ok: false, status: 409, body: { code: 'hd_dd_already_enquiry' } }]]);
+  c4.app.select('Frame Design', { label: 'Sidelight Left', id: 2 });   // changed: the update will be sent
+  c4.app.go('callback');
+  var c4f = byTag(shell(c4), 'form');
+  input(c4f, 'name').value = 'Bob'; input(c4f, 'telephone').value = '01234 567890';
+  fire(c4f, 'submit');
+  await settle();
+  assert.strictEqual(c4.updates().length, 1, 'the update was tried');
+  assert.strictEqual(c4.app.savedToken, null, 'the 409 closed the record');
+  assert.ok(text(shell(c4)).indexOf(CB.COPY.already) !== -1, 'already-with-us state');
+  assert.ok(text(shell(c4)).indexOf('Something went wrong') === -1);
+  assert.ok(!byTag(shell(c4), 'form'), 'no form left to retry');
+  assert.ok(byText(shell(c4), 'Keep customising the door'));
+  assert.strictEqual(c4.calls.filter(function (x) { return /callback$/.test(x[0]); }).length, 0);
+  assert.ok(!c4.steps.some(function (x) { return x[0] === 'callback'; }) && c4.leads === 0);
+  // ... and a 409 from the call back route itself
+  var c5 = harness('Single Door', 'Abbott', [[/\/callback$/, { ok: false, status: 409, body: { code: 'hd_dd_already_enquiry', message: 'x' } }]]);
+  c5.app.go('callback');
+  var c5f = byTag(shell(c5), 'form');
+  input(c5f, 'name').value = 'Bob'; input(c5f, 'telephone').value = '01234 567890';
+  fire(c5f, 'submit');
+  await settle();
+  assert.ok(text(shell(c5)).indexOf(CB.COPY.already) !== -1 && !byTag(shell(c5), 'form'));
+  assert.strictEqual(c5.app.savedToken, null);
+  // ... and with no saved record at all: back to save
+  var c6 = harness(null, null);
+  c6.app.select('Door Type', 'Single Door'); c6.app.select('Door Design', 'Abbott');
+  c6.app.go('callback');
+  assert.ok(!byTag(shell(c6), 'form'), 'no form without a record');
+  fire(byText(shell(c6), 'Save my design'), 'click');
+  assert.strictEqual(c6.app.screen, 'door', 'sent back to save');
+
+  // ---- half-made chips: the design keeps its last complete layout; leaving resyncs the chips --
+  var hm = harness('Single Door', 'Abbott');
+  fire(chip(hm, 'sides:both'), 'click'); fire(chip(hm, 'top:top'), 'click'); fire(chip(hm, 'panel:glass'), 'click');
+  await settle();
+  assert.strictEqual(hm.app.design()['Frame Design'].id, 18);
+  fire(chip(hm, 'panel:halfflag'), 'click');   // now a joint is needed
+  await settle();
+  assert.strictEqual(hm.app.design()['Frame Design'].id, 18, 'still the last complete layout');
+  assert.strictEqual(hm.lastFrame().id, 18, 'and so is the saved record');
+  assert.strictEqual(byText(shell(hm), 'Next: get my quote').disabled, true, 'Next waits for the joint');
+  fire(byText(shell(hm), 'Keep customising the door'), 'click');
+  assert.strictEqual(hm.app.screen, 'door');
+  assert.deepStrictEqual(hm.app.after.sel, { sides: 'both', top: 'top', panel: 'glass' }, 'chips match the design again');
+
+  // ---- the door screen never brings back "Matches the door" on a top-light frame -------------
+  var rs = harness('Single Door', 'Abbott');
+  ['sides:both', 'top:top', 'panel:halfflag', 'joint:bar'].forEach(function (k) { fire(chip(rs, k), 'click'); });
+  rs.app.wiz.select('Sidelight Glass', { label: 'Matches the door', id: null });
+  rs.app.go('door');
+  rs.app.restyle('Abbott');
+  assert.strictEqual(rs.app.design()['Frame Design'].id, 20);
+  assert.notStrictEqual(rs.app.design()['Sidelight Glass'].label, 'Matches the door', 'settle swaps it out');
+  assert.ok(!window.HD_DD_D3Toolbox.moreGroups(rs.app).some(function (g) { return /Sidelight/.test(g.heading); }), 'side glass is not in More options');
+
   // ---- loadSaved -------------------------------------------------------------------------
   var saved = (function () { var s = harness('Single Door', 'Abbott'); return JSON.parse(JSON.stringify(s.app.design())); })();
   function opened(kind, search) {
