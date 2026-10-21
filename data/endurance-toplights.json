@@ -1,0 +1,2351 @@
+{
+ "_schema": "toplights-v1",
+ "capturedAt": "2026-10-21T12:31:48.838Z",
+ "source": "Endurance retail designer, Frame Design walked by id (SubOption thumbnail space, same space as sidelitComposites). Stable Door matched Single Door exactly; Avantal differs only in the door blank (138 wide, 0.075 further left). Endurance draws 30 \"Toplight (full)\" identically to 11 \"Toplight\", and 31-33 use the same frame artwork as 14/17/20 with one tall side pane instead of two.",
+ "Single Door": {
+  "11": {
+   "label": "Toplight",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "12": {
+   "label": "Toplight with Sidelight Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "13": {
+   "label": "Toplight with Sidelight Left with Midrail",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "14": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "15": {
+   "label": "Toplight with Sidelight Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "16": {
+   "label": "Toplight with Sidelight Right with Midrail",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "17": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "18": {
+   "label": "Toplight with Sidelight Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "19": {
+   "label": "Toplight with Sidelights Both with Midrails",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsMidrailTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "20": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "30": {
+   "label": "Toplight (full)",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "31": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "32": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "33": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  }
+ },
+ "Stable Door": {
+  "11": {
+   "label": "Toplight",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "12": {
+   "label": "Toplight with Sidelight Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "13": {
+   "label": "Toplight with Sidelight Left with Midrail",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "14": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "15": {
+   "label": "Toplight with Sidelight Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "16": {
+   "label": "Toplight with Sidelight Right with Midrail",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "17": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "18": {
+   "label": "Toplight with Sidelight Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "19": {
+   "label": "Toplight with Sidelights Both with Midrails",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsMidrailTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "20": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "30": {
+   "label": "Toplight (full)",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "31": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "32": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.625,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "33": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.125,
+    "cy": 201.6,
+    "w": 138.15,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  }
+ },
+ "Avantal": {
+  "11": {
+   "label": "Toplight",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "12": {
+   "label": "Toplight with Sidelight Left",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "13": {
+   "label": "Toplight with Sidelight Left with Midrail",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "14": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "15": {
+   "label": "Toplight with Sidelight Right",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 203.175,
+      "w": 48,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "16": {
+   "label": "Toplight with Sidelight Right with Midrail",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightMidrailTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 135.525,
+      "w": 48,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 293.4,
+      "w": 48,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "17": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 24.75,
+      "w": 48,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 120.675,
+      "w": 48,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "18": {
+   "label": "Toplight with Sidelight Both",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 203.175,
+      "w": 48.15,
+      "h": 308.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "19": {
+   "label": "Toplight with Sidelights Both with Midrails",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsMidrailTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 135.525,
+      "w": 48.15,
+      "h": 172.95
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 293.4,
+      "w": 48.15,
+      "h": 127.8
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "20": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 24.75,
+      "w": 48.15,
+      "h": 32.4
+     },
+     "side": "right"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 120.675,
+      "w": 48.15,
+      "h": 143.25
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  },
+  "30": {
+   "label": "Toplight (full)",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleTopLight",
+   "frameGeom": {
+    "cx": 77.625,
+    "cy": 181.5,
+    "w": 155.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.8,
+      "cy": 24.75,
+      "w": 136.5,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [],
+   "canvas": {
+    "width": 156,
+    "height": 363
+   }
+  },
+  "31": {
+   "label": "Toplight with Half Flag Left",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleLeftSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.55,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "left"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "32": {
+   "label": "Toplight with Half Flag Right",
+   "doorBlank": {
+    "cx": 77.55,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleRightSidelightHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 111.375,
+    "cy": 181.5,
+    "w": 222.75,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 76.875,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 186.15,
+      "cy": 100.425,
+      "w": 48,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 223,
+    "height": 363
+   }
+  },
+  "33": {
+   "label": "Toplight with Half Flag Both",
+   "doorBlank": {
+    "cx": 145.05,
+    "cy": 201.6,
+    "w": 138,
+    "h": 307.5
+   },
+   "frameVariant": "SingleBothSidelightsHalfFlagTopLight",
+   "frameGeom": {
+    "cx": 145.125,
+    "cy": 181.5,
+    "w": 290.25,
+    "h": 363
+   },
+   "top": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Top/Ornate.jpg",
+     "geom": {
+      "cx": 144.375,
+      "cy": 24.75,
+      "w": 136.65,
+      "h": 32.4
+     }
+    }
+   ],
+   "panels": [
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 32.625,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "left"
+    },
+    {
+     "url": "Assets/CompositeDoors/Images/Glazing/Side/Ornate.jpg",
+     "geom": {
+      "cx": 253.725,
+      "cy": 100.425,
+      "w": 48.15,
+      "h": 183.75
+     },
+     "side": "right"
+    }
+   ],
+   "canvas": {
+    "width": 291,
+    "height": 363
+   }
+  }
+ }
+}

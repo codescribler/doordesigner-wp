@@ -254,6 +254,48 @@
     return out;
   };
 
+  // Top-light variants, keyed by Frame Design ID: Endurance lists "Toplight with Half
+  // Flag Left/Right/Both" twice (ids 14/17/20 with a bar at door height, 31/32/33 with
+  // the side glass running to the top), so the description can't be the key.
+  EXT.captureToplitComposites = async function () {
+    const fd = field('Frame Design');
+    if (!fd || fd.SubOptions.length <= 1) return null;
+    const baseId = fd.CurrentID;
+    const out = {};
+    for (const s of fd.SubOptions.filter(s => /toplight/i.test(s.Description))) {
+      await setOption(fd.Category, s.ID, 'Frame Design');
+      await sleep(450);
+      const j = job();
+      out[s.ID] = {
+        label: s.Description, layers: fullComposite(),
+        segments: { door: segmentDims(j.SegmentDoor), topBox: segmentDims(j.SegmentTopBox),
+          sidelightL: segmentDims(j.SegmentSidelight_L), sidelightR: segmentDims(j.SegmentSidelight_R) }
+      };
+    }
+    await setOption(fd.Category, baseId, 'Frame Design');
+    console.log('[EXT]   toplit composites: ' + Object.keys(out).length + ' shapes');
+    return out;
+  };
+
+  EXT.capturePatchToplights = async function (onlyTypes) {
+    const all = field('Door Type').SubOptions.map(s => s.Description);
+    const types = (onlyTypes && onlyTypes.length) ? all.filter(t => onlyTypes.indexOf(t) !== -1) : all;
+    window.__patch = window.__patch || { _schema: 'patch-v1' };
+    for (const tName of types) {
+      EXT.selectType(tName);
+      const tid = field('Door Type').SubOptions.find(s => s.Description === tName).ID;
+      await waitForId('Door Type', tid);
+      await sleep(800);
+      const tc = await EXT.captureToplitComposites();
+      if (tc) {
+        window.__patch[tName] = window.__patch[tName] || { doorType: tName };
+        window.__patch[tName].toplitComposites = tc;
+      }
+    }
+    console.log('[EXT-patch] toplight composites done. Run EXT.downloadPatch("endurance-toplights.json").');
+    return window.__patch;
+  };
+
   function segmentDims(seg) {
     if (!seg || typeof seg !== 'object') return null;
     const out = {};
