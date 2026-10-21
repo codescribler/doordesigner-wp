@@ -13,6 +13,9 @@ class HD_DD_Repository {
 
 	const DB_VERSION = '4';
 
+	/** Row kinds: a saved design, a quote request, or a call back request. */
+	const KINDS = array( 'save', 'enquiry', 'callback' );
+
 	/** @return string Fully-prefixed table name. */
 	public static function table() {
 		global $wpdb;
@@ -122,7 +125,7 @@ class HD_DD_Repository {
 			'customer_phone'    => $data['telephone'],
 			'customer_postcode' => $data['postcode'],
 			'design_name'       => isset( $data['design_name'] ) ? (string) $data['design_name'] : '',
-			'kind'              => ( isset( $data['kind'] ) && 'save' === $data['kind'] ) ? 'save' : 'enquiry',
+			'kind'              => ( isset( $data['kind'] ) && in_array( $data['kind'], self::KINDS, true ) ) ? $data['kind'] : 'enquiry',
 			'flow'              => isset( $data['flow'] ) ? (string) $data['flow'] : '',
 			'design'            => wp_json_encode( $data['design'] ),
 			'payload'           => wp_json_encode( $data['payload'] ),
@@ -265,21 +268,29 @@ class HD_DD_Repository {
 	}
 
 	/**
-	 * Turn a save into an enquiry atomically: writes the fields and sets kind = enquiry only
-	 * while the row is still a save, so of two simultaneous requests exactly one wins.
+	 * Turn a save into an enquiry or a call back atomically: writes the fields and sets the kind
+	 * only while the row is still a save, so of two simultaneous requests exactly one wins.
 	 *
-	 * @return int|false 1 when claimed, 0 when it was already an enquiry, false on a database error.
+	 * @return int|false 1 when claimed, 0 when it was already claimed (or the kind is not claimable), false on a database error.
 	 */
-	public function claim_as_enquiry( $id, array $fields ) {
-		$fields['kind'] = 'enquiry';
+	public function claim_as_kind( $id, $kind, array $fields ) {
+		if ( ! in_array( $kind, array( 'enquiry', 'callback' ), true ) ) {
+			return 0;
+		}
+		$fields['kind'] = $kind;
 		return $this->update_row( $id, $fields, 'save' );
 	}
 
-	/** @return array{enquiry:int,save:int} Row counts by kind (failed submissions count as enquiries). */
+	/** Turn a save into an enquiry; see claim_as_kind(). */
+	public function claim_as_enquiry( $id, array $fields ) {
+		return $this->claim_as_kind( $id, 'enquiry', $fields );
+	}
+
+	/** @return array{enquiry:int,save:int,callback:int} Row counts by kind (failed submissions count as enquiries). */
 	public function count_by_kind() {
 		global $wpdb;
 		$table = self::table();
-		$out   = array( 'enquiry' => 0, 'save' => 0 );
+		$out   = array( 'enquiry' => 0, 'save' => 0, 'callback' => 0 );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
 		foreach ( (array) $wpdb->get_results( "SELECT kind, COUNT(*) AS n FROM {$table} GROUP BY kind" ) as $r ) {
 			if ( isset( $out[ $r->kind ] ) ) {
@@ -289,11 +300,11 @@ class HD_DD_Repository {
 		return $out;
 	}
 
-	/** @return array Row objects, newest first; $kind 'save' or 'enquiry' narrows the list. */
+	/** @return array Row objects, newest first; $kind 'save', 'enquiry' or 'callback' narrows the list. */
 	public function list( $limit = 100, $offset = 0, $kind = '' ) {
 		global $wpdb;
 		$table = self::table();
-		if ( 'save' === $kind || 'enquiry' === $kind ) {
+		if ( in_array( $kind, self::KINDS, true ) ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
 			return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE kind = %s ORDER BY created_at DESC LIMIT %d OFFSET %d", $kind, $limit, $offset ) );
 		}

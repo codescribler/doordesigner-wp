@@ -201,9 +201,7 @@ class HD_DD_Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Door Enquiries', 'hd-door-designer' ); ?></h1>
 			<ul class="subsubsub" style="float:none;margin:6px 0 10px;">
-				<li><a href="<?php echo esc_url( $base ); ?>" <?php echo '' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'All', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) ( $counts['enquiry'] + $counts['save'] ); ?>)</span></a> |</li>
-				<li><a href="<?php echo esc_url( $base . '&kind=enquiry' ); ?>" <?php echo 'enquiry' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'Enquiries', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) $counts['enquiry']; ?>)</span></a> |</li>
-				<li><a href="<?php echo esc_url( $base . '&kind=save' ); ?>" <?php echo 'save' === $kind ? 'class="current"' : ''; ?>><?php esc_html_e( 'Saved designs', 'hd-door-designer' ); ?> <span class="count">(<?php echo (int) $counts['save']; ?>)</span></a></li>
+				<?php echo self::filter_links( $base, $kind, $counts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in filter_links(). ?>
 			</ul>
 
 			<?php if ( isset( $_GET['hd_dd_deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only success flag. ?>
@@ -348,6 +346,8 @@ class HD_DD_Admin {
 							<tr><th style="width:200px;"><?php esc_html_e( 'Received', 'hd-door-designer' ); ?></th><td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td></tr>
 							<?php if ( isset( $row->kind ) && 'save' === $row->kind ) : ?>
 								<tr><th><?php esc_html_e( 'Type', 'hd-door-designer' ); ?></th><td><?php esc_html_e( 'Saved design. They gave an email address only and have not asked for a price yet.', 'hd-door-designer' ); ?></td></tr>
+							<?php elseif ( isset( $row->kind ) && 'callback' === $row->kind ) : ?>
+								<tr><th><?php esc_html_e( 'Type', 'hd-door-designer' ); ?></th><td><?php esc_html_e( 'Call back requested', 'hd-door-designer' ); ?></td></tr>
 							<?php endif; ?>
 							<?php if ( ! empty( $row->design_name ) ) : ?>
 								<tr><th><?php esc_html_e( 'Design name', 'hd-door-designer' ); ?></th><td><?php echo esc_html( $row->design_name ); ?></td></tr>
@@ -424,23 +424,43 @@ class HD_DD_Admin {
 		return $label;
 	}
 
-	/** The list's label for an email-only save, or '' for an enquiry. Escaped. */
+	/** The list's label for a save or a call back, or '' for an enquiry. Escaped. */
 	public static function kind_badge( $kind ) {
-		if ( 'save' !== $kind ) {
+		if ( 'save' === $kind ) {
+			$text = __( 'Saved, no price requested', 'hd-door-designer' );
+		} elseif ( 'callback' === $kind ) {
+			$text = __( 'Call back requested', 'hd-door-designer' );
+		} else {
 			return '';
 		}
-		return '<br><span style="display:inline-block;margin-top:3px;padding:1px 7px;border-radius:9px;background:#e7f0ec;color:#1d4f3f;font-size:11px;font-weight:600;">' . esc_html__( 'Saved, no price requested', 'hd-door-designer' ) . '</span>';
+		return '<br><span style="display:inline-block;margin-top:3px;padding:1px 7px;border-radius:9px;background:#e7f0ec;color:#1d4f3f;font-size:11px;font-weight:600;">' . esc_html( $text ) . '</span>';
 	}
 
-	/** The list filter from the URL: 'save', 'enquiry', or '' for everything. */
+	/** The list's filter links (All, Enquiries, Call backs, Saved designs) with counts. Escaped. */
+	public static function filter_links( $base, $kind, array $counts ) {
+		$items = array(
+			''         => array( __( 'All', 'hd-door-designer' ), self::list_total( $counts, '' ) ),
+			'enquiry'  => array( __( 'Enquiries', 'hd-door-designer' ), self::list_total( $counts, 'enquiry' ) ),
+			'callback' => array( __( 'Call backs', 'hd-door-designer' ), self::list_total( $counts, 'callback' ) ),
+			'save'     => array( __( 'Saved designs', 'hd-door-designer' ), self::list_total( $counts, 'save' ) ),
+		);
+		$out  = array();
+		foreach ( $items as $key => $item ) {
+			$url   = '' === $key ? $base : $base . '&kind=' . $key;
+			$out[] = '<li><a href="' . esc_url( $url ) . '"' . ( (string) $key === (string) $kind ? ' class="current"' : '' ) . '>' . esc_html( $item[0] ) . ' <span class="count">(' . (int) $item[1] . ')</span></a>';
+		}
+		return implode( ' |</li>', $out ) . '</li>';
+	}
+
 	/** Rows the list shows (the newest). */
 	const LIST_LIMIT = 200;
 
 	/** How many rows the current filter matches, from count_by_kind(). */
 	public static function list_total( array $counts, $kind ) {
-		$enquiries = isset( $counts['enquiry'] ) ? (int) $counts['enquiry'] : 0;
-		$saves     = isset( $counts['save'] ) ? (int) $counts['save'] : 0;
-		return 'save' === $kind ? $saves : ( 'enquiry' === $kind ? $enquiries : $enquiries + $saves );
+		$n = function ( $k ) use ( $counts ) {
+			return isset( $counts[ $k ] ) ? (int) $counts[ $k ] : 0;
+		};
+		return in_array( $kind, HD_DD_Repository::KINDS, true ) ? $n( $kind ) : $n( 'enquiry' ) + $n( 'save' ) + $n( 'callback' );
 	}
 
 	/** A note for above the table when there are more rows than the list shows; '' otherwise. Escaped. */
@@ -452,9 +472,10 @@ class HD_DD_Admin {
 		return '<p class="description">' . esc_html( sprintf( __( 'Showing the latest %d.', 'hd-door-designer' ), self::LIST_LIMIT ) ) . '</p>';
 	}
 
+	/** The list filter from the URL: 'save', 'enquiry', 'callback', or '' for everything. */
 	public static function list_kind( $raw ) {
 		$kind = is_string( $raw ) ? sanitize_key( $raw ) : '';
-		return in_array( $kind, array( 'save', 'enquiry' ), true ) ? $kind : '';
+		return in_array( $kind, HD_DD_Repository::KINDS, true ) ? $kind : '';
 	}
 
 	/** The list's coloured badge for status_label(), or '' for a normal row. Escaped. */

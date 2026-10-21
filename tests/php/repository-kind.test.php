@@ -41,7 +41,7 @@ check( $b['reference'] === $wpdb->rows[1]['reference'] && $b['token'] === $wpdb-
 check( is_string( $wpdb->rows[1]['payload'] ) && false !== strpos( $wpdb->rows[1]['payload'], $b['reference'] ), 'arrays are stored as JSON' );
 check( 0 === $repo->update_row( $b['id'], array( 'reference' => 'HACK' ) ), 'nothing writable: nothing done' );
 
-check( array( 'enquiry' => 0, 'save' => 0 ) === $repo->count_by_kind(), 'count_by_kind always has both keys' );
+check( array( 'enquiry' => 0, 'save' => 0, 'callback' => 0 ) === $repo->count_by_kind(), 'count_by_kind always has all three keys' );
 check( '4' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the columns are added on update' );
 
 // --- Schema upgrade: the version only moves once the new columns really exist (A4) ----------
@@ -70,5 +70,24 @@ check( count( $wpdb->last_insert_format ) === count( $wpdb->rows[1] ) - 1, 'one 
 $calls = count( $GLOBALS['hd_test_dbdelta'] );
 HD_DD_Repository::maybe_upgrade();
 check( $calls === count( $GLOBALS['hd_test_dbdelta'] ), 'once current, nothing runs' );
+
+// --- The callback kind (Designer 3) ---------------------------------------------------------
+hd_test_reset();
+$repo = new HD_DD_Repository();
+check( array( 'save', 'enquiry', 'callback' ) === HD_DD_Repository::KINDS, 'KINDS lists the three kinds' );
+$c = $repo->insert( hd_row( array( 'kind' => 'callback' ) ) );
+check( 'callback' === $wpdb->rows[0]['kind'], 'a callback row stores kind callback' );
+$repo->insert( hd_row( array( 'kind' => 'nonsense' ) ) );
+check( 'enquiry' === $wpdb->rows[1]['kind'], 'an unknown kind is still stored as enquiry' );
+$s = $repo->insert( hd_row( array( 'kind' => 'save' ) ) );
+check( 1 === $repo->claim_as_kind( $s['id'], 'callback', array( 'customer_phone' => '01727 000000' ) ), 'claim_as_kind claims a save as a callback' );
+check( 'callback' === $wpdb->rows[2]['kind'] && '01727 000000' === $wpdb->rows[2]['customer_phone'], 'and writes kind and fields' );
+check( 0 === $repo->claim_as_kind( $s['id'], 'callback', array() ), 'a second claim returns 0' );
+$s2 = $repo->insert( hd_row( array( 'kind' => 'save' ) ) );
+check( 1 === $repo->claim_as_enquiry( $s2['id'], array( 'customer_name' => 'Jo' ) ) && 'enquiry' === $wpdb->rows[3]['kind'], 'claim_as_enquiry still works' );
+check( 0 === $repo->claim_as_kind( $s2['id'], 'callback', array() ) && 'enquiry' === $wpdb->rows[3]['kind'], 'an enquiry cannot be claimed as a callback' );
+check( 0 === $repo->claim_as_enquiry( $s['id'], array() ) && 'callback' === $wpdb->rows[2]['kind'], 'a callback cannot be claimed as an enquiry' );
+check( false === $repo->claim_as_kind( $s['id'], 'save', array() ) || 0 === $repo->claim_as_kind( $s['id'], 'save', array() ), 'cannot claim as save' );
+check( 'callback' === $wpdb->rows[2]['kind'], 'and the row is unchanged' );
 
 hd_test_done( 'repository-kind.test.php' );
