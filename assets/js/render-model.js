@@ -13,7 +13,7 @@
 
 	// Back→front paint order. The baseline composite omits Knockers/Letterplates,
 	// so we can't derive this from the data alone.
-	var Z = ['DoorBlanks', 'StableDoorCentreRails', 'DoorCassettes', 'DoorGlazing', 'Handles', 'HandlesRight', 'Knockers', 'Letterplates', 'DripBars', 'Side', 'DoorFrames'];
+	var Z = ['DoorBlanks', 'StableDoorCentreRails', 'DoorCassettes', 'DoorGlazing', 'Handles', 'HandlesRight', 'Knockers', 'Letterplates', 'DripBars', 'Side', 'toplight', 'DoorFrames'];
 
 	function slotOf(u) { var m = String(u).match(/Images\/([^/]+)\//); return m ? m[1] : '?'; }
 
@@ -65,12 +65,23 @@
 		return name ? model.sideDesigns[name] : null;
 	}
 
+	// The top-light layout for this design, or null. Only when the caller opts in with
+	// {toplights:true} (Designer 3); Classic never does, so a Toplight design stays a plain door
+	// there. Looked up by Frame Design ID: 14/31, 17/32 and 20/33 share a label.
+	function topShapeFor(T, design, opts) {
+		if (!opts || !opts.toplights || !T || !T.sidelights || !T.sidelights.topShapes) { return null; }
+		var fd = design['Frame Design'];
+		return (fd && fd.id != null && T.sidelights.topShapes[String(fd.id)]) || null;
+	}
+
 	// Whole-door horizontal mirror so the handle ends up on the correct side. The captured baseline
 	// draws the handle on the LEFT (single door: a right-hinged door's latch side; double door: the
 	// LEFT leaf is the master). Sidelit doors never mirror — the frame shape fixes the side.
-	function shouldFlip(model, type, design) {
+	function shouldFlip(model, type, design, opts) {
 		var T = model && model.types ? model.types[type] : null;
 		if (!T) { return false; }
+		var top = topShapeFor(T, design, opts);
+		if (top && top.panels.length) { return false; }
 		var frameShape = (design['Frame Design'] && design['Frame Design'].label) || '';
 		var sidelit = !!(T.sidelights && T.sidelights.shapes && T.sidelights.shapes[frameShape]);
 		if (sidelit) { return false; }
@@ -141,7 +152,7 @@
 
 	var ASSET_PREFIX = 'Assets/CompositeDoors/Images/';
 
-	function assemble(model, type, design) {
+	function assemble(model, type, design, opts) {
 		var T = model.types ? model.types[type] : null;
 		if (!T) { return []; }
 		var get = function (h) { return (design[h] && design[h].label) || ''; };
@@ -233,14 +244,17 @@
 		// --- Sidelights: shift the door body into the centre, add the side panels,
 		// and swap the plain frame for the wide frame variant for this shape. ---
 		var frame = T.frames[get('Frame Colour')] || T.baseFrame;
-		var sd = (T.sidelights && T.sidelights.shapes) ? T.sidelights.shapes[get('Frame Design')] : null;
+		var top = topShapeFor(T, design, opts);
+		var sd = top || ((T.sidelights && T.sidelights.shapes) ? T.sidelights.shapes[get('Frame Design')] : null);
 		if (sd) {
-			layers.forEach(function (l) { l.cx += sd.doorOffsetX; });
+			layers.forEach(function (l) { l.cx += sd.doorOffsetX; if (top) { l.cy += top.doorOffsetY; } });
+			// Top-light glass above the door (always glazed; under the frame like the side glass).
+			if (top) { top.top.forEach(function (t) { push(t.url, t.geom); layers[layers.length - 1].slot = 'toplight'; }); }
 			// Side glass only when Glazed. "Matches the door" paints the door's glass DESIGN into a
 			// key-matched side layout's apertures (a decorative sidelight); any other (obscure) choice
 			// keeps the captured Ornate privacy-glass overlay. Unglazed shows the frame's solid panels.
 			if (sidelightGlazed(design)) {
-				var decoDesign = decorativeSideDesign(model, style, get('Sidelight Glass'), get('Door Glass'));
+				var decoDesign = top ? null : decorativeSideDesign(model, style, get('Sidelight Glass'), get('Door Glass'));
 				if (decoDesign) {
 					var decoGlass = get('Door Glass');
 					(sd.panels || []).forEach(function (p) {

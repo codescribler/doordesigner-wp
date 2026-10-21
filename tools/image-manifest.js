@@ -36,6 +36,14 @@ function imageManifest(raw, model, assemble) {
       f('Letterplate').forEach((lp) => add(assemble(model, type, d({ 'Hardware Type': { label: hw }, 'Letterplate': { label: lp } }))));
     });
   });
+  // Top-light frames (Designer 3 only): every frame colour x every top-light layout.
+  Object.keys(model.types).forEach((type) => {
+    const S = model.types[type].sidelights;
+    if (!S || !S.topShapes) { return; }
+    Object.keys(model.types[type].frames || {}).forEach((fc) => Object.keys(S.topShapes).forEach((id) => {
+      add(assemble(model, type, { 'Door Type': { label: type }, 'Frame Colour': { label: fc }, 'Frame Design': { id: id, label: S.topShapes[id].label } }, { toplights: true }));
+    }));
+  });
   // Everything the capture recorded (frames, drip bars, sidelights, side designs…).
   (raw._imageUrls || []).forEach((u) => { const c = u.replace(/\?.*$/, ''); if (/\.(png|jpe?g)$/i.test(c)) { set.add(c); } });
   return Array.from(set).filter((u) => u.indexOf(PREFIX) === 0).sort();

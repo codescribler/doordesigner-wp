@@ -18,6 +18,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { loadToplights, buildTopShapes } = require('./toplight-shapes.js');
 
 const SRC = path.join(__dirname, '..', 'data', 'endurance-catalogue-full.json');
 const OUT = path.join(__dirname, '..', 'data', 'render-model.json');
@@ -415,6 +416,19 @@ function buildSideDesignByKey(sideDesigns) {
   return out;
 }
 
+// Top-light layouts (by Frame Design id) beside the label-keyed sidelit shapes. Only
+// assemble(..., {toplights:true}) reads them, so Classic is unchanged.
+function addTopShapes(raw, model) {
+  const data = loadToplights();
+  Object.keys(model.types).forEach((t) => {
+    const S = model.types[t].sidelights;
+    const sc = raw[t] && raw[t].sidelitComposites;
+    const blank = sc && sc['No Sidelights'] && keep(sc['No Sidelights'], 'DoorBlanks')[0];
+    const top = S && blank ? buildTopShapes(data, t, { cx: blank.cx, cy: blank.cy }) : null;
+    if (top) { S.topShapes = top; }
+  });
+}
+
 function build(raw) {
   const hc = loadHardwareColours();
   const sideDesigns = loadSideDesigns();
@@ -431,6 +445,7 @@ function build(raw) {
     types: {},
   };
   ['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach((t) => { if (raw[t]) model.types[t] = buildType(raw[t], t); });
+  addTopShapes(raw, model);
   return model;
 }
 

@@ -179,4 +179,12 @@ assert.ok(glassKeys.includes('K5.png') && glassKeys.includes('K2.png'), 'Cheviot
 const cassetteKeys = new Set(cheviot.filter((l) => l.slot === 'DoorCassettes').map((l) => l.url.split('/')[4]));
 assert.ok(cassetteKeys.has('K5') && cassetteKeys.has('K2'), 'Cheviot cassettes use both keys');
 
+// Top-light layouts sit in their own id-keyed map, never in the label-keyed shapes Classic reads.
+const top14 = model.types['Single Door'].sidelights.topShapes['14'];
+assert.equal(top14.frameVariant, 'SingleLeftSidelightHalfFlagTopLight');
+assert.equal(top14.doorOffsetX, 67.5, 'top-light door shifts like the matching sidelight');
+assert.ok(Math.abs(top14.doorOffsetY - 39.3) < 0.001, 'top-light door drops below the top glass');
+assert.equal(model.types['Avantal'].sidelights.topShapes['11'].doorOffsetX, 0, 'Avantal toplight blank lines up with its own plain blank');
+assert.ok(!model.types['Double Door'].sidelights, 'Double Door has no sidelit or top-light layouts');
+
 console.log('render-model OK');

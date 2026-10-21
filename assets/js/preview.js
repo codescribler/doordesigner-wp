@@ -8,8 +8,9 @@
  * the local mirror for production).
  *
  * window.HD_DD_Preview.create(canvas, { model, assetBase }) -> instance
- *   instance.render(type, design, { omitSlots }?) -> Promise
- *   instance.renderRegion(type, design, box, { size, omitSlots }?) -> Promise   (close-ups)
+ *   instance.render(type, design, { omitSlots, toplights }?) -> Promise
+ *   instance.renderRegion(type, design, box, { size, omitSlots, toplights }?) -> Promise   (close-ups)
+ *   toplights:true draws the top-light frame layouts (Designer 3); without it they draw as a plain door.
  */
 (function () {
 	'use strict';
@@ -86,14 +87,16 @@
 		var self = this;
 		var T = this.model && this.model.types ? this.model.types[type] : null;
 		if (!T) { return Promise.resolve(null); }
-		var layers = window.HD_DD_RenderModel.assemble(this.model, type, design);
+		// opts.toplights (Designer 3 only) draws the top-light frames; Classic never passes it.
+		var rmOpts = (opts && opts.toplights) ? { toplights: true } : undefined;
+		var layers = window.HD_DD_RenderModel.assemble(this.model, type, design, rmOpts);
 		var omit = (opts && opts.omitSlots) || null;
 		if (omit) { layers = layers.filter(function (l) { return omit.indexOf(l.slot) === -1; }); }
 		// Stage derived from the actual layers so sidelit doors (wider) size correctly.
 		var stage = deriveStage(layers, T.canvas);
 		// Hinge side mirrors the whole door (handle moves to the other side). The decision
 		// lives in the shared render model so the Node build + browser agree and can't drift.
-		var flip = window.HD_DD_RenderModel.shouldFlip(this.model, type, design);
+		var flip = window.HD_DD_RenderModel.shouldFlip(this.model, type, design, rmOpts);
 		var slow = [];
 		return Promise.all(layers.map(function (l) {
 			var url = self.resolveUrl(l.url);

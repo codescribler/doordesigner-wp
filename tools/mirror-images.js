@@ -41,6 +41,12 @@ function download(url, dest) {
 async function main() {
   const ROOT = path.join(__dirname, '..');
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/endurance-catalogue-full.json'), 'utf8'));
+  // Top-light frames are not in the catalogue capture; take them from the built manifest.
+  try {
+    const extra = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/image-manifest.json'), 'utf8')).images
+      .filter((u) => /\/DoorFrames\/[^/]*TopLight\/|\/Glazing\/Top\//.test(u));
+    data._imageUrls = Array.from(new Set((data._imageUrls || []).concat(extra)));
+  } catch (e) { /* no manifest yet: mirror the capture only */ }
   const total = (data._imageUrls || []).length;
   const plan = mirrorPlan(data);
   const skipped = total - plan.length;
