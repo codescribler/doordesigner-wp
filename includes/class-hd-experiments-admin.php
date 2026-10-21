@@ -16,10 +16,12 @@ class HD_DD_Experiments_Admin {
 	const PAGE   = 'hd-dd-experiments';
 	const CAP    = 'manage_options';
 	const ACTION = 'hd_dd_experiment';
+	const EXPORT = 'hd_dd_experiment_export';
 
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ), 20 ); // after the parent menu exists.
 		add_action( 'admin_post_' . self::ACTION, array( $this, 'handle' ) );
+		add_action( 'admin_post_' . self::EXPORT, array( $this, 'download' ) );
 	}
 
 	public function menu() {
@@ -44,6 +46,40 @@ class HD_DD_Experiments_Admin {
 		$result = self::apply( wp_unslash( $_POST ) );
 		$code   = is_wp_error( $result ) ? $result->get_error_code() : $result;
 		wp_safe_redirect( add_query_arg( 'hd_dd_exp', rawurlencode( $code ), admin_url( 'admin.php?page=' . self::PAGE ) ) );
+		exit;
+	}
+
+	/**
+	 * The export download: headers and JSON body, or null when the nonce or capability fails.
+	 * Separate from download() so it can be tested.
+	 *
+	 * @param string $nonce The _wpnonce value.
+	 * @return array|null {headers: string[], body: string}
+	 */
+	public static function export_response( $nonce ) {
+		if ( ! current_user_can( self::CAP ) || ! wp_verify_nonce( (string) $nonce, self::EXPORT ) ) {
+			return null;
+		}
+		return array(
+			'headers' => array(
+				'Content-Type: application/json; charset=utf-8',
+				'Content-Disposition: attachment; filename=hd-dd-experiments-' . gmdate( 'Ymd-Hi' ) . '.json',
+				'Cache-Control: no-store',
+			),
+			'body'    => wp_json_encode( HD_DD_Experiments::export_data(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ),
+		);
+	}
+
+	/** admin-post handler: stream the full experiment data as a JSON file. */
+	public function download() {
+		$resp = self::export_response( isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified in export_response().
+		if ( ! $resp ) {
+			wp_die( esc_html__( 'Not allowed.', 'hd-door-designer' ) );
+		}
+		foreach ( $resp['headers'] as $h ) {
+			header( $h );
+		}
+		echo $resp['body']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download.
 		exit;
 	}
 
@@ -116,6 +152,7 @@ class HD_DD_Experiments_Admin {
 				printf( esc_html__( 'Default flow (everyone, when no test runs): %s. Visits with ?flow= in the URL or a flow="" shortcode attribute are never counted.', 'hd-door-designer' ), '<strong>' . esc_html( HD_DD_Experiments::flow_label( HD_DD_Experiments::default_flow() ) ) . '</strong>' );
 				?>
 			</p>
+			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::EXPORT ), self::EXPORT ) ); ?>"><?php esc_html_e( 'Download test data', 'hd-door-designer' ); ?></a></p>
 			<?php
 			if ( $exp ) {
 				$this->render_current( $exp );

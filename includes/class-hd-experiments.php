@@ -230,18 +230,29 @@ class HD_DD_Experiments {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT arm, COUNT(*) AS visitors, COUNT(converted_at) AS leads FROM {$table} WHERE experiment_id = %s GROUP BY arm", $exp['id'] ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT arm, COUNT(*) AS visitors, COUNT(converted_at) AS leads, COUNT(callback_at) AS callbacks FROM {$table} WHERE experiment_id = %s GROUP BY arm", $exp['id'] ) );
 		$out  = array();
 		foreach ( self::ARMS as $arm ) {
-			$out[ $arm ] = array( 'flow' => $exp[ $arm ], 'label' => self::flow_label( $exp[ $arm ] ), 'visitors' => 0, 'leads' => 0 );
+			$out[ $arm ] = array( 'flow' => $exp[ $arm ], 'label' => self::flow_label( $exp[ $arm ] ), 'visitors' => 0, 'leads' => 0, 'callbacks' => 0 );
 		}
 		foreach ( (array) $rows as $r ) {
 			if ( isset( $out[ $r->arm ] ) ) {
 				$out[ $r->arm ]['visitors'] = (int) $r->visitors;
 				$out[ $r->arm ]['leads']    = (int) $r->leads;
+				$out[ $r->arm ]['callbacks'] = isset( $r->callbacks ) ? (int) $r->callbacks : 0;
 			}
 		}
 		return $out;
+	}
+
+	/** The manager-app contract: current + history runs as JSON-ready arrays. See HD_DD_Experiment_Export. */
+	public static function snapshot() {
+		return HD_DD_Experiment_Export::snapshot();
+	}
+
+	/** Raw dump for the wp-admin download. See HD_DD_Experiment_Export. */
+	public static function export_data() {
+		return HD_DD_Experiment_Export::export_data();
 	}
 
 	/** Live decision for an experiment under the (filterable) win rule. */

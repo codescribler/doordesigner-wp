@@ -70,4 +70,15 @@ $GLOBALS['hd_test_options']['hd_dd_settings'] = array( 'default_flow' => 'classi
 $clean = $admin->sanitize_settings( array( 'recipient_email' => 'a@example.com', 'default_flow' => '<b>x</b>' ) );
 check( 'classic' === $clean['default_flow'], 'an unknown flow falls back to the current value' );
 
+// --- Export download -----------------------------------------------------------------------------
+hd_exp_reset();
+$good = wp_create_nonce( 'hd_dd_experiment_export' );
+check( null === $A::export_response( 'bad-nonce' ), 'a bad nonce is refused' );
+$GLOBALS['hd_test_can'] = false;
+check( null === $A::export_response( $good ), 'no capability is refused' );
+$GLOBALS['hd_test_can'] = true;
+$r = $A::export_response( $good );
+check( $r && (bool) preg_grep( '/^Content-Disposition: attachment; filename=hd-dd-experiments-\d{8}-\d{4}\.json$/', $r['headers'] ), 'attachment header with a dated filename' );
+check( $r && array_key_exists( 'visitors', (array) json_decode( $r['body'], true ) ), 'body is the export JSON' );
+
 hd_test_done( 'experiment-admin.test.php' );

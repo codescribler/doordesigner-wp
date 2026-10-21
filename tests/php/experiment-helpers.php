@@ -8,6 +8,7 @@
 require __DIR__ . '/wp-stubs.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-stats.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-notifier.php';
+require_once HD_DD_DIR . 'includes/class-hd-experiment-export.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiments.php';
 
 class HD_Test_Exp_WPDB extends HD_Test_WPDB {
@@ -65,12 +66,19 @@ class HD_Test_Exp_WPDB extends HD_Test_WPDB {
 					continue;
 				}
 				if ( ! isset( $out[ $v['arm'] ] ) ) {
-					$out[ $v['arm'] ] = (object) array( 'arm' => $v['arm'], 'visitors' => 0, 'leads' => 0 );
+					$out[ $v['arm'] ] = (object) array( 'arm' => $v['arm'], 'visitors' => 0, 'leads' => 0, 'callbacks' => 0 );
 				}
 				$out[ $v['arm'] ]->visitors++;
 				$out[ $v['arm'] ]->leads += null === $v['converted_at'] ? 0 : 1;
+				$out[ $v['arm'] ]->callbacks += empty( $v['callback_at'] ) ? 0 : 1;
 			}
 			return array_values( $out );
+		}
+		if ( 0 === strpos( $q, 'SELECT * FROM wp_hd_dd_experiment_visitors' ) ) {
+			return array_values( $this->visitors );
+		}
+		if ( 0 === strpos( $q, 'SELECT reference, kind, flow, created_at, payload FROM wp_hd_enquiries WHERE payload LIKE' ) ) {
+			return array_map( function ( $r ) { return (object) $r; }, $this->rows );
 		}
 		return parent::get_results( $q );
 	}
