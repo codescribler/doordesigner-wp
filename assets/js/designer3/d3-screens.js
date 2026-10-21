@@ -42,6 +42,38 @@
 		if (help) { shell.appendChild(el('p', 'hd-d3-help', help)); }
 	}
 
+	// A double door tile: both leaves composited from the same layers Classic's style tiles use
+	// (RenderModel.assemble, the "no glass" cassettes so the design shows), placed as % of the stage.
+	function doubleTile(app, label) {
+		var RM = W.HD_DD_RenderModel, base = app.assetBase(), T = app.model && app.model.types && app.model.types['Double Door'];
+		if (!RM || !base || !T) { return null; }
+		var dd = { 'Door Type': { label: 'Double Door' }, 'Door Design': { label: label }, 'Door Colour (External)': { label: T.baselineColour } };
+		var raw = RM.assemble(app.model, 'Double Door', dd), maxX = 0, maxY = 0;
+		var layers = raw.map(function (l) {
+			maxX = Math.max(maxX, (l.cx || 0) + (l.w || 0) / 2);
+			maxY = Math.max(maxY, (l.cy || 0) + (l.h || 0) / 2);
+			return { url: l.url.replace(/(DoorCassettes\/[^/]+\/Thumbnails\/)[^/]+(\.png)/, '$1NoGlass$2'), cx: l.cx, cy: l.cy, w: l.w, h: l.h, flipH: !!l.flipH };
+		});
+		return layers.length ? { layers: layers, base: base, stage: { width: Math.ceil(maxX) || 294, height: Math.ceil(maxY) || 318 } } : null;
+	}
+	function layerBox(img) {
+		var sw = img.stage.width, sh = img.stage.height, box = el('span', 'hd-d3-card__door');
+		box.style.aspectRatio = sw + ' / ' + sh;
+		img.layers.forEach(function (l) {
+			var im = el('img', 'hd-d3-card__layer');
+			im.alt = ''; im.loading = 'lazy';
+			im.onerror = function () { if (im.parentNode) { im.parentNode.removeChild(im); } };
+			im.style.left = ((l.cx - l.w / 2) / sw * 100) + '%';
+			im.style.top = ((l.cy - l.h / 2) / sh * 100) + '%';
+			im.style.width = (l.w / sw * 100) + '%';
+			im.style.height = (l.h / sh * 100) + '%';
+			if (l.flipH) { im.style.transform = 'scaleX(-1)'; }
+			im.src = encodeURI(/^https?:\/\//.test(l.url) || l.url.charAt(0) === '/' ? l.url : img.base + '/' + l.url);
+			box.appendChild(im);
+		});
+		return box;
+	}
+
 	// `img` is a picture URL, or { svg: '<svg…>' } for a drawn outline.
 	function card(label, sub, img, on, onPick) {
 		var b = el('button', 'hd-d3-card' + (on ? ' is-on' : ''));
@@ -49,6 +81,8 @@
 		var media = el('span', 'hd-d3-card__media');
 		if (img && img.svg) {
 			media.innerHTML = img.svg;
+		} else if (img && img.layers) {
+			media.appendChild(layerBox(img));
 		} else if (img) {
 			var im = el('img');
 			im.alt = ''; im.loading = 'lazy';
@@ -89,7 +123,7 @@
 		function fill() {
 			grid.innerHTML = '';
 			styles.filter(function (s) { return app.styleFilter === 'All' || !app.styleFilter || cats[s.label] === app.styleFilter; }).forEach(function (s) {
-				var img = P() ? P().blankThumb(app.assetBase(), app.model, app.type(), s.label) : null;
+				var img = (app.type() === 'Double Door' && doubleTile(app, s.label)) || (P() ? P().blankThumb(app.assetBase(), app.model, app.type(), s.label) : null);
 				grid.appendChild(card(short(s.label), '', img, s.label === app.style(), function () { app.select('Door Design', s.label); }));
 			});
 		}

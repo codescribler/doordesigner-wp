@@ -254,3 +254,7 @@
   .hd-d3-stage--after .hd-d3-frame { width: 340px; }
   .hd-d3-framepick__drawing { flex-basis: 132px; }
 }
+
+/* Double-door style tile: both leaves composited from layers (see d3-screens.js doubleTile). */
+.hd-d3-card__door { position: relative; display: block; height: 92%; max-width: 92%; }
+.hd-d3-card__layer { position: absolute; max-width: none; max-height: none; object-fit: fill; pointer-events: none; }
