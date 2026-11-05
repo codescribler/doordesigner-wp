@@ -56,6 +56,16 @@ function flush() { return new Promise(function (r) { setTimeout(r, 0); }); }
   await flush(); await flush();
   assert.deepStrictEqual(sent, ['started', 'shown', 'form'], 'a failed expose or send still never throws');
 
+  // A step the visitor didn't take (door_type link) is no milestone.
+  sent = [];
+  F.attach(function (m) { sent.push(m); }, null);
+  d3.step('type', 'Front Door', { auto: true });
+  await flush();
+  assert.deepStrictEqual(sent, [], 'an automatic step is not a first choice');
+  d3.step('style', 'Ascot');
+  await flush();
+  assert.deepStrictEqual(sent, ['started']);
+
   // Detached (forced flow, return link): nothing.
   F.attach(null, null);
   sent = [];

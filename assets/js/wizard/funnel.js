@@ -102,10 +102,11 @@
     } catch (e) { /* best-effort */ }
   }
 
-  // A reporter bound to one funnel name + order map.
+  // A reporter bound to one funnel name + order map. `opts.auto`: a step the visitor didn't
+  // take themselves (a door_type link picking the type), so it is no A/B milestone.
   function create(name, order) {
-    function step(key, choice) {
-      report(name, key);
+    function step(key, choice, opts) {
+      if (!(opts && opts.auto)) { report(name, key); }
       var t = tracker();
       if (!t || order[key] == null) { return; }
       var opts = { order: order[key] };

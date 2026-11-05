@@ -253,7 +253,7 @@
 		// A door_type link (data-door-type) starts on that type's style grid.
 		if (this.screen === 'type' && this.doorType && !this.type()) {
 			this.wiz.selectType(this.doorType);
-			this.funnel.step('type', this.doorType);
+			this.funnel.step('type', this.doorType, { auto: true });   // not a choice they made
 			this.screen = 'style';
 		}
 		var Sc = W.HD_DD_D3Screens || {};
