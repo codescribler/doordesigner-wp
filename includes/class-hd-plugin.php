@@ -49,6 +49,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Experiment_Tracking */
 	private $experiment_tracking;
 
+	/** @var HD_DD_Follow_Up */
+	private $follow_up;
+
 	/** @var HD_DD_Experiments_Admin */
 	public $experiments_admin;
 
@@ -71,6 +74,7 @@ final class HD_DD_Plugin {
 		// activate). Cheap no-op once the stored schema version matches.
 		HD_DD_Repository::maybe_upgrade();
 		HD_DD_Experiments::maybe_upgrade();
+		HD_DD_Follow_Up::maybe_upgrade();
 
 		$this->repository  = new HD_DD_Repository();
 		$this->catalogue   = new HD_DD_Catalogue();
@@ -85,6 +89,7 @@ final class HD_DD_Plugin {
 		$this->experiments = new HD_DD_Experiments();
 		$this->experiments_admin = new HD_DD_Experiments_Admin();
 		$this->experiment_tracking = new HD_DD_Experiment_Tracking();
+		$this->follow_up = new HD_DD_Follow_Up();
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -98,6 +103,7 @@ final class HD_DD_Plugin {
 		$this->experiments->register();
 		$this->experiments_admin->register();
 		$this->experiment_tracking->register();
+		$this->follow_up->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */

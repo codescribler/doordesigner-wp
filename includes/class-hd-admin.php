@@ -162,6 +162,8 @@ class HD_DD_Admin {
 				<?php submit_button(); ?>
 			</form>
 
+			<?php HD_DD_Follow_Up_Admin::render_settings_section(); ?>
+
 			<hr>
 			<h2><?php esc_html_e( 'Preview images', 'hd-door-designer' ); ?></h2>
 			<p class="description">
@@ -323,6 +325,7 @@ class HD_DD_Admin {
 			<?php if ( '' !== $status_label ) : ?>
 				<div class="notice <?php echo 'failed' === (string) $row->status ? 'notice-error' : 'notice-warning'; ?>"><p><?php echo esc_html( $status_label ); ?></p></div>
 			<?php endif; ?>
+			<?php HD_DD_Follow_Up_Admin::render_detail_box( $row ); ?>
 			<p>
 				<a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'Back to enquiries', 'hd-door-designer' ); ?></a>
 				<?php if ( $designer_url ) : ?>

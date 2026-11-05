@@ -190,8 +190,8 @@ class HD_DD_Save {
 		HD_DD_Save_Mailer::send_owner_saved( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array(), $reload_url );
 		HD_DD_Save_Mailer::send_saver( $payload, $reload_url );
 
-		/** Fires after a design is saved by email (not an enquiry yet). */
-		do_action( 'hd_dd_design_saved', $payload, $saved['id'] );
+		/** Fires after a design is saved by email (not an enquiry yet). reloadUrl is for listeners only (not stored). */
+		do_action( 'hd_dd_design_saved', $payload + array( 'reloadUrl' => $reload_url ), $saved['id'] );
 
 		return new WP_REST_Response( array( 'ok' => true, 'reference' => $saved['reference'], 'token' => $saved['token'] ), 201 );
 	}
