@@ -43,7 +43,7 @@ HD_DD_Experiments::migrate_flows();
 HD_DD_Experiments::migrate_flows();
 check( null !== HD_DD_Experiments::current(), 'a Classic vs Swipe 2 test keeps running' );
 check( array() === HD_DD_Experiments::history(), 'and nothing is added to history' );
-check( '3' === HD_DD_Experiments::DB_VERSION, 'version bumped so the migration runs on update' );
+check( version_compare( HD_DD_Experiments::DB_VERSION, '3', '>=' ), 'version bumped so the migration runs on update' );
 
 // A stored test with keys missing (hand-edited or from an old version) is not a crash or a notice.
 hd_exp_reset();

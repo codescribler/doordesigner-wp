@@ -46,6 +46,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Experiments */
 	public $experiments;
 
+	/** @var HD_DD_Experiment_Tracking */
+	private $experiment_tracking;
+
 	/** @var HD_DD_Experiments_Admin */
 	public $experiments_admin;
 
@@ -81,6 +84,7 @@ final class HD_DD_Plugin {
 		$this->failure_log = new HD_DD_Failure_Log( $this->repository );
 		$this->experiments = new HD_DD_Experiments();
 		$this->experiments_admin = new HD_DD_Experiments_Admin();
+		$this->experiment_tracking = new HD_DD_Experiment_Tracking();
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -93,6 +97,7 @@ final class HD_DD_Plugin {
 		$this->failure_log->register();
 		$this->experiments->register();
 		$this->experiments_admin->register();
+		$this->experiment_tracking->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */

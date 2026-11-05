@@ -28,7 +28,7 @@ $run_keys = array( 'id', 'control', 'challenger', 'percent', 'startedAt', 'ended
 $c = $s['current'];
 check( $run_keys === array_keys( $c ), 'current run keys' );
 check( $exp['id'] === $c['id'] && 40 === $c['percent'], 'id and percent' );
-check( array( 'flow', 'label', 'visitors', 'leads', 'callbacks' ) === array_keys( $c['control'] ), 'arm keys' );
+check( array( 'flow', 'label', 'visitors', 'leads', 'callbacks', 'saves', 'anyLeads', 'savedThenQuoted', 'journey', 'devices' ) === array_keys( $c['control'] ), 'arm keys' );
 check( 'classic' === $c['control']['flow'] && 'Classic' === $c['control']['label'] && 'designer3' === $c['challenger']['flow'] && 'Designer 3' === $c['challenger']['label'], 'arm flows and labels' );
 check( 1 === $c['control']['visitors'] && 1 === $c['control']['leads'] && 0 === $c['control']['callbacks'], 'control numbers' );
 check( 1 === $c['challenger']['visitors'] && 0 === $c['challenger']['leads'] && 1 === $c['challenger']['callbacks'], 'challenger numbers (callback is not a lead)' );

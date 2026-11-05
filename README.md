@@ -386,6 +386,7 @@ node tests/js/door-card.test.js       # close-up box for the door card
 node tests/js/furniture-pick.test.js  # hardware colour change never strands the handle pick
 node tests/js/designer3-wiring.test.js # boot starts Designer 3 with funnel door-designer-v4
 node tests/js/funnel-v4.test.js       # Designer 3 funnel order (ORDER_V4)
+node tests/js/milestones.test.js      # A/B journey milestones (started / shown / form) + device on expose
 node tests/js/d3-defaults.test.js     # pre-picked furniture per style, never one the style lacks
 node tests/js/d3-frame.test.js        # side/top light chips <-> the 24 Frame Design ids
 node tests/js/d3-hotspots.test.js     # where the "+" dots sit on the door

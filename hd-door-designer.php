@@ -52,6 +52,8 @@ require_once HD_DD_DIR . 'includes/class-hd-save.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-stats.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-notifier.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-export.php';
+require_once HD_DD_DIR . 'includes/class-hd-experiment-journey.php';
+require_once HD_DD_DIR . 'includes/class-hd-experiment-tracking.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiments.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiments-admin.php';
 require_once HD_DD_DIR . 'includes/class-hd-shortcode.php';

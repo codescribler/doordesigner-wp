@@ -95,7 +95,15 @@
 					if (canD3) { flow = 'designer3'; } else { console.warn('[HD DD] Designer 3 unavailable, showing Classic'); }
 				}
 				var assignment = (!muted && a.counted && flow === a.flow) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
-				if (assignment && window.HD_DD_Experiment) { window.HD_DD_Experiment.expose(api, a); }
+				var exposed = (assignment && window.HD_DD_Experiment) ? window.HD_DD_Experiment.expose(api, a) : null;
+				// How far this visitor gets (started / saw their door / opened the quote form), for
+				// the A/B report. Only for counted visitors, and only once the expose has landed.
+				var F = window.HD_DD_Funnel;
+				if (F && F.attach) {
+					F.attach(assignment ? function (step) {
+						return api('experiment/step', { method: 'POST', body: JSON.stringify({ experimentId: assignment.experimentId, visitorId: assignment.visitorId, arm: assignment.arm, step: step }) });
+					} : null, exposed);
+				}
 				launch(flow, assignment);
 			}
 

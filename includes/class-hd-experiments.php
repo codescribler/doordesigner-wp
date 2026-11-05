@@ -19,7 +19,7 @@ class HD_DD_Experiments {
 	const OPTION      = 'hd_dd_experiment';
 	const HISTORY     = 'hd_dd_experiment_history';
 	const DB_OPTION   = 'hd_dd_experiments_db_version';
-	const DB_VERSION  = '3';
+	const DB_VERSION  = '4';
 	const CRON        = 'hd_dd_experiment_evaluate';
 	const RATE_LIMIT  = 30;   // exposes per IP …
 	const RATE_WINDOW = 3600; // … per hour.
@@ -225,22 +225,19 @@ class HD_DD_Experiments {
 		return $start ? max( 0, (int) floor( ( $now - $start ) / 86400 ) ) : 0;
 	}
 
-	/** @return array Per arm: {flow, label, visitors, leads} — the shape evaluate() takes. */
+	/**
+	 * Per arm: {flow, label, visitors, leads, callbacks} (the shape evaluate() takes) plus the
+	 * saves, any-lead, journey and device numbers from HD_DD_Experiment_Journey.
+	 */
 	public static function arms( array $exp ) {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT arm, COUNT(*) AS visitors, COUNT(converted_at) AS leads, COUNT(callback_at) AS callbacks FROM {$table} WHERE experiment_id = %s GROUP BY arm", $exp['id'] ) );
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT arm, device, exposed_at, started_at, shown_at, form_at, saved_at, converted_at, callback_at FROM {$table} WHERE experiment_id = %s", $exp['id'] ) );
+		$sums = HD_DD_Experiment_Journey::summarise( $rows, HD_DD_Experiment_Tracking::since( $exp ), self::ARMS );
 		$out  = array();
 		foreach ( self::ARMS as $arm ) {
-			$out[ $arm ] = array( 'flow' => $exp[ $arm ], 'label' => self::flow_label( $exp[ $arm ] ), 'visitors' => 0, 'leads' => 0, 'callbacks' => 0 );
-		}
-		foreach ( (array) $rows as $r ) {
-			if ( isset( $out[ $r->arm ] ) ) {
-				$out[ $r->arm ]['visitors'] = (int) $r->visitors;
-				$out[ $r->arm ]['leads']    = (int) $r->leads;
-				$out[ $r->arm ]['callbacks'] = isset( $r->callbacks ) ? (int) $r->callbacks : 0;
-			}
+			$out[ $arm ] = array_merge( array( 'flow' => $exp[ $arm ], 'label' => self::flow_label( $exp[ $arm ] ) ), $sums[ $arm ] );
 		}
 		return $out;
 	}
@@ -317,6 +314,7 @@ class HD_DD_Experiments {
 		$id      = isset( $p['experimentId'] ) ? (string) $p['experimentId'] : '';
 		$visitor = isset( $p['visitorId'] ) ? (string) $p['visitorId'] : '';
 		$arm     = isset( $p['arm'] ) ? (string) $p['arm'] : '';
+		$device  = ( isset( $p['device'] ) && in_array( $p['device'], array( 'phone', 'desktop' ), true ) ) ? (string) $p['device'] : '';
 
 		if ( ! preg_match( '/^[a-f0-9]{32}$/', $visitor ) || ! in_array( $arm, self::ARMS, true ) ) {
 			return new WP_REST_Response( array( 'ok' => false ), 400 );
@@ -329,7 +327,7 @@ class HD_DD_Experiments {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$table} (experiment_id, visitor_id, arm, exposed_at) VALUES (%s, %s, %s, %s)", $id, $visitor, $arm, gmdate( 'Y-m-d H:i:s' ) ) );
+		$wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$table} (experiment_id, visitor_id, arm, exposed_at, device) VALUES (%s, %s, %s, %s, %s)", $id, $visitor, $arm, gmdate( 'Y-m-d H:i:s' ), $device ) );
 		return new WP_REST_Response( array( 'ok' => true ), 200 );
 	}
 
@@ -428,6 +426,9 @@ class HD_DD_Experiments {
 		if ( get_option( self::DB_OPTION ) !== self::DB_VERSION ) {
 			self::create_table();
 			self::migrate_flows();
+			// Journey milestones are recorded from now; saves from before are filled in once.
+			add_option( HD_DD_Experiment_Tracking::SINCE, gmdate( 'Y-m-d H:i:s' ), '', false );
+			HD_DD_Experiment_Tracking::backfill_saves();
 			update_option( self::DB_OPTION, self::DB_VERSION, false );
 		}
 	}
@@ -445,6 +446,11 @@ class HD_DD_Experiments {
 			exposed_at DATETIME NOT NULL,
 			converted_at DATETIME NULL DEFAULT NULL,
 			callback_at DATETIME NULL DEFAULT NULL,
+			started_at DATETIME NULL DEFAULT NULL,
+			shown_at DATETIME NULL DEFAULT NULL,
+			form_at DATETIME NULL DEFAULT NULL,
+			saved_at DATETIME NULL DEFAULT NULL,
+			device VARCHAR(10) NOT NULL DEFAULT '',
 			PRIMARY KEY  (experiment_id, visitor_id),
 			KEY experiment_arm (experiment_id, arm)
 		) {$charset};"

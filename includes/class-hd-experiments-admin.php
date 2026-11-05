@@ -188,12 +188,14 @@ class HD_DD_Experiments_Admin {
 			?>
 		</p>
 		<?php $this->render_split( $exp, $chal ); ?>
-		<table class="widefat striped" style="max-width:820px;">
+		<table class="widefat striped" style="max-width:1020px;">
 			<thead><tr>
 				<th><?php esc_html_e( 'Flow', 'hd-door-designer' ); ?></th>
 				<th><?php esc_html_e( 'Visitors (opened the designer)', 'hd-door-designer' ); ?></th>
-				<th><?php esc_html_e( 'Leads', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Leads (quote requests)', 'hd-door-designer' ); ?></th>
 				<th><?php esc_html_e( 'Conversion rate', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Saves', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Any lead (quote, save or call back)', 'hd-door-designer' ); ?></th>
 				<th><?php esc_html_e( 'Expected loss if you pick it', 'hd-door-designer' ); ?></th>
 			</tr></thead>
 			<tbody>
@@ -203,6 +205,8 @@ class HD_DD_Experiments_Admin {
 						<td><?php echo (int) $arm['visitors']; ?></td>
 						<td><?php echo (int) $arm['leads']; ?></td>
 						<td><?php echo esc_html( HD_DD_Experiment_Notifier::pct( $decision['rates'][ $key ], 1 ) ); ?></td>
+						<td><?php echo isset( $arm['saves'] ) ? (int) $arm['saves'] : 0; ?></td>
+						<td><?php echo isset( $arm['anyLeads'] ) ? (int) $arm['anyLeads'] : 0; ?></td>
 						<td><?php echo esc_html( number_format( 100 * $decision['loss'][ $key ], 2 ) . ' ' . __( 'points', 'hd-door-designer' ) ); ?></td>
 					</tr>
 				<?php endforeach; ?>

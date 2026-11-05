@@ -4,7 +4,8 @@
  * consumes (see the Run shape below); export_data() is the full raw dump behind the
  * wp-admin "Download test data" button. Neither carries customer names, emails or phones.
  *
- * Run = { id, control, challenger ({flow,label,visitors,leads,callbacks}), percent,
+ * Run = { id, control, challenger ({flow,label,visitors,leads,callbacks} and, from 0.6.0,
+ *         saves, anyLeads, savedThenQuoted, journey{}, devices{}: see HD_DD_Experiment_Journey), percent,
  *         startedAt, endedAt|null, outcome|null, splitChanges [{at,from,to}],
  *         decision {status, winner, probChallengerBetter, lossControl, lossChallenger, guards[]} }
  *
@@ -87,13 +88,38 @@ class HD_DD_Experiment_Export {
 	private static function arm( array $exp, array $stats, $key ) {
 		$s    = isset( $stats[ $key ] ) && is_array( $stats[ $key ] ) ? $stats[ $key ] : array();
 		$flow = isset( $s['flow'] ) ? (string) $s['flow'] : (string) $exp[ $key ];
-		return array(
+		$out  = array(
 			'flow'      => $flow,
 			'label'     => isset( $s['label'] ) ? (string) $s['label'] : HD_DD_Experiments::flow_label( $flow ),
 			'visitors'  => isset( $s['visitors'] ) ? (int) $s['visitors'] : 0,
 			'leads'     => isset( $s['leads'] ) ? (int) $s['leads'] : 0,
 			'callbacks' => isset( $s['callbacks'] ) ? (int) $s['callbacks'] : 0,
 		);
+		// Recorded from 0.6.0: runs that ended earlier simply lack these.
+		foreach ( array( 'saves', 'anyLeads', 'savedThenQuoted' ) as $k ) {
+			if ( isset( $s[ $k ] ) ) {
+				$out[ $k ] = (int) $s[ $k ];
+			}
+		}
+		if ( isset( $s['journey'] ) && is_array( $s['journey'] ) ) {
+			$j              = $s['journey'];
+			$out['journey'] = array( 'since' => isset( $j['since'] ) ? (string) $j['since'] : '' );
+			foreach ( array( 'opened', 'started', 'shown', 'saved', 'form', 'quoted', 'callbacks', 'anyLeads' ) as $k ) {
+				$out['journey'][ $k ] = isset( $j[ $k ] ) ? (int) $j[ $k ] : 0;
+			}
+		}
+		if ( isset( $s['devices'] ) && is_array( $s['devices'] ) ) {
+			$out['devices'] = array();
+			foreach ( HD_DD_Experiment_Journey::DEVICES as $d ) {
+				$v                    = isset( $s['devices'][ $d ] ) && is_array( $s['devices'][ $d ] ) ? $s['devices'][ $d ] : array();
+				$out['devices'][ $d ] = array(
+					'visitors' => isset( $v['visitors'] ) ? (int) $v['visitors'] : 0,
+					'leads'    => isset( $v['leads'] ) ? (int) $v['leads'] : 0,
+					'anyLeads' => isset( $v['anyLeads'] ) ? (int) $v['anyLeads'] : 0,
+				);
+			}
+		}
+		return $out;
 	}
 
 	private static function split_changes( array $exp ) {

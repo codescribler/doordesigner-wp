@@ -165,13 +165,28 @@
     }
   }
 
+  // 'phone' when the narrower of the screen and the window is under 768px, else 'desktop';
+  // '' when the browser says nothing. `win` is injectable for tests.
+  function deviceKind(win) {
+    try {
+      var w = win || (typeof window !== 'undefined' ? window : null);
+      if (!w) { return ''; }
+      var sizes = [w.innerWidth, w.screen && w.screen.width].filter(function (n) { return typeof n === 'number' && n > 0; });
+      if (!sizes.length) { return ''; }
+      return Math.min.apply(Math, sizes) < 768 ? 'phone' : 'desktop';
+    } catch (e) { return ''; }
+  }
+
   // Count this visitor in their arm: POST experiment/expose once per visitor per
   // experiment. `apiRequest` is HD_DD_ApiClient.create(...).request. Resolves true
   // when the server recorded it; never rejects.
   function expose(apiRequest, a, env) {
     try {
       if (!a || !a.counted || a.exposed || typeof apiRequest !== 'function') { return Promise.resolve(false); }
-      var body = JSON.stringify({ experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm });
+      var payload = { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm };
+      var device = deviceKind(env && env.window);
+      if (device) { payload.device = device; }
+      var body = JSON.stringify(payload);
       return Promise.resolve(apiRequest('experiment/expose', { method: 'POST', body: body })).then(function (res) {
         if (res && res.ok) {
           // Any 2xx is final (a stale experiment id won't improve on retry); a 429 / 5xx retries next load.
@@ -206,5 +221,5 @@
     return (a && a.counted && a.experimentId) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
   }
 
-  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, canRunDesigner3: canRunDesigner3, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, STORAGE_KEY: KEY };
+  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, canRunDesigner3: canRunDesigner3, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, deviceKind: deviceKind, STORAGE_KEY: KEY };
 }));

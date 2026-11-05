@@ -9,6 +9,8 @@ require __DIR__ . '/wp-stubs.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-stats.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-notifier.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiment-export.php';
+require_once HD_DD_DIR . 'includes/class-hd-experiment-journey.php';
+require_once HD_DD_DIR . 'includes/class-hd-experiment-tracking.php';
 require_once HD_DD_DIR . 'includes/class-hd-experiments.php';
 
 class HD_Test_Exp_WPDB extends HD_Test_WPDB {
@@ -31,13 +33,29 @@ class HD_Test_Exp_WPDB extends HD_Test_WPDB {
 
 	public function query( $q ) {
 		$this->queries[] = $q;
-		if ( preg_match( "/^INSERT IGNORE INTO wp_hd_dd_experiment_visitors \(experiment_id, visitor_id, arm, exposed_at\) VALUES \('([^']*)', '([^']*)', '([^']*)', '([^']*)'\)$/", $q, $m ) ) {
+		if ( preg_match( "/^INSERT IGNORE INTO wp_hd_dd_experiment_visitors \(experiment_id, visitor_id, arm, exposed_at, device\) VALUES \('([^']*)', '([^']*)', '([^']*)', '([^']*)', '([^']*)'\)$/", $q, $m ) ) {
 			$key = $m[1] . '|' . $m[2];
 			if ( isset( $this->visitors[ $key ] ) ) {
 				return 0;
 			}
-			$this->visitors[ $key ] = array( 'experiment_id' => $m[1], 'visitor_id' => $m[2], 'arm' => $m[3], 'exposed_at' => $m[4], 'converted_at' => null, 'callback_at' => null );
+			$this->visitors[ $key ] = array( 'experiment_id' => $m[1], 'visitor_id' => $m[2], 'arm' => $m[3], 'exposed_at' => $m[4], 'device' => $m[5], 'converted_at' => null, 'callback_at' => null );
 			return 1;
+		}
+		// HD_DD_Experiment_Tracking::mark(): "SET a = COALESCE(a, 't'), … WHERE experiment_id … arm".
+		if ( preg_match( "/^UPDATE wp_hd_dd_experiment_visitors SET (.+) WHERE experiment_id = '([^']*)' AND visitor_id = '([^']*)' AND arm = '([^']*)'$/", $q, $m ) && false !== strpos( $m[1], 'COALESCE' ) ) {
+			$key = $m[2] . '|' . $m[3];
+			if ( ! isset( $this->visitors[ $key ] ) || $m[4] !== $this->visitors[ $key ]['arm'] ) {
+				return 0;
+			}
+			preg_match_all( '/(\w+) = COALESCE\((\w+), \'([^\']*)\'\)/', $m[1], $sets, PREG_SET_ORDER );
+			$changed = false;
+			foreach ( $sets as $set ) {
+				if ( empty( $this->visitors[ $key ][ $set[1] ] ) ) {
+					$this->visitors[ $key ][ $set[1] ] = $set[3];
+					$changed = true;
+				}
+			}
+			return $changed ? 1 : 0;
 		}
 		if ( preg_match( "/^UPDATE wp_hd_dd_experiment_visitors SET callback_at = '([^']*)' WHERE experiment_id = '([^']*)' AND visitor_id = '([^']*)' AND arm = '([^']*)' AND callback_at IS NULL$/", $q, $m ) ) {
 			$key = $m[2] . '|' . $m[3];
@@ -73,6 +91,13 @@ class HD_Test_Exp_WPDB extends HD_Test_WPDB {
 				$out[ $v['arm'] ]->callbacks += empty( $v['callback_at'] ) ? 0 : 1;
 			}
 			return array_values( $out );
+		}
+		if ( preg_match( "/^SELECT arm, device, exposed_at, .* FROM wp_hd_dd_experiment_visitors WHERE experiment_id = '([^']*)'$/", $q, $m ) ) {
+			$id = $m[1];
+			return array_values( array_map( function ( $v ) { return (object) $v; }, array_filter( $this->visitors, function ( $v ) use ( $id ) { return $v['experiment_id'] === $id; } ) ) );
+		}
+		if ( 0 === strpos( $q, 'SELECT flow, created_at, payload FROM wp_hd_enquiries WHERE payload LIKE' ) ) {
+			return array_map( function ( $r ) { return (object) $r; }, $this->rows );
 		}
 		if ( 0 === strpos( $q, 'SELECT * FROM wp_hd_dd_experiment_visitors' ) ) {
 			return array_values( $this->visitors );

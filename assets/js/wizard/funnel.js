@@ -66,9 +66,46 @@
     return (cfg && cfg.version) ? String(cfg.version) : '';
   }
 
+  // A/B journey milestones (HD_DD_Experiment_Tracking on the server), read from the funnel
+  // steps each flow already reports, so the control flow's own files never change:
+  //   started  any choice   shown  saw their finished door   form  opened the quote form
+  // Saves, quote requests and call backs are recorded by the server, not here.
+  var MILESTONES = {
+    'door-designer': { shown: 'review', form: 'details' },     // classic: Review, then the form
+    'door-designer-v3': { shown: 'review' },
+    'door-designer-v4': { shown: 'shown', form: 'quoteform' }  // Designer 3: the complete door
+  };
+  var BEFORE_CHOICE = { opened: true, browsed: true };
+  function milestoneFor(name, key) {
+    var m = MILESTONES[name];
+    if (!m || !key || BEFORE_CHOICE[key]) { return ''; }
+    if (m.form === key) { return 'form'; }
+    if (m.shown === key) { return 'shown'; }
+    return 'started';
+  }
+
+  // attach(send, ready): boot.js hands over send(milestone) for a visitor counted in the test,
+  // and the expose promise, so no milestone reaches the server before the visitor's row
+  // exists. Each milestone is sent at most once per page; nothing here may throw.
+  var journey = null;
+  function attach(send, ready) {
+    journey = typeof send === 'function' ? { send: send, ready: ready, sent: {} } : null;
+  }
+  function report(name, key) {
+    try {
+      var m = journey && milestoneFor(name, key);
+      if (!m || journey.sent[m] || muted()) { return; }
+      journey.sent[m] = true;
+      var j = journey;
+      Promise.resolve(j.ready).then(function () { return j.send(m); }, function () { return j.send(m); })
+        .then(null, function () { /* best-effort */ });
+    } catch (e) { /* best-effort */ }
+  }
+
   // A reporter bound to one funnel name + order map.
   function create(name, order) {
     function step(key, choice) {
+      report(name, key);
       var t = tracker();
       if (!t || order[key] == null) { return; }
       var opts = { order: order[key] };
@@ -92,5 +129,5 @@
 
   var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, ORDER_V3: ORDER_V3, ORDER_V4: ORDER_V4, create: create, step: classic.step, lead: classic.lead, muted: muted };
+  return { ORDER: ORDER, ORDER_V3: ORDER_V3, ORDER_V4: ORDER_V4, create: create, step: classic.step, lead: classic.lead, muted: muted, attach: attach, milestoneFor: milestoneFor };
 }));
