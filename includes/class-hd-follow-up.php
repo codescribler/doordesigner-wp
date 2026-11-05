@@ -15,11 +15,12 @@ defined( 'ABSPATH' ) || exit;
 class HD_DD_Follow_Up {
 
 	const DB_OPTION  = 'hd_dd_followups_db_version';
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 	const CRON       = 'hd_dd_followups_run';
 	const STOP       = 'hd_dd_followup_stop';    // public admin-post action (the email link).
 	const ADMIN_STOP = 'hd_dd_followup_admin_stop';
 	const BACKFILL   = 'hd_dd_followup_backfill';
+	const GO         = 'hd_dd_followup_go';      // public admin-post action: a button in an email.
 	const BATCH      = 25;                        // emails per cron run at most.
 
 	const REASONS = array(
@@ -41,6 +42,10 @@ class HD_DD_Follow_Up {
 		add_action( 'admin_post_' . self::STOP, array( __CLASS__, 'handle_stop' ) );
 		add_action( 'admin_post_' . self::ADMIN_STOP, array( __CLASS__, 'handle_admin_stop' ) );
 		add_action( 'admin_post_' . self::BACKFILL, array( __CLASS__, 'handle_backfill' ) );
+		add_action( 'admin_post_nopriv_' . self::GO, array( __CLASS__, 'handle_go' ) );
+		add_action( 'admin_post_' . self::GO, array( __CLASS__, 'handle_go' ) );
+		add_action( 'hd_dd_enquiry_submitted', array( __CLASS__, 'on_quote' ), 30, 2 );
+		add_action( 'hd_dd_callback_requested', array( __CLASS__, 'on_callback' ), 30, 2 );
 	}
 
 	public static function schedule() {
@@ -134,6 +139,7 @@ class HD_DD_Follow_Up {
 				continue;
 			}
 			HD_DD_Follow_Up_Mailer::send( $step + 1, $row, self::links( $f, $row, $step + 1 ) );
+			HD_DD_Follow_Up_Log::add( $f->enquiry_id, $step + 1, 'sent', '', $now );
 			$sent++;
 			if ( $step + 1 >= HD_DD_Follow_Up_Plan::STEPS ) {
 				self::stop( $f->enquiry_id, 'finished' );
@@ -142,11 +148,26 @@ class HD_DD_Follow_Up {
 		return $sent;
 	}
 
-	/** The open / price / stop links for one email (tagged so analytics can see which brought them back). */
+	/**
+	 * The links in email $step. Both buttons go through GO, which logs the click and sends them
+	 * on to their design (the destination is worked out here, never taken from the link).
+	 */
 	public static function links( $f, $row, $step ) {
+		$go = function ( $button ) use ( $f, $step ) {
+			return add_query_arg( array( 'action' => self::GO, 't' => (string) $f->token, 'e' => (int) $step, 'b' => $button ), admin_url( 'admin-post.php' ) );
+		};
+		return array(
+			'open'  => $go( 'open' ),
+			'price' => $go( 'price' ),
+			'stop'  => add_query_arg( array( 'action' => self::STOP, 't' => (string) $f->token ), admin_url( 'admin-post.php' ) ),
+		);
+	}
+
+	/** Where a button in email $step leads: their design, tagged so analytics see the email. */
+	public static function destination( $f, $row, $step, $button ) {
 		$base = (string) $f->reload_url;
 		if ( '' === $base || false === strpos( $base, 'design=' ) ) {
-			$base = self::designer_url( (string) $row->token );
+			$base = self::designer_url( $row ? (string) $row->token : '' );
 		}
 		$open = add_query_arg(
 			array(
@@ -157,11 +178,74 @@ class HD_DD_Follow_Up {
 			),
 			$base
 		);
-		return array(
-			'open'  => $open,
-			'price' => add_query_arg( 'price', '1', $open ),
-			'stop'  => add_query_arg( array( 'action' => self::STOP, 't' => (string) $f->token ), admin_url( 'admin-post.php' ) ),
-		);
+		return 'price' === $button ? add_query_arg( 'price', '1', $open ) : $open;
+	}
+
+	/**
+	 * A button press: log it (unless it is a mail scanner checking the link straight after
+	 * sending) and return where to send them, or '' for an unknown link.
+	 */
+	public static function click( $token, $step, $button, $now = null ) {
+		global $wpdb;
+		$now    = null === $now ? time() : (int) $now;
+		$step   = (int) $step;
+		$button = 'price' === $button ? 'price' : 'open';
+		$f      = preg_match( '/^[a-f0-9]{32}$/', (string) $token ) ? $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table() . ' WHERE token = %s', $token ) ) : null;
+		if ( ! $f || $step < 1 || $step > HD_DD_Follow_Up_Plan::STEPS ) {
+			return '';
+		}
+		$row     = ( new HD_DD_Repository() )->get( (int) $f->enquiry_id );
+		$sent_at = null;
+		foreach ( HD_DD_Follow_Up_Log::for_enquiry( $f->enquiry_id ) as $e ) {
+			if ( 'sent' === $e->type && $step === (int) $e->step ) {
+				$sent_at = strtotime( $e->at . ' UTC' );
+			}
+		}
+		if ( ! $sent_at || $now - $sent_at >= HD_DD_Follow_Up_Log::SCANNER_SECONDS ) {
+			HD_DD_Follow_Up_Log::add( $f->enquiry_id, $step, 'click', $button, $now );
+		}
+		return self::destination( $f, $row, $step, $button );
+	}
+
+	public static function handle_go() {
+		// phpcs:disable WordPress.Security.NonceVerification -- the token is the credential; read-only redirect.
+		$token  = isset( $_GET['t'] ) ? sanitize_key( wp_unslash( $_GET['t'] ) ) : '';
+		$step   = isset( $_GET['e'] ) ? absint( $_GET['e'] ) : 0;
+		$button = isset( $_GET['b'] ) ? sanitize_key( wp_unslash( $_GET['b'] ) ) : '';
+		// phpcs:enable
+		$head = isset( $_SERVER['REQUEST_METHOD'] ) && 'HEAD' === strtoupper( (string) $_SERVER['REQUEST_METHOD'] );
+		$url  = $head ? '' : self::click( $token, $step, $button );
+		wp_safe_redirect( '' !== $url ? $url : home_url( '/door-designer/' ) );
+		exit;
+	}
+
+	/** hd_dd_enquiry_submitted: a price request from someone being followed up. */
+	public static function on_quote( $payload, $id = 0 ) {
+		self::on_lead( $payload, $id, 'quote' );
+	}
+
+	/** hd_dd_callback_requested: a call back from someone being followed up. */
+	public static function on_callback( $payload, $id = 0 ) {
+		self::on_lead( $payload, $id, 'callback' );
+	}
+
+	/** Log the lead against the last email they had (0 = none yet) and stop the sequence. */
+	private static function on_lead( $payload, $id, $type ) {
+		global $wpdb;
+		$f = self::get( (int) $id );
+		if ( ! $f ) {
+			$email = isset( $payload['customer']['email'] ) ? (string) $payload['customer']['email'] : '';
+			if ( '' === $email ) {
+				return;
+			}
+			$et = HD_DD_Repository::table();
+			$f  = $wpdb->get_row( $wpdb->prepare( 'SELECT f.* FROM ' . self::table() . " f JOIN {$et} e ON e.id = f.enquiry_id WHERE e.customer_email = %s ORDER BY f.started_at DESC LIMIT 1", $email ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		}
+		if ( ! $f ) {
+			return;
+		}
+		HD_DD_Follow_Up_Log::add( $f->enquiry_id, (int) $f->sent_steps, $type );
+		self::stop( $f->enquiry_id, 'converted' );
 	}
 
 	/** The designer page with ?design=token: the page setting, else /door-designer/. */
@@ -269,6 +353,7 @@ class HD_DD_Follow_Up {
 	public static function maybe_upgrade() {
 		if ( get_option( self::DB_OPTION ) !== self::DB_VERSION ) {
 			self::create_table();
+			HD_DD_Follow_Up_Log::create_table();
 			update_option( self::DB_OPTION, self::DB_VERSION, false );
 		}
 	}

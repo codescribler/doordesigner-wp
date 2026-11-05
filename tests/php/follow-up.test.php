@@ -6,6 +6,7 @@
 require __DIR__ . '/wp-stubs.php';
 require_once HD_DD_DIR . 'includes/class-hd-follow-up-plan.php';
 require_once HD_DD_DIR . 'includes/class-hd-follow-up-mailer.php';
+require_once HD_DD_DIR . 'includes/class-hd-follow-up-log.php';
 require_once HD_DD_DIR . 'includes/class-hd-follow-up.php';
 require_once HD_DD_DIR . 'includes/class-hd-follow-up-admin.php';
 
@@ -15,7 +16,13 @@ function mysql2date( $f, $d ) { return gmdate( $f, strtotime( $d ) ); }
 /** Enquiries in $rows (as the base fake), follow-ups in $follow; answers the follow-up queries. */
 class HD_Test_FU_WPDB extends HD_Test_WPDB {
 	public $follow = array();
+	public $events = array();
 	public function insert( $table, $data, $format = null ) {
+		if ( 'wp_hd_dd_followup_events' === $table ) {
+			$data['id']     = count( $this->events ) + 1;
+			$this->events[] = $data;
+			return 1;
+		}
 		if ( 'wp_hd_dd_followups' === $table ) {
 			if ( isset( $this->follow[ $data['enquiry_id'] ] ) ) { return false; }
 			$this->follow[ $data['enquiry_id'] ] = $data + array( 'last_sent_at' => null, 'stopped_at' => null, 'stop_reason' => '' );
@@ -39,9 +46,25 @@ class HD_Test_FU_WPDB extends HD_Test_WPDB {
 			foreach ( $this->follow as $f ) { if ( $f['token'] === $m[1] ) { return (object) $f; } }
 			return null;
 		}
+		if ( preg_match( "/SELECT f.\* FROM wp_hd_dd_followups f JOIN wp_hd_enquiries e ON e.id = f.enquiry_id WHERE e.customer_email = '([^']*)'/", $q, $m ) ) {
+			foreach ( $this->follow as $id => $f ) {
+				$e = $this->enquiry( $id );
+				if ( $e && $e['customer_email'] === $m[1] ) { return (object) $f; }
+			}
+			return null;
+		}
 		return parent::get_row( $q );
 	}
 	public function get_results( $q ) {
+		if ( 0 === strpos( $q, 'SELECT * FROM wp_hd_dd_followup_events ORDER BY' ) ) {
+			return array_map( function ( $e ) { return (object) $e; }, $this->events );
+		}
+		if ( preg_match( "/FROM wp_hd_dd_followup_events WHERE enquiry_id = (\d+)/", $q, $m ) ) {
+			return array_values( array_map( function ( $e ) { return (object) $e; }, array_filter( $this->events, function ( $e ) use ( $m ) { return (int) $e['enquiry_id'] === (int) $m[1]; } ) ) );
+		}
+		if ( preg_match( "/FROM wp_hd_dd_followups f JOIN wp_hd_enquiries e ON e.id = f.enquiry_id WHERE e.customer_email = '([^']*)' ORDER BY/", $q, $m ) ) {
+			return array();
+		}
 		if ( 0 === strpos( $q, 'SELECT * FROM wp_hd_dd_followups WHERE stopped_at IS NULL' ) ) {
 			$out = array_filter( $this->follow, function ( $f ) { return null === $f['stopped_at']; } );
 			usort( $out, function ( $a, $b ) { return strcmp( $a['started_at'], $b['started_at'] ); } );
@@ -176,11 +199,27 @@ check( ! HD_DD_Follow_Up::start( $row, $t0 ), 'never started twice' );
 check( 0 === HD_DD_Follow_Up::run( $t0 + 3600 ), 'nothing in the first day' );
 check( 1 === HD_DD_Follow_Up::run( $t0 + 24 * 3600 ) && 0 === HD_DD_Follow_Up::run( $t0 + 24 * 3600 + 60 ), 'email 1 once' );
 $mail = end( $GLOBALS['hd_test_mail'] );
-check( false !== strpos( $mail['message'], 'utm_content=email-1' ) && false !== strpos( $mail['message'], 'design=' . $row->token ), 'links open their design and say which email' );
+check( false !== strpos( $mail['message'], 'action=hd_dd_followup_go' ) && false !== strpos( $mail['message'], 'e=1' ) && false !== strpos( $mail['message'], 'b=price' ), 'buttons go through the click tracker' );
+$dest = HD_DD_Follow_Up::destination( (object) $wpdb->follow[ $id ], $row, 1, 'price' );
+check( false !== strpos( $dest, 'design=' . $row->token ) && false !== strpos( $dest, 'utm_content=email-1' ) && false !== strpos( $dest, 'price=1' ), 'and land on their design, tagged with the email' );
+check( 1 === count( $wpdb->events ) && 'sent' === $wpdb->events[0]['type'] && 1 === $wpdb->events[0]['step'], 'the send is logged' );
+$tok = $wpdb->follow[ $id ]['token'];
+$url = HD_DD_Follow_Up::click( $tok, 1, 'price', $t0 + 24 * 3600 + 30 );
+check( '' !== $url && 1 === count( $wpdb->events ), 'a click seconds after sending (a scanner) is not counted, but still redirects' );
+HD_DD_Follow_Up::click( $tok, 1, 'price', $t0 + 25 * 3600 );
+HD_DD_Follow_Up::click( $tok, 1, 'open', $t0 + 25 * 3600 + 60 );
+check( 3 === count( $wpdb->events ) && 'click' === $wpdb->events[1]['type'] && 'price' === $wpdb->events[1]['detail'], 'real clicks are logged with the button' );
+check( '' === HD_DD_Follow_Up::click( 'nope', 1, 'price' ) && '' === HD_DD_Follow_Up::click( $tok, 9, 'price' ), 'unknown links log nothing' );
 check( 1 === HD_DD_Follow_Up::run( $t0 + 48 * 3600 ), 'email 2' );
 check( 0 === HD_DD_Follow_Up::run( $t0 + 72 * 3600 ), 'nothing on day 3' );
 check( 1 === HD_DD_Follow_Up::run( $t0 + 96 * 3600 ), 'email 3' );
 check( 'finished' === $wpdb->follow[ $id ]['stop_reason'] && 3 === count( $GLOBALS['hd_test_mail'] ), 'three emails, then finished' );
+// A price request after the last email still counts for it.
+HD_DD_Follow_Up::on_quote( array(), $id );
+$sum = HD_DD_Follow_Up_Log::summarise( HD_DD_Follow_Up_Log::all() );
+check( 1 === $sum[1]['sent'] && 1 === $sum[1]['clicked'] && 1 === $sum[2]['sent'] && 1 === $sum[3]['sent'] && 1 === $sum[3]['quotes'] && 0 === $sum[1]['quotes'], 'report: one person per email, clicks as people, the quote after email 3' );
+$history = array_map( array( 'HD_DD_Follow_Up_Log', 'describe' ), HD_DD_Follow_Up_Log::for_enquiry( $id ) );
+check( 'Sent email 1' === $history[0] && 'Clicked "Get my exact price" in email 1' === $history[1] && 'Asked for a price (after email 3)' === end( $history ), 'the history reads plainly' );
 check( 0 === HD_DD_Follow_Up::run( $t0 + 200 * 3600 ), 'nothing after that' );
 
 // A quote request (or a quote from the same email elsewhere) stops it.
@@ -189,6 +228,11 @@ $id = fu_save( 'kim@example.com', '2026-11-02 10:00:00' );
 HD_DD_Follow_Up::start( $wpdb->get_row( "SELECT * FROM wp_hd_enquiries WHERE id = $id" ), $t0 );
 fu_save( 'kim@example.com', '2026-11-02 11:00:00', array( 'kind' => 'enquiry' ) );
 check( 0 === HD_DD_Follow_Up::run( $t0 + 24 * 3600 ) && 'converted' === $wpdb->follow[ $id ]['stop_reason'], 'a quote from the same address stops the emails' );
+// The quote hook (Classic form, same email) logs it against "before any follow-up".
+HD_DD_Follow_Up::on_quote( array( 'customer' => array( 'email' => 'kim@example.com' ) ), 999 );
+check( 'quote' === end( $wpdb->events )['type'] && 0 === end( $wpdb->events )['step'], 'a quote by email address is matched, step 0' );
+HD_DD_Follow_Up::on_callback( array( 'customer' => array( 'email' => 'nobody@example.com' ) ), 998 );
+check( 'quote' === end( $wpdb->events )['type'], 'someone never followed up logs nothing' );
 
 // A newer save from the same person replaces the older follow-up.
 fu_reset();
@@ -229,7 +273,8 @@ check( array( $old ) === array_map( function ( $s ) { return (int) $s->id; }, HD
 check( 1 === HD_DD_Follow_Up::backfill( $t0 ), 'one started' );
 check( 1 === HD_DD_Follow_Up::run( $t0 ), 'their first email goes straight away' );
 check( 0 === HD_DD_Follow_Up::run( $t0 + 3600 ) && 1 === HD_DD_Follow_Up::run( $t0 + 24 * 3600 ), 'then a day later the second' );
-check( false !== strpos( end( $GLOBALS['hd_test_mail'] )['message'], 'design=' ), 'a backfilled save links to its design via the designer page' );
+$orow = $wpdb->get_row( "SELECT * FROM wp_hd_enquiries WHERE id = $old" );
+check( false !== strpos( HD_DD_Follow_Up::destination( (object) $wpdb->follow[ $old ], $orow, 2, 'open' ), '/door-designer/?design=' . $orow->token ), 'a backfilled save links to its design via the designer page' );
 check( array() === HD_DD_Follow_Up::backfill_candidates(), 'running the backfill again starts nothing' );
 
 hd_test_done( 'follow-up.test.php' );

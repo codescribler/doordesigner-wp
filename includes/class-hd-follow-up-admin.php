@@ -50,6 +50,14 @@ class HD_DD_Follow_Up_Admin {
 					<button type="submit" class="button"><?php esc_html_e( 'Stop follow-ups (they replied)', 'hd-door-designer' ); ?></button>
 				</form>
 			<?php endif; ?>
+			<?php $events = $f ? HD_DD_Follow_Up_Log::for_enquiry( (int) $row->id ) : array(); ?>
+			<?php if ( $events ) : ?>
+				<ul style="margin:0 0 10px;list-style:disc;padding-left:20px;">
+					<?php foreach ( $events as $e ) : ?>
+						<li><?php echo esc_html( self::when( $e->at ) . ' — ' . HD_DD_Follow_Up_Log::describe( $e ) ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -68,7 +76,9 @@ class HD_DD_Follow_Up_Admin {
 				<?php echo esc_html( sprintf( /* translators: %d: count */ __( 'Follow-ups started for %d earlier saves. The first emails go out within the hour (8am to 8pm).', 'hd-door-designer' ), (int) $_GET['followups_started'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			</p></div>
 		<?php endif; ?>
+		<?php self::render_report(); ?>
 		<?php if ( $candidates ) : ?>
+			<h3><?php esc_html_e( 'Earlier saves', 'hd-door-designer' ); ?></h3>
 			<p><?php echo esc_html( sprintf( /* translators: %d: count */ _n( '%d earlier save has not been followed up:', '%d earlier saves have not been followed up:', count( $candidates ), 'hd-door-designer' ), count( $candidates ) ) ); ?></p>
 			<ul style="list-style:disc;padding-left:20px;">
 				<?php foreach ( $candidates as $c ) : ?>
@@ -82,6 +92,90 @@ class HD_DD_Follow_Up_Admin {
 			</form>
 		<?php else : ?>
 			<p><?php esc_html_e( 'Every earlier save is either followed up already or has gone on to ask for a price.', 'hd-door-designer' ); ?></p>
+		<?php endif; ?>
+		<?php
+	}
+
+	/** UK date and time for a stored UTC time. */
+	private static function when( $mysql ) {
+		return wp_date( 'j M Y, H:i', strtotime( $mysql . ' UTC' ) );
+	}
+
+	private static function pct( $n, $of ) {
+		return $of > 0 ? ' (' . round( 100 * $n / $of ) . '%)' : '';
+	}
+
+	/** Totals per email, how sequences ended, and the log of who was sent what and when. */
+	public static function render_report() {
+		$sum = HD_DD_Follow_Up_Log::summarise( HD_DD_Follow_Up_Log::all() );
+		$out = HD_DD_Follow_Up_Log::outcomes();
+		$log = HD_DD_Follow_Up_Log::recent( 100 );
+		$ref = admin_url( 'admin.php?page=hd-door-enquiries&enquiry=' );
+		?>
+		<h3><?php esc_html_e( 'How the follow-ups are doing', 'hd-door-designer' ); ?></h3>
+		<table class="widefat striped" style="max-width:820px;">
+			<thead><tr>
+				<th><?php esc_html_e( 'Email', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Sent to', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Clicked a button', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Then asked for a price', 'hd-door-designer' ); ?></th>
+				<th><?php esc_html_e( 'Then asked for a call back', 'hd-door-designer' ); ?></th>
+			</tr></thead>
+			<tbody>
+				<?php foreach ( array( 1 => __( '1. In daylight (day 1)', 'hd-door-designer' ), 2 => __( '2. Fitted price (day 2)', 'hd-door-designer' ), 3 => __( '3. Still thinking? (day 4)', 'hd-door-designer' ) ) as $n => $label ) : ?>
+					<?php $r = $sum[ $n ]; ?>
+					<tr>
+						<td><?php echo esc_html( $label ); ?></td>
+						<td><?php echo (int) $r['sent']; ?></td>
+						<td><?php echo esc_html( $r['clicked'] . self::pct( $r['clicked'], $r['sent'] ) ); ?></td>
+						<td><?php echo esc_html( $r['quotes'] . self::pct( $r['quotes'], $r['sent'] ) ); ?></td>
+						<td><?php echo (int) $r['callbacks']; ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<p class="description">
+			<?php
+			echo esc_html(
+				sprintf(
+					/* translators: 1: people, 2: running, 3: asked, 4: no more emails, 5: replied */
+					__( '%1$d people followed up: %2$d still running, %3$d asked for a price or call back, %4$d clicked "No more emails", %5$d stopped by hand after replying.', 'hd-door-designer' ),
+					$out['total'],
+					$out['running'],
+					isset( $out['converted'] ) ? $out['converted'] : 0,
+					isset( $out['unsubscribed'] ) ? $out['unsubscribed'] : 0,
+					isset( $out['replied'] ) ? $out['replied'] : 0
+				)
+			);
+			?>
+			<?php esc_html_e( '"Then asked" counts people whose last follow-up was that email. Clicks within two minutes of sending are ignored (email security scanners open links), and opens are not counted because many mail apps open every email automatically.', 'hd-door-designer' ); ?>
+		</p>
+
+		<h3><?php esc_html_e( 'Sent emails and what happened', 'hd-door-designer' ); ?></h3>
+		<?php if ( ! $log ) : ?>
+			<p><?php esc_html_e( 'Nothing sent yet.', 'hd-door-designer' ); ?></p>
+		<?php else : ?>
+			<div style="max-height:420px;overflow:auto;max-width:1020px;">
+				<table class="widefat striped">
+					<thead><tr>
+						<th><?php esc_html_e( 'When (UK)', 'hd-door-designer' ); ?></th>
+						<th><?php esc_html_e( 'Who', 'hd-door-designer' ); ?></th>
+						<th><?php esc_html_e( 'Design', 'hd-door-designer' ); ?></th>
+						<th><?php esc_html_e( 'What happened', 'hd-door-designer' ); ?></th>
+					</tr></thead>
+					<tbody>
+						<?php foreach ( $log as $e ) : ?>
+							<tr>
+								<td style="white-space:nowrap;"><?php echo esc_html( self::when( $e->at ) ); ?></td>
+								<td><?php echo esc_html( (string) $e->customer_email ); ?></td>
+								<td><a href="<?php echo esc_url( $ref . (int) $e->enquiry_id ); ?>"><?php echo esc_html( trim( (string) $e->reference . ' ' . (string) $e->design_name ) ); ?></a></td>
+								<td><?php echo esc_html( HD_DD_Follow_Up_Log::describe( $e ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<p class="description"><?php esc_html_e( 'The latest 100 events. Open a saved design in Door Enquiries to see its full history.', 'hd-door-designer' ); ?></p>
 		<?php endif; ?>
 		<?php
 	}
