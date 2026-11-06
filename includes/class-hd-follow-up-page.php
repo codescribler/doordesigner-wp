@@ -41,7 +41,7 @@ class HD_DD_Follow_Up_Page {
 		$et      = HD_DD_Repository::table();
 		$lt      = HD_DD_Follow_Up_Log::table();
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names only.
-		$follows = (array) $wpdb->get_results( "SELECT f.*, e.customer_email, e.customer_name, e.design_name, e.reference, (SELECT COUNT(*) FROM {$lt} ev WHERE ev.enquiry_id = f.enquiry_id AND ev.type = 'click') AS clicks FROM {$ft} f LEFT JOIN {$et} e ON e.id = f.enquiry_id ORDER BY f.started_at DESC" );
+		$follows = (array) $wpdb->get_results( "SELECT f.*, e.customer_email, e.customer_name, e.design_name, e.reference, e.created_at AS saved_at, (SELECT COUNT(*) FROM {$lt} ev WHERE ev.enquiry_id = f.enquiry_id AND ev.type = 'click') AS clicks FROM {$ft} f LEFT JOIN {$et} e ON e.id = f.enquiry_id ORDER BY f.started_at DESC" );
 		$saves   = (array) $wpdb->get_results( "SELECT id, reference, created_at, customer_email, customer_name, design_name, status, kind FROM {$et} WHERE kind = 'save'" );
 		$leads   = (array) $wpdb->get_col( "SELECT DISTINCT customer_email FROM {$et} WHERE kind IN ('enquiry','callback')" );
 		// phpcs:enable
@@ -63,7 +63,7 @@ class HD_DD_Follow_Up_Page {
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . HD_DD_Admin::SETTINGS_SLUG ) ); ?>"><?php esc_html_e( 'Per-email results are in Settings.', 'hd-door-designer' ); ?></a>
 			</p>
 			<?php self::render_summary( $c ); ?>
-			<?php self::render_running( $board['running'], $c['running'] ); ?>
+			<?php self::render_running( $board['running'] ); ?>
 			<?php self::render_finished( $board['finished'] ); ?>
 			<?php self::render_stopped( $board['stopped'] ); ?>
 			<?php self::render_not_started( $board['not_started'] ); ?>
@@ -72,11 +72,17 @@ class HD_DD_Follow_Up_Page {
 	}
 
 	private static function render_summary( $c ) {
-		$tiles = array(
-			array( __( 'In the sequence now', 'hd-door-designer' ), $c['running'], sprintf( /* translators: 1-3: counts */ __( 'Waiting for email 1: %1$d · 2: %2$d · 3: %3$d', 'hd-door-designer' ), $c['waiting'][1], $c['waiting'][2], $c['waiting'][3] ) ),
+		$tiles = array();
+		foreach ( self::step_labels() as $n => $l ) {
+			$tiles[] = array( $l[0], $c['waiting'][ $n ], $l[1] );
+		}
+		$tiles = array_merge(
+			$tiles,
+			array(
 			array( __( 'Finished all three', 'hd-door-designer' ), $c['finished'], __( 'Got every email, no action yet', 'hd-door-designer' ) ),
 			array( __( 'Dropped out', 'hd-door-designer' ), $c['stopped'], self::reasons_line( $c['reasons'] ) ),
 			array( sprintf( /* translators: %d: days */ __( 'Saves with no follow-up (last %d days)', 'hd-door-designer' ), self::DAYS ), $c['not_started'], __( 'Reasons in the table below', 'hd-door-designer' ) ),
+			)
 		);
 		?>
 		<div style="display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 8px;">
@@ -99,32 +105,43 @@ class HD_DD_Follow_Up_Page {
 		return $parts ? implode( ' · ', $parts ) : __( 'Nobody yet', 'hd-door-designer' );
 	}
 
-	private static function render_running( $running, $total ) {
-		$rows = array_merge( $running[1], $running[2], $running[3] );
-		$due  = array();
-		foreach ( $rows as $f ) {
-			$due[ (int) $f->enquiry_id ] = HD_DD_Follow_Up_Plan::next_due( strtotime( $f->started_at . ' UTC' ), (int) $f->sent_steps, $f->last_sent_at ? strtotime( $f->last_sent_at . ' UTC' ) : null );
-		}
-		usort(
-			$rows,
-			function ( $a, $b ) use ( $due ) {
-				return (int) $due[ (int) $a->enquiry_id ] - (int) $due[ (int) $b->enquiry_id ];
+	/** Step => [tile/heading label, short note]: who is waiting for which email. */
+	private static function step_labels() {
+		return array(
+			1 => array( __( 'Scheduled for email 1', 'hd-door-designer' ), __( 'Saved; first follow-up about a day later', 'hd-door-designer' ) ),
+			2 => array( __( 'Had email 1, waiting for email 2', 'hd-door-designer' ), __( 'About two days after saving', 'hd-door-designer' ) ),
+			3 => array( __( 'Had email 2, waiting for email 3', 'hd-door-designer' ), __( 'The last one, about four days after saving', 'hd-door-designer' ) ),
+		);
+	}
+
+	/** One table per step, soonest due first. */
+	private static function render_running( $running ) {
+		foreach ( self::step_labels() as $n => $l ) {
+			$rows = $running[ $n ];
+			$due  = array();
+			foreach ( $rows as $f ) {
+				$due[ (int) $f->enquiry_id ] = HD_DD_Follow_Up_Plan::next_due( strtotime( $f->started_at . ' UTC' ), (int) $f->sent_steps, $f->last_sent_at ? strtotime( $f->last_sent_at . ' UTC' ) : null );
 			}
-		);
-		self::heading( __( 'In the sequence now', 'hd-door-designer' ), $total );
-		self::table(
-			array( __( 'Who', 'hd-door-designer' ), __( 'Design', 'hd-door-designer' ), __( 'Started', 'hd-door-designer' ), __( 'Emails sent', 'hd-door-designer' ), __( 'Next email', 'hd-door-designer' ), __( 'Clicks', 'hd-door-designer' ) ),
-			array_map(
-				function ( $f ) use ( $due ) {
-					$d    = $due[ (int) $f->enquiry_id ];
-					$next = sprintf( /* translators: %d: email number */ __( 'Email %d', 'hd-door-designer' ), (int) $f->sent_steps + 1 ) . ' — '
-						. ( $d && $d > time() ? wp_date( 'D j M, H:i', $d ) : __( 'due now (next hourly check, 8am–8pm)', 'hd-door-designer' ) );
-					return array( self::who( $f ), self::design( $f ), self::utc( $f->started_at ), esc_html( (int) $f->sent_steps . ' of ' . HD_DD_Follow_Up_Plan::STEPS ), esc_html( $next ), (int) $f->clicks );
-				},
-				$rows
-			),
-			__( 'Nobody is in the sequence right now.', 'hd-door-designer' )
-		);
+			usort(
+				$rows,
+				function ( $a, $b ) use ( $due ) {
+					return (int) $due[ (int) $a->enquiry_id ] - (int) $due[ (int) $b->enquiry_id ];
+				}
+			);
+			self::heading( $l[0], count( $rows ) );
+			self::table(
+				array( __( 'Who', 'hd-door-designer' ), __( 'Design', 'hd-door-designer' ), __( 'Saved', 'hd-door-designer' ), __( 'Last email', 'hd-door-designer' ), sprintf( /* translators: %d: email number */ __( 'Email %d due', 'hd-door-designer' ), $n ), __( 'Clicks', 'hd-door-designer' ) ),
+				array_map(
+					function ( $f ) use ( $due ) {
+						$d = $due[ (int) $f->enquiry_id ];
+						$next = $d && $d > time() ? wp_date( 'D j M, H:i', $d ) : __( 'Due now (next hourly check, 8am–8pm)', 'hd-door-designer' );
+						return array( self::who( $f ), self::design( $f ), self::local( $f->saved_at ), self::utc( $f->last_sent_at ), esc_html( $next ), (int) $f->clicks );
+					},
+					$rows
+				),
+				__( 'Nobody at this step.', 'hd-door-designer' )
+			);
+		}
 	}
 
 	private static function render_finished( $rows ) {
@@ -163,7 +180,7 @@ class HD_DD_Follow_Up_Page {
 			array_map(
 				function ( $s ) {
 					$s->enquiry_id = $s->id;
-					return array( esc_html( mysql2date( 'j M Y, H:i', $s->created_at ) ), self::who( $s ), self::design( $s ), esc_html( HD_DD_Follow_Up_Board::NOT_STARTED[ $s->why ] ) );
+					return array( self::local( $s->created_at ), self::who( $s ), self::design( $s ), esc_html( HD_DD_Follow_Up_Board::NOT_STARTED[ $s->why ] ) );
 				},
 				$rows
 			),
@@ -207,6 +224,11 @@ class HD_DD_Follow_Up_Page {
 
 	private static function utc( $mysql ) {
 		return $mysql ? esc_html( wp_date( 'j M Y, H:i', strtotime( $mysql . ' UTC' ) ) ) : '—';
+	}
+
+	/** A stored local (UK) time, e.g. the save's created_at. */
+	private static function local( $mysql ) {
+		return $mysql ? esc_html( mysql2date( 'j M Y, H:i', $mysql ) ) : '—';
 	}
 
 	private static function reason( $key ) {
