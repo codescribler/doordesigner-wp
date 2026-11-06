@@ -76,6 +76,7 @@ class HD_DD_Follow_Up_Admin {
 				<?php echo esc_html( sprintf( /* translators: %d: count */ __( 'Follow-ups started for %d earlier saves. The first emails go out within the hour (8am to 8pm).', 'hd-door-designer' ), (int) $_GET['followups_started'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			</p></div>
 		<?php endif; ?>
+		<p><a href="<?php echo esc_url( HD_DD_Follow_Up_Page::url() ); ?>"><?php esc_html_e( 'See who is in the sequence, who finished and who dropped out →', 'hd-door-designer' ); ?></a></p>
 		<?php self::render_report(); ?>
 		<?php if ( $candidates ) : ?>
 			<h3><?php esc_html_e( 'Earlier saves', 'hd-door-designer' ); ?></h3>

@@ -52,6 +52,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Follow_Up */
 	private $follow_up;
 
+	/** @var HD_DD_Follow_Up_Page */
+	private $follow_up_page;
+
 	/** @var HD_DD_Experiments_Admin */
 	public $experiments_admin;
 
@@ -90,6 +93,7 @@ final class HD_DD_Plugin {
 		$this->experiments_admin = new HD_DD_Experiments_Admin();
 		$this->experiment_tracking = new HD_DD_Experiment_Tracking();
 		$this->follow_up = new HD_DD_Follow_Up();
+		$this->follow_up_page = new HD_DD_Follow_Up_Page();
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -104,6 +108,7 @@ final class HD_DD_Plugin {
 		$this->experiments_admin->register();
 		$this->experiment_tracking->register();
 		$this->follow_up->register();
+		$this->follow_up_page->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */
