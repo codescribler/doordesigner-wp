@@ -95,6 +95,13 @@ As Designer 3 (complete door, toolbox, bottom sheet on phones), with these diffe
 - The Handle control keeps glowing and the typed email is kept. *My call:* tapping the bubble or the Handle label opens the handle choices.
 - The server also refuses a Designer 4 request whose design has no handle (missing, or the catalogue's "No Handle").
 
+**Once the door is a lead, the box goes.** Asked for by Daniel on 2026-11-10 ("Once the design is saved the save form should disappear and changes should automatically be saved. This is to make space on the screen and make it less cluttered."). Whenever this door is already a lead on the door screen (coming back from a later step, reopened from a link or from My designs, or added with "Add this door to my estimate"):
+- The email box, its button, note and border are gone, and so is the guide price. The nudge never shows.
+- In their place is one slim line: "✓ Saved. Changes save automatically." with a text link on the right, "Next: your doorway" while the door type offers a doorway and it has not been picked or skipped, otherwise "See my designs". With no handle the link does not move on and shows the bubble. On phones the line is one row, at most 44px high, so the toolbox values stay in view above the dock.
+- Every change is still saved automatically, as before; the line shows how that is going: "Saving…" while a save is under way, "Couldn't save just now. We'll try again when you change something." if it failed (the next change tries again), and "Oops, your door needs a handle to be saved." (error style) while the door has no handle, back to the saved text once a handle is chosen and saved.
+- The line is announced politely to screen readers and a status change never moves focus. If the box turns into the line without leaving the screen, focus moves to its link.
+- The banner, once the door has a handle, reads "Here's your door. Tap a label to change any part of it." (Designer 3's says "a dot").
+
 ### Step 1 of 3: the email (this is the lead)
 
 Submitting a valid email with a handle chosen:
