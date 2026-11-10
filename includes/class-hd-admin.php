@@ -91,6 +91,22 @@ class HD_DD_Admin {
 		return $emails ? implode( ', ', array_values( $emails ) ) : $fallback;
 	}
 
+	/**
+	 * The manager's API base: https only, no trailing slash. Anything else keeps the previous
+	 * value and shows a settings error. Blank is allowed (nothing is sent until it is set).
+	 */
+	private function sanitize_manager_url( $raw, $previous ) {
+		$url = trim( (string) $raw );
+		if ( '' === $url ) {
+			return '';
+		}
+		if ( ! preg_match( '#^https://[^/\s]+#i', $url ) || '' === esc_url_raw( $url ) ) {
+			add_settings_error( self::OPTION, 'hd_dd_manager_url', __( 'The manager URL must start with https:// (for example https://your-manager.example/api/v1). The previous value was kept.', 'hd-door-designer' ) );
+			return $previous;
+		}
+		return rtrim( esc_url_raw( $url ), '/' );
+	}
+
 	public function sanitize_settings( $input ) {
 		$current = HD_DD_Plugin::settings();
 		$trust   = HD_DD_Trust_Settings::sanitize( is_array( $input ) ? $input : array(), $current );
@@ -101,7 +117,7 @@ class HD_DD_Admin {
 			'github_repo'     => isset( $input['github_repo'] ) ? esc_url_raw( trim( $input['github_repo'] ) ) : $current['github_repo'],
 			'asset_base'      => isset( $input['asset_base'] ) ? esc_url_raw( trim( $input['asset_base'] ) ) : $current['asset_base'],
 			'default_flow'    => ( isset( $input['default_flow'] ) && HD_DD_Experiments::is_flow( $input['default_flow'] ) ) ? $input['default_flow'] : $current['default_flow'],
-			'manager_url'     => isset( $input['manager_url'] ) ? esc_url_raw( trim( $input['manager_url'] ) ) : $current['manager_url'],
+			'manager_url'     => isset( $input['manager_url'] ) ? $this->sanitize_manager_url( $input['manager_url'], $current['manager_url'] ) : $current['manager_url'],
 			// A blank key field means "leave it as it is" (the stored key is never printed back).
 			'manager_key'     => ( isset( $input['manager_key'] ) && '' !== trim( (string) $input['manager_key'] ) ) ? sanitize_text_field( $input['manager_key'] ) : $current['manager_key'],
 		);
@@ -157,7 +173,7 @@ class HD_DD_Admin {
 						<th scope="row"><label for="hd_manager_url"><?php esc_html_e( 'Manager URL', 'hd-door-designer' ); ?></label></th>
 						<td>
 							<input name="<?php echo esc_attr( self::OPTION ); ?>[manager_url]" id="hd_manager_url" type="url" class="regular-text" placeholder="https://" value="<?php echo esc_attr( $s['manager_url'] ); ?>" />
-							<p class="description"><?php esc_html_e( 'Where Designer 4 lead events are sent. Leads are stored here first and sent when this and the key are set.', 'hd-door-designer' ); ?></p>
+							<p class="description"><?php esc_html_e( 'The manager API base, where Designer 4 lead events are sent. It must start with https:// and end in /api/v1, for example https://your-manager.example/api/v1. Leads are stored here first and sent when this and the key are set.', 'hd-door-designer' ); ?></p>
 						</td>
 					</tr>
 					<tr>
