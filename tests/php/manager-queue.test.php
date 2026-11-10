@@ -184,4 +184,33 @@ check( 'new-key' === $out['manager_key'], 'a new key replaces the stored one' );
 $out = $admin->sanitize_settings( array() );
 check( 'old-key' === $out['manager_key'] && 'https://manager.test/api' === $out['manager_url'], 'a save without the fields keeps both' );
 
+// 11) enqueue never leaves a due row without its eventId: a cron run between the insert and
+// the update finds nothing to send, and a failed update is a failed enqueue.
+class HD_Test_Racing_WPDB extends HD_Test_Queue_WPDB {
+	public $fail_update = false;
+	public $during_update = null;
+	public function update( $table, $data, $where, $f = null, $wf = null ) {
+		if ( $this->during_update ) { call_user_func( $this->during_update ); }
+		return $this->fail_update ? false : parent::update( $table, $data, $where, $f, $wf );
+	}
+	public function delete( $table, $where, $f = null ) {
+		$this->rows = array_values( array_filter( $this->rows, function ( $r ) use ( $where ) { return (int) $r['id'] !== (int) $where['id']; } ) );
+		return 1;
+	}
+}
+hd_test_q_reset();
+$GLOBALS['wpdb'] = new HD_Test_Racing_WPDB();
+$GLOBALS['wpdb']->during_update = function () { HD_DD_Manager_Queue::run(); };
+HD_DD_Manager_Queue::enqueue( hd_test_event() );
+check( 0 === count( $GLOBALS['hd_test_http'] ), 'a cron run between the insert and the update sends nothing' );
+$body = json_decode( $GLOBALS['wpdb']->rows[0]['body'], true );
+check( 'hd-1' === $body['eventId'] && strtotime( $GLOBALS['wpdb']->rows[0]['next_at'] . ' UTC' ) <= time(), 'the finished row has its eventId and is due now' );
+HD_DD_Manager_Queue::run();
+check( 1 === count( $GLOBALS['hd_test_http'] ) && 'hd-1' === json_decode( $GLOBALS['hd_test_http'][0]['args']['body'], true )['eventId'], 'it is then sent with its eventId' );
+hd_test_q_reset();
+$GLOBALS['wpdb'] = new HD_Test_Racing_WPDB();
+$GLOBALS['wpdb']->fail_update = true;
+check( 0 === HD_DD_Manager_Queue::enqueue( hd_test_event() ), 'a failed update is a failed enqueue (returns 0)' );
+check( 0 === HD_DD_Manager_Queue::pending() && 0 === count( $GLOBALS['hd_test_cron_single'] ), 'the half-written row is removed and no push is scheduled' );
+
 hd_test_done( 'manager-queue' );

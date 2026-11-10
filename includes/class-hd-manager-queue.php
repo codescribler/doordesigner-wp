@@ -58,7 +58,11 @@ class HD_DD_Manager_Queue {
 		);
 	}
 
-	/** Store an event and ask for a push now. Returns the row id (0 when it could not be stored). */
+	/**
+	 * Store an event and ask for a push now. Returns the row id (0 when it could not be stored).
+	 * The row is inserted held back (not due), and one update writes its eventId and time and makes
+	 * it due, so a cron run in between can never send an event that has no eventId.
+	 */
 	public static function enqueue( array $event ) {
 		global $wpdb;
 		$ok = $wpdb->insert(
@@ -66,7 +70,7 @@ class HD_DD_Manager_Queue {
 			array(
 				'body'     => wp_json_encode( $event ),
 				'attempts' => 0,
-				'next_at'  => gmdate( 'Y-m-d H:i:s' ),
+				'next_at'  => gmdate( 'Y-m-d H:i:s', time() + self::CLAIM ),
 			),
 			array( '%s', '%d', '%s' )
 		);
@@ -76,7 +80,17 @@ class HD_DD_Manager_Queue {
 		}
 		$event['eventId'] = 'hd-' . $id;
 		$event['at']      = (int) round( microtime( true ) * 1000 );
-		$wpdb->update( self::table(), array( 'body' => wp_json_encode( $event ) ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
+		$done             = $wpdb->update(
+			self::table(),
+			array( 'body' => wp_json_encode( $event ), 'next_at' => gmdate( 'Y-m-d H:i:s' ) ),
+			array( 'id' => $id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+		if ( ! $done ) {
+			$wpdb->delete( self::table(), array( 'id' => $id ), array( '%d' ) ); // never leave a half-written row.
+			return 0;
+		}
 		wp_schedule_single_event( time(), self::CRON );
 		return $id;
 	}
