@@ -52,7 +52,7 @@
   }
 
   // Designer 4 needs everything Designer 3 does, plus its own app and modules.
-  var D4_NEEDS = D3_NEEDS.concat(['HD_DD_Designer4App', 'HD_DD_D4Handle', 'HD_DD_D4Doorway', 'HD_DD_D4Store', 'HD_DD_D4Ask', 'HD_DD_D4Door', 'HD_DD_D4SideGlass', 'HD_DD_D4DoorwayScreen', 'HD_DD_D4Steps', 'HD_DD_D4Card', 'HD_DD_D4MyDesigns']);
+  var D4_NEEDS = D3_NEEDS.concat(['HD_DD_Designer4App', 'HD_DD_D4Handle', 'HD_DD_D4Doorway', 'HD_DD_D4Store', 'HD_DD_D4Ask', 'HD_DD_D4Callouts', 'HD_DD_D4Labels', 'HD_DD_D4Door', 'HD_DD_D4SideGlass', 'HD_DD_D4DoorwayScreen', 'HD_DD_D4Steps', 'HD_DD_D4Card', 'HD_DD_D4MyDesigns']);
   function canRunDesigner4(win, renderModel) {
     return !!(renderModel && win) && D4_NEEDS.every(function (k) { return !!win[k]; });
   }
