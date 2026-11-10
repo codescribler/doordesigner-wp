@@ -122,7 +122,9 @@
 		S.once(app, 'doorway');
 		shell.appendChild(S.strip(app, 'doorway'));
 		var mail = S.email(app);
-		shell.appendChild(el('p', 'hd-d4-okline', app._askKnown ? COPY.added : (mail ? COPY.okLine.replace('{email}', mail) : COPY.okLineNoEmail)));
+		if (!app.reopened) {   // only straight after a lead or an added door, never a door reopened from My designs
+			shell.appendChild(el('p', 'hd-d4-okline', app._askKnown ? COPY.added : (mail ? COPY.okLine.replace('{email}', mail) : COPY.okLineNoEmail)));
+		}
 		var head = el('div', 'hd-d3-head');
 		head.appendChild(el('h2', 'hd-d3-title', COPY.title));
 		shell.appendChild(head);

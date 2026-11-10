@@ -174,7 +174,7 @@
 		var links = el('div', 'hd-d4-done__links');
 		links.appendChild(button('hd-d3-textlink', COPY.designs, function () { app.go('designs'); }));
 		links.appendChild(button('hd-d3-textlink', COPY.another, function () { app.startDoor(); }));
-		links.appendChild(button('hd-d3-textlink', COPY.keep, function () { app.go('door'); }));
+		if (app.style()) { links.appendChild(button('hd-d3-textlink', COPY.keep, function () { app.go('door'); })); }
 		box.appendChild(links);
 		shell.appendChild(box);
 	}

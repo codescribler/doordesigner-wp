@@ -175,6 +175,20 @@ var byText = T.byText, input = T.input, fire = T.fire, settle = T.settle, fx = T
   k.app._askKnown = true;
   k.app.go('doorway');
   assert.strictEqual(byCls(k.shell(), 'hd-d4-okline').textContent, '✓ We\'ve added this door to your estimate.');
+  // a door reopened from My designs: no green line
+  var ro = harness();
+  ro.app.reopened = true;      // as loadSaved leaves it
+  ro.app.go('doorway');
+  assert.ok(!byCls(ro.shell(), 'hd-d4-okline'), 'no confirmation line for a reopened door');
+  ro.app.onLead({ ok: true, token: 'tok9' });   // then a door added this visit
+  assert.strictEqual(ro.app.screen, 'doorway');
+  assert.ok(byCls(ro.shell(), 'hd-d4-okline'), 'the line is back after an added door');
+  // done with no door open (e.g. after "Design another door"): no "Keep customising"
+  var nd = harness();
+  nd.app.startDoor();
+  nd.app.go('done');
+  assert.ok(byText(nd.shell(), 'See my designs') && byText(nd.shell(), 'Design another door'));
+  assert.ok(!byText(nd.shell(), 'Keep customising this door'), 'no keep link without a door');
   var dd = harness('Double Door', fx.customerView().byType['Double Door'].fields['Door Design'][0].label);
   dd.app.go('details');
   assert.deepStrictEqual(allCls(dd.shell(), 'hd-d4-strip__step').map(function (x) { return x.textContent; }), ['✓ 1. Your door', '2. Your details']);
