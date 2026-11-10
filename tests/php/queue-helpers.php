@@ -39,6 +39,7 @@ class HD_Test_Queue_WPDB extends HD_Test_WPDB {
 		if ( preg_match( "/^SELECT id, body FROM wp_hd_dd_manager_queue WHERE done_at IS NULL AND attempts >= (\d+) AND next_at > '([^']*)' AND id < (\d+)/", $q, $m ) ) {
 			$this->hold_queries++;
 			$rows = array_filter( $this->pending_rows(), function ( $r ) use ( $m ) { return (int) $r['attempts'] >= (int) $m[1] && $r['next_at'] > $m[2] && (int) $r['id'] < (int) $m[3]; } );
+			usort( $rows, function ( $a, $b ) { return $a['id'] - $b['id']; } );
 			return array_values( array_map( function ( $r ) { return (object) array( 'id' => $r['id'], 'body' => $r['body'] ); }, $rows ) );
 		}
 		$rows = $this->pending_rows();
@@ -47,7 +48,8 @@ class HD_Test_Queue_WPDB extends HD_Test_WPDB {
 			$rows = array_filter( $rows, function ( $r ) use ( $m ) { return (int) $r['attempts'] < (int) $m[1] || $r['next_at'] <= $m[2]; } );
 		}
 		usort( $rows, function ( $a, $b ) { return $a['id'] - $b['id']; } );
-		return array_map( function ( $r ) { return (object) $r; }, array_slice( $rows, 0, 25 ) );
+		$limit = preg_match( '/LIMIT (\d+)$/', $q, $m ) ? (int) $m[1] : 25;
+		return array_map( function ( $r ) { return (object) $r; }, array_slice( $rows, 0, $limit ) );
 	}
 	public function get_var( $q ) {
 		if ( preg_match( "/^SHOW TABLES LIKE '([^']*)'$/", $q, $m ) ) { return $this->has_table ? $m[1] : null; }

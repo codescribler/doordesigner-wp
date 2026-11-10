@@ -110,7 +110,7 @@ $rows[3] = array_merge( $rows[3], array( 'attempts' => 1, 'done_at' => gmdate( '
 $rows[4] = array_merge( $rows[4], array( 'attempts' => 1, 'done_at' => gmdate( 'Y-m-d H:i:s', time() - 40 * 86400 ), 'failed' => 'deal_closed' ) );
 $rows[5] = array_merge( $rows[5], array( 'attempts' => 1, 'done_at' => gmdate( 'Y-m-d H:i:s' ), 'failed' => null ) );
 unset( $rows );
-$report = HD_DD_Manager_Queue::report();
+$report = HD_DD_D4_Admin::queue_report();
 check( 3 === $report['waiting'], 'waiting counts every row not yet delivered or refused (got ' . $report['waiting'] . ')' );
 check( 2 === $report['stuck'] && array( 'http_401:unauthorized' => 2 ) === $report['stuck_codes'], 'keeps refusing counts rows with 8+ failures, by last error' );
 check( 1 === $report['refused'] && array( 'invalid_request' => 1 ) === $report['refused_codes'], 'refused for good counts final rows from the last 30 days, by code' );

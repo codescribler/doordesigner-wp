@@ -14,10 +14,11 @@ class HD_DD_Manager_Queue {
 	const DB_OPTION  = 'hd_dd_manager_db_version';
 	const DB_VERSION   = '2';
 	const CRON         = 'hd_dd_manager_push';
-	const BATCH        = 25;  // rows per run at most.
+	const BATCH        = 25;  // rows tried (claimed and sent) per run at most.
+	const WINDOW       = 200; // rows looked at per run, so held rows cannot crowd out the 25.
 	const CLAIM        = 300; // seconds a row is held while it is being sent.
 	const STUCK        = 8;   // failures after which a row no longer holds newer rows back.
-	const REFUSED_DAYS = 30;  // how far back wp-admin counts rows refused for good.
+	const REFUSED_DAYS = 30;  // how far back wp-admin counts rows refused for good (HD_DD_D4_Admin).
 
 	public function register() {
 		add_action( self::CRON, array( __CLASS__, 'run' ) );
@@ -126,39 +127,6 @@ class HD_DD_Manager_Queue {
 		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE done_at IS NULL' );
 	}
 
-	/**
-	 * What wp-admin shows: rows waiting, rows the manager keeps refusing (STUCK+ failures, by last
-	 * error) and rows refused for good in the last REFUSED_DAYS days (by code).
-	 *
-	 * @return array{waiting:int,stuck:int,stuck_codes:array,refused:int,refused_codes:array}
-	 */
-	public static function report() {
-		global $wpdb;
-		$t   = self::table();
-		$col = self::schema_current() ? 'last_error' : 'failed'; // no last_error column yet: failed is NULL on waiting rows.
-		$cut = gmdate( 'Y-m-d H:i:s', time() - self::REFUSED_DAYS * 86400 );
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table and column names are internal.
-		$stuck = self::by_code( (array) $wpdb->get_results( $wpdb->prepare( "SELECT {$col} AS code, COUNT(*) AS n FROM {$t} WHERE done_at IS NULL AND attempts >= %d GROUP BY {$col}", self::STUCK ) ) );
-		$gone  = self::by_code( (array) $wpdb->get_results( $wpdb->prepare( "SELECT failed AS code, COUNT(*) AS n FROM {$t} WHERE failed IS NOT NULL AND done_at >= %s GROUP BY failed", $cut ) ) );
-		// phpcs:enable
-		return array(
-			'waiting'       => self::pending(),
-			'stuck'         => (int) array_sum( $stuck ),
-			'stuck_codes'   => $stuck,
-			'refused'       => (int) array_sum( $gone ),
-			'refused_codes' => $gone,
-		);
-	}
-
-	private static function by_code( array $rows ) {
-		$out = array();
-		foreach ( $rows as $r ) {
-			$code         = ( isset( $r->code ) && '' !== (string) $r->code ) ? (string) $r->code : 'unknown';
-			$out[ $code ] = ( isset( $out[ $code ] ) ? $out[ $code ] : 0 ) + (int) $r->n;
-		}
-		return $out;
-	}
-
 	/** Seconds to wait after the nth failed attempt. */
 	public static function delay( $attempt ) {
 		return (int) min( 3600, 60 * ( 2 ** max( 0, min( 20, (int) $attempt - 1 ) ) ) );
@@ -171,7 +139,9 @@ class HD_DD_Manager_Queue {
 	 * the run, so one event the manager keeps refusing never holds the newer ones back for ever.
 	 * Its own customer's later events (same email or same door reference) are held back untouched
 	 * while it waits or fails, so the manager never sees a customer's events out of order; other
-	 * customers' events keep flowing. A final refusal holds nothing back.
+	 * customers' events keep flowing. A final refusal holds nothing back. A held row passes its own
+	 * keys on (so the hold chains), and only an earlier row (a lower id) can hold a row. Up to
+	 * WINDOW rows are looked at; at most BATCH of them are tried, and held rows do not count.
 	 *
 	 * @return int Events delivered.
 	 */
@@ -182,15 +152,25 @@ class HD_DD_Manager_Queue {
 		}
 		$now  = null === $now ? time() : (int) $now;
 		$t    = self::table();
-		// Stuck rows that are not due are left out, so they cannot fill the batch.
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $t . ' WHERE done_at IS NULL AND ( attempts < %d OR next_at <= %s ) ORDER BY id ASC LIMIT %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), self::BATCH ) );
-		$sent = 0;
-		$held = self::held_by_earlier( $rows, $now );
+		// Stuck rows that are not due are left out, so they cannot fill the window.
+		$rows    = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $t . ' WHERE done_at IS NULL AND ( attempts < %d OR next_at <= %s ) ORDER BY id ASC LIMIT %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), self::WINDOW ) );
+		$sent    = 0;
+		$tried   = 0;
+		$held    = array( 'emails' => array(), 'refs' => array() );
+		$waiting = self::waiting_stuck( $rows, $now );
 		foreach ( $rows as $row ) {
+			if ( $tried >= self::BATCH ) {
+				break;
+			}
+			// Earlier stuck rows that are not due hold their customers from here on.
+			while ( $waiting && (int) $waiting[0]->id < (int) $row->id ) {
+				self::hold( $held, json_decode( (string) array_shift( $waiting )->body, true ) );
+			}
 			$stuck = (int) $row->attempts >= self::STUCK;
 			$event = json_decode( (string) $row->body, true );
 			if ( self::is_held( $held, $event ) ) {
-				continue; // an earlier event of this customer has not gone yet: untouched this run.
+				self::hold( $held, $event ); // its own customer and door wait behind it too.
+				continue;                    // untouched this run.
 			}
 			if ( strtotime( $row->next_at . ' UTC' ) > $now || ! self::claim( $row, $now ) ) {
 				if ( $stuck ) {
@@ -199,6 +179,7 @@ class HD_DD_Manager_Queue {
 				}
 				break;
 			}
+			$tried++;
 			if ( ! is_array( $event ) ) {
 				self::finish( $row, $now, 'bad_body' );
 				continue;
@@ -233,23 +214,16 @@ class HD_DD_Manager_Queue {
 	}
 
 	/**
-	 * The customers held back before the batch starts: those of earlier stuck rows that are not
-	 * due (the batch query leaves them out). One query, undelivered rows only.
-	 *
-	 * @return array{emails:array,refs:array}
+	 * Stuck rows that are not due (the window query leaves them out), oldest first, below the
+	 * window's last id. One query, undelivered rows only. Each holds only rows after its own id.
 	 */
-	private static function held_by_earlier( array $rows, $now ) {
+	private static function waiting_stuck( array $rows, $now ) {
 		global $wpdb;
-		$held = array( 'emails' => array(), 'refs' => array() );
 		if ( ! $rows ) {
-			return $held;
+			return array();
 		}
-		$last    = (int) end( $rows )->id;
-		$waiting = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT id, body FROM ' . self::table() . ' WHERE done_at IS NULL AND attempts >= %d AND next_at > %s AND id < %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), $last ) );
-		foreach ( $waiting as $w ) {
-			self::hold( $held, json_decode( (string) $w->body, true ) );
-		}
-		return $held;
+		$last = (int) end( $rows )->id;
+		return array_values( (array) $wpdb->get_results( $wpdb->prepare( 'SELECT id, body FROM ' . self::table() . ' WHERE done_at IS NULL AND attempts >= %d AND next_at > %s AND id < %d ORDER BY id ASC', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), $last ) ) );
 	}
 
 	/** The event's customer keys: its email (trimmed, lower case) and its door reference. */

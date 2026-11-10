@@ -105,6 +105,43 @@ $GLOBALS['hd_test_http_replies'] = array( hd_test_error_reply( 422, 'invalid_req
 HD_DD_Manager_Queue::run( $now );
 check( array( 'HD-A1/door_added', 'HD-A1/door_changed' ) === hd_qo_sent(), 'a 422 invalid_request does not hold A\'s later row either' );
 
+// 7) Held rows do not use up the run's 25 places: other customers still go.
+hd_test_q_reset();
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-A1', $A ) );
+foreach ( range( 1, 30 ) as $i ) { HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-A1', $A, 'door_changed' ) ); }
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-B1', $B ) );
+hd_qo_fail( 0, 8, $now + 1800 );
+HD_DD_Manager_Queue::run( $now );
+check( array( 'HD-B1/door_added' ) === hd_qo_sent(), '30 held rows for A do not stop the row for B (got ' . count( hd_qo_sent() ) . ' sent)' );
+check( 31 === HD_DD_Manager_Queue::pending(), 'none of the rows for A was sent or touched' );
+
+// 8) The cap counts rows tried: 40 customers, 25 sent, oldest first.
+hd_test_q_reset();
+foreach ( range( 1, 40 ) as $i ) { HD_DD_Manager_Queue::enqueue( hd_test_event( "HD-C$i", "c$i@example.com" ) ); }
+HD_DD_Manager_Queue::run( $now );
+check( array_map( function ( $i ) { return "HD-C$i/door_added"; }, range( 1, 25 ) ) === hd_qo_sent(), 'exactly 25 sent, oldest first' );
+check( 15 === HD_DD_Manager_Queue::pending(), '15 wait for the next run' );
+
+// 9) The hold chains: stuck (A, door X), held (C, door X), then (C, door Y) is held too.
+hd_test_q_reset();
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-X', $A ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-X', 'c@example.com', 'door_changed' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-Y', 'c@example.com' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-B1', $B ) );
+hd_qo_fail( 0, 8, $now + 1800 );
+HD_DD_Manager_Queue::run( $now );
+check( array( 'HD-B1/door_added' ) === hd_qo_sent(), 'the later row for C waits for the held row for C (got ' . implode( ',', hd_qo_sent() ) . ')' );
+hd_qo_untouched( 2, 'door Y for C' );
+
+// 10) Only an EARLIER waiting row holds: a stuck, not-due row with a higher id holds nothing before it.
+hd_test_q_reset();
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-A1', $A ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-A1', $A, 'door_changed' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-B1', $B ) );
+hd_qo_fail( 1, 8, $now + 1800 );
+HD_DD_Manager_Queue::run( $now );
+check( array( 'HD-A1/door_added', 'HD-B1/door_added' ) === hd_qo_sent(), 'a later stuck row does not hold an earlier row of the same customer (got ' . implode( ',', hd_qo_sent() ) . ')' );
+
 // The other guarantees: a blank key sends nothing and burns no attempts; a claimed row is not sent.
 hd_test_q_reset( '' );
 HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-A1', $A ) );
