@@ -198,8 +198,12 @@
 	// ---- Entry points (boot.js and My designs) -------------------------------------------------
 	// Mirrors Designer 3's loadSaved. The door as saved (it always has a handle), the ask "sent". A
 	// door removed, or whose deal is closed, opens My designs (the list omits removed doors).
-	P.loadSaved = function (token) {
+	// screen: where a live door lands, 'door' (default) or 'doorway' (My designs). Nothing of a door
+	// open before carries over (My designs opens one door after another in the same visit).
+	P.loadSaved = function (token, screen) {
 		var self = this;
+		this._saver = null; this._token = null; this.savedKind = null;
+		this.mine = {}; this.auto = {};
 		this.newDoor();
 		this.freshDoor = false;
 		this.previewDue = false;
@@ -214,11 +218,11 @@
 			var defs = self.defaultsFor(s);
 			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design' && !(defs[h] != null && trim(defs[h]) === trim(saved[h].label))) { self.mine[h] = saved[h].label; } });
 			if (self.store) { self.store.addToken(token); }
-			return self.openListed(token);
+			return self.openListed(token, screen);
 		}).catch(function () { self.render(); });
 	};
 
-	P.openListed = function (token) {
+	P.openListed = function (token, screen) {
 		var self = this;
 		function open(res) {
 			var body = res && res.ok && res.body;
@@ -227,7 +231,7 @@
 			var door = doors ? doors.filter(function (d) { return d && d.token === token; })[0] : null;
 			if (doors && (!door || door.status === 'closed')) { self.go('designs'); return; }
 			self.savedToken = token;   // the ask shows "sent" and changes save through update()
-			self.go('door');
+			self.go(screen === 'doorway' ? 'doorway' : 'door');
 		}
 		if (!this.store || !this.store.list) { open(null); return Promise.resolve(); }
 		return Promise.resolve(this.store.list()).then(open, function () { open(null); });

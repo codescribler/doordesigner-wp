@@ -246,11 +246,12 @@ assert.strictEqual(sd.noHandleSent, false, 'startDoor is a new door');
 assert.strictEqual(make().noHandleSent, false);
 
 // ---- loadSaved: the door (no preview), or My designs for a removed or closed door ------------
-function opened(design, doors) {
+function opened(design, doors, screen, before) {
   var store = fakeStore();
   store.listReply = { ok: true, body: { doors: doors, missing: { name: false, postcode: true, phone: true } } };
   var o = make({ store: store, api: function () { return Promise.resolve({ ok: true, body: { design: JSON.parse(JSON.stringify(design)), kind: 'enquiry' } }); } });
-  o.loadSaved('tok1');
+  if (before) { before(o); }
+  o.loadSaved('tok1', screen);
   return tick().then(tick).then(function () { return o; });
 }
 (async function () {
@@ -275,6 +276,22 @@ function opened(design, doors) {
   var closed = await opened(src.design(), [{ token: 'tok1', status: 'closed' }]);
   assert.strictEqual(closed.screen, 'designs', 'a closed door opens My designs');
   assert.strictEqual(closed.previewDue, false);
+  var closedAsked = await opened(src.design(), [{ token: 'tok1', status: 'closed' }], 'doorway');
+  assert.strictEqual(closedAsked.screen, 'designs', 'a closed door never opens at the doorway');
+
+  // From My designs: a target screen, and nothing carried over from the door that was open before
+  var atDoorway = await opened(src.design(), [{ token: 'tok1', status: 'pending' }], 'doorway', function (o) {
+    door(o); o.pick('handle', 'Handle', 'Lever/Lever');
+    o.mine.Bogus = 'left over'; o.savedToken = 'tokOld'; o.saver(); o.d4steps = { fired: { doorway: true } };
+  });
+  assert.strictEqual(atDoorway.screen, 'doorway', 'loadSaved(token, "doorway") lands on the doorway');
+  assert.strictEqual(atDoorway.previewDue, false);
+  assert.strictEqual(atDoorway.savedToken, 'tok1');
+  assert.strictEqual(atDoorway.mine.Bogus, undefined, 'the previous door\'s picks are dropped');
+  assert.strictEqual(atDoorway.d4steps, null, 'per-door step state starts over');
+  assert.strictEqual(atDoorway.design().Handle.label, 'Lever/Lever');
+  var atDoor = await opened(src.design(), [{ token: 'tok1', status: 'pending' }], 'door');
+  assert.strictEqual(atDoor.screen, 'door');
 
   // ---- after a lead, no autosave while the door has no handle; the next handle sends it --------
   window.HD_DD_CONFIG = { d3Defaults: table, restUrl: 'https://example.test/wp-json/hd/v1/' };
