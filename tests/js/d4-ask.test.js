@@ -102,6 +102,16 @@ function harness(over) {
   assert.strictEqual(find(h.box, 'hd-d4-ask__done').textContent, '✓ Sent. Any changes you make here are saved too.');
   var next = find(h.box, 'hd-d4-ask__btn');
   assert.strictEqual(next.textContent, 'Next: your doorway');
+  // With the handle taken off after the lead: the same check as the email button.
+  h.handle = false;
+  var noHandleBefore = h.noHandle;
+  next.listeners.click();
+  await tick();
+  assert.strictEqual(h.noHandle, noHandleBefore + 1, 'Next without a handle calls onNoHandle');
+  assert.strictEqual(find(h.box, 'hd-d4-ask__error').textContent, 'Oops, your door needs a handle to be saved.');
+  assert.strictEqual(h.leads.length, 1, 'Next without a handle does not call onLead');
+  assert.strictEqual(h.calls.length, 1, 'Next without a handle sends no update');
+  h.handle = true;
   next.listeners.click();
   await tick();
   assert.strictEqual(h.leads[1].again, true);

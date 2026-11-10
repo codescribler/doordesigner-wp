@@ -61,12 +61,20 @@
       var wrap = el('div', 'hd-d4-ask hd-d4-ask--done');
       wrap.appendChild(el('div', 'hd-d4-ask__done', COPY.sentLine));
       var btn = el('button', 'hd-d4-ask__btn', COPY.next);
+      var error = el('div', 'hd-d4-ask__error');
       btn.type = 'button';
       btn.addEventListener('click', function () {
+        error.textContent = '';
+        if (!o.hasHandle()) {   // the same check as the email button: no handle, nothing sent
+          error.textContent = COPY.noHandle;
+          if (o.onNoHandle) { o.onNoHandle(); }
+          return;
+        }
         update();
         if (o.onLead) { o.onLead({ ok: true, token: token, again: true }); }
       });
       wrap.appendChild(btn);
+      wrap.appendChild(error);
       container.appendChild(wrap);
     }
 
