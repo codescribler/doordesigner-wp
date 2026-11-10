@@ -119,14 +119,15 @@
         if (e && e.preventDefault) { e.preventDefault(); }
         if (busy) { return; }
         error.textContent = ''; status.textContent = '';
-        if (input) {
-          email = RS.cleanEmail(input.value);
-          if (!RS.validEmail(email)) { error.textContent = COPY.badEmail; return; }
-        }
+        // The handle check comes first: with no handle nothing is sent, whatever the email box holds.
         if (!o.hasHandle()) {
           error.textContent = COPY.noHandle;
           if (o.onNoHandle) { o.onNoHandle(); }
           return;
+        }
+        if (input) {
+          email = RS.cleanEmail(input.value);
+          if (!RS.validEmail(email)) { error.textContent = COPY.badEmail; return; }
         }
         if (!cfg.restUrl) {
           status.textContent = COPY.preview;

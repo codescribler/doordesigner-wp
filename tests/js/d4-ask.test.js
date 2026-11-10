@@ -70,6 +70,15 @@ function harness(over) {
   assert.strictEqual(find(h.box, 'hd-d4-ask__error').textContent, 'Oops, your door needs a handle to be saved.');
   assert.strictEqual(h.noHandle, 1);
   assert.strictEqual(input(h.box, 'email').value, 'jo@example.com');
+  // The handle check comes first: an empty or bad email with no handle still gets the handle
+  // message and the bubble, not the email message.
+  ['', 'nope'].forEach(function (v, i) {
+    input(h.box, 'email').value = v;
+    submit(h.box);
+    assert.strictEqual(h.calls.length, 0);
+    assert.strictEqual(find(h.box, 'hd-d4-ask__error').textContent, 'Oops, your door needs a handle to be saved.', 'handle first for email "' + v + '"');
+    assert.strictEqual(h.noHandle, 2 + i, 'bubble shown for email "' + v + '"');
+  });
   h.handle = true;
 
   // Bad email.
