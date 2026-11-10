@@ -3,12 +3,14 @@
 //   - the handle preview: each of app.previewLabels() drawn for a second, once, then the real door;
 //   - the banner and the glowing Handle control (class hd-d4-needhandle on the shell) while the
 //     door has no handle;
+//   - the part labels with lines in place of the "+" dots (d4-labels.js);
 //   - the guide price above the ask, and the nudge pointing at the price;
-//   - the "no handle" speech bubble by the handle dot (the ask's onNoHandle).
+//   - the "no handle" speech bubble above the Handle label (the ask's onNoHandle).
 //
 //   HD_DD_D4Door.door(app, shell) -> { refresh, destroy, bubble, stopPreview }
 // app gives: needHandle, previewDue, previewLabels(), reducedMotion(), timers {set, clear},
-// funnel, toolbox, dots(), design(), type(), OPTS, model, canvas, assetBase(), cfg(), whenPainted().
+// funnel, toolbox, dots(), design(), type(), OPTS, model, canvas, assetBase(), cfg(), whenPainted(),
+// matchMedia.
 (function (W) {
 	'use strict';
 
@@ -76,11 +78,20 @@
 
 		function playing() { return !!(runner && runner.playing()); }
 		function hideBubble() { drop(bubbleEl); bubbleEl = null; setClass(shell, 'hd-d4-bubbling', false); }
-		// The bubble sits on the handle dot, which moves when the hinge side changes.
+		// The bubble sits above the Handle label (CSS lifts it by its own height), kept inside the
+		// stage and the screen, its pointer at the label's middle. The label moves when the hinge
+		// side changes or the screen resizes, and the bubble follows.
 		function placeBubble() {
-			var dot = bubbleEl && (app.dots() || []).filter(function (d) { return d.key === 'handle'; })[0];
-			if (dot) { bubbleEl.style.left = (dot.x * 100) + '%'; bubbleEl.style.top = (dot.y * 100) + '%'; }
+			var l = bubbleEl && parts && parts.box('handle');
+			if (!l) { return; }
+			var a = parts.bounds(), bw = bubbleEl.offsetWidth || 200, cx = l.x + l.w / 2;
+			var left = a ? Math.max(a.left, Math.min(cx - bw / 2, a.right - bw)) : cx - bw / 2;
+			bubbleEl.style.left = left + 'px';
+			bubbleEl.style.top = l.y + 'px';
+			bubbleEl.style.setProperty('--hd-d4-tip', Math.max(18, Math.min(bw - 18, cx - left)) + 'px');
 		}
+		// The part labels (d4-labels.js); "labels" below are the preview's handle labels.
+		var parts = W.HD_DD_D4Labels ? W.HD_DD_D4Labels.create(app, shell, placeBubble) : null;
 		// Once the door has a handle, the ask's "needs a handle" line is no longer true.
 		function clearNoHandleLine() {
 			var err = q(shell, 'hd-d4-ask__error'), line = W.HD_DD_D4Ask && W.HD_DD_D4Ask.COPY.noHandle;
@@ -94,7 +105,8 @@
 				setClass(banner, 'hd-d4-banner--preview', playing());
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);
-			setClass(shell, 'hd-d4-previewing', playing());   // the dots hide so the handle shows
+			setClass(shell, 'hd-d4-previewing', playing());   // the handle's ring hides so each handle shows
+			if (parts) { parts.draw(); }
 			if (!app.needHandle) { hideBubble(); clearNoHandleLine(); } else { placeBubble(); }
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
@@ -117,10 +129,11 @@
 		view.destroy = function () {
 			view.stopPreview();
 			hideBubble();
+			if (parts) { parts.destroy(); }
 			if (base.destroy) { base.destroy(); }
 		};
 
-		// No handle on submit: a bubble by the handle dot; it (or the dot) opens the handle choices.
+		// No handle on submit: a bubble above the Handle label; it (or the label) opens the handle choices.
 		// "nohandle" is reported once per door (app.noHandleSent, reset by app.newDoor()).
 		view.bubble = function () {
 			if (!app.noHandleSent) { app.noHandleSent = true; app.funnel.step('nohandle'); }
