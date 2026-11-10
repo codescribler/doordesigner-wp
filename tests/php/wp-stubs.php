@@ -245,6 +245,7 @@ function absint( $n ) { return abs( (int) $n ); }
 function is_wp_error( $t ) { return $t instanceof WP_Error; }
 function current_time( $type ) { return 'mysql' === $type ? gmdate( 'Y-m-d H:i:s' ) : ( 'Y' === $type ? gmdate( 'Y' ) : time() ); }
 function wp_generate_password( $len = 12, $special = true, $extra = false ) { $c = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; $o = ''; for ( $i = 0; $i < $len; $i++ ) { $o .= $c[ random_int( 0, strlen( $c ) - 1 ) ]; } return $o; }
+function wp_salt( $scheme = 'auth' ) { return 'test-salt-' . $scheme; }
 function home_url( $path = '' ) { return 'https://example.test' . $path; }
 function get_permalink( $id ) { return 'https://example.test/door-designer/'; }
 function wp_parse_url( $url, $component = -1 ) { return parse_url( (string) $url, $component ); }
@@ -294,6 +295,12 @@ require_once HD_DD_DIR . 'includes/class-hd-mailer.php';
 require_once HD_DD_DIR . 'includes/class-hd-save-mailer.php';
 require_once HD_DD_DIR . 'includes/class-hd-enquiry.php';
 require_once HD_DD_DIR . 'includes/class-hd-save.php';
+require_once HD_DD_DIR . 'includes/class-hd-manager-client.php';
+require_once HD_DD_DIR . 'includes/class-hd-manager-queue.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-access.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-events.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-mailer.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4.php';
 require_once HD_DD_DIR . 'includes/class-hd-trust-settings.php';
 require_once HD_DD_DIR . 'includes/class-hd-plugin.php';
 

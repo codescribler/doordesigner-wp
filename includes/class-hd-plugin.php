@@ -34,6 +34,9 @@ final class HD_DD_Plugin {
 	/** @var HD_DD_Save */
 	public $save;
 
+	/** @var HD_DD_D4 */
+	public $d4;
+
 	/** @var HD_DD_Admin */
 	public $admin;
 
@@ -87,6 +90,7 @@ final class HD_DD_Plugin {
 		$this->shortcode  = new HD_DD_Shortcode( $this->assets );
 		$this->enquiry    = new HD_DD_Enquiry( $this->repository, $this->catalogue );
 		$this->save       = new HD_DD_Save( $this->repository, $this->enquiry );
+		$this->d4         = new HD_DD_D4( $this->repository, $this->enquiry );
 		$this->admin      = new HD_DD_Admin( $this->repository );
 		$this->updater    = new HD_DD_Updater();
 		$this->failure_log = new HD_DD_Failure_Log( $this->repository );
@@ -103,6 +107,7 @@ final class HD_DD_Plugin {
 		$this->shortcode->register();
 		$this->enquiry->register();
 		$this->save->register();
+		$this->d4->register();
 		$this->admin->register();
 		$this->updater->register();
 		$this->failure_log->register();

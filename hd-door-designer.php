@@ -69,6 +69,10 @@ require_once HD_DD_DIR . 'includes/class-hd-admin.php';
 require_once HD_DD_DIR . 'includes/class-hd-updater.php';
 require_once HD_DD_DIR . 'includes/class-hd-manager-client.php';
 require_once HD_DD_DIR . 'includes/class-hd-manager-queue.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-access.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-events.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-mailer.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4.php';
 require_once HD_DD_DIR . 'includes/class-hd-plugin.php';
 
 // ---------------------------------------------------------------------------
