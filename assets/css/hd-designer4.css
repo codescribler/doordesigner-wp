@@ -1,1 +1,268 @@
-/* Designer 4 styles (shell: filled in by a later task). Class prefix hd-d4-. */
+/*
+ * HD Door Designer — Designer 4
+ * ------------------------------------------------------------------
+ * Every shell Designer 4 draws carries `hd-dd hd-d3 hd-d4` (d4-app.js render), so Designer 3's
+ * tokens and layout apply and everything here is scoped under .hd-d4 or an hd-d4- class: nothing
+ * reaches Designer 3 or Classic. Loaded after hd-designer3.css. Same breakpoints as Designer 3:
+ * phones up to 719px, the two-column layout from 720px.
+ *
+ * Sections
+ *   1. Tokens, focus, tap targets
+ *   2. Door screen: the handle glow, the speech bubble, the banner, the guide price, the ask
+ *   3. Progress strip and the green line
+ *   4. Doorway: the door beside the picture tiles, side glass, Next and Skip
+ *   5. Details and finished
+ *   6. My designs: head, cards, tag, doorway prompt, remove, closed, new card, prompts
+ *   7. Wider screens
+ *   8. Motion (+ reduced motion)
+ */
+
+/* 1. Tokens, focus, tap targets ----------------------------------------------------- */
+.hd-d4 {
+  --d4-ink: var(--ink, #161616);
+  --d4-muted: #5b6068;        /* 6.3:1 on white */
+  --d4-warm: #fff4e8;         /* Designer 3's nudge colours */
+  --d4-warm-line: #f7c99a;
+  --d4-warm-ink: #5a3410;
+  --d4-warm-strong: #8a4208;  /* 6.8:1 on --d4-warm */
+  --d4-danger: #b3261e;
+  --d4-input-line: #8a8e96;   /* 3.3:1 against white, for the field edge */
+}
+.hd-d4 button:focus-visible,
+.hd-d4 input:focus-visible,
+.hd-d4 a:focus-visible,
+.hd-d4 [tabindex="-1"]:focus-visible { outline: 3px solid var(--d4-ink); outline-offset: 2px; }
+.hd-d4 [tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
+
+/* 2. Door screen ------------------------------------------------------------------------ */
+/* While the door has no handle, the three ways to the handle choices glow. */
+.hd-d4.hd-d4-needhandle .hd-d3-dot--handle { animation: hd-d3-pulse 1.4s ease-out infinite; }
+.hd-d4.hd-d4-needhandle [data-k="tab:handle"] {
+  border-color: var(--d3-dot); background: var(--d4-warm);
+  animation: hd-d4-glow 1.8s ease-in-out infinite;
+}
+.hd-d4.hd-d4-needhandle [data-k="row:handle"] {
+  background: var(--d4-warm); box-shadow: inset 4px 0 0 var(--d3-dot);
+  animation: hd-d4-glow-in 1.8s ease-in-out infinite;
+}
+.hd-d4.hd-d4-needhandle [data-k="tab:handle"] .hd-d3-tab__value,
+.hd-d4.hd-d4-needhandle [data-k="row:handle"] .hd-d3-row__value { color: var(--d4-warm-strong); font-weight: 600; }
+
+/* "How will you get in without a handle?": above the handle dot (left/top set by d4-door.js),
+   its pointer down at the dot. Under the phone dock (z-index 30), so it never covers the email box. */
+.hd-d4-bubble {
+  position: absolute; z-index: 20;
+  width: max-content; max-width: min(200px, 60vw); min-height: 44px; margin: 0; padding: 9px 13px;
+  transform: translate(-50%, calc(-100% - 24px)); transform-origin: 50% 100%;
+  border: 2px solid var(--d4-ink); border-radius: 16px; background: #fff; color: var(--d4-ink);
+  font: inherit; font-size: .95rem; font-weight: 600; line-height: 1.3; text-align: center; white-space: normal;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18); cursor: pointer;
+  animation: hd-d4-pop .3s ease-out;
+}
+.hd-d4-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -9px; width: 14px; height: 14px; margin-left: -7px;
+  background: #fff; border-right: 2px solid var(--d4-ink); border-bottom: 2px solid var(--d4-ink);
+  transform: rotate(45deg);
+}
+.hd-d4 .hd-d3-banner.hd-d4-banner--preview {
+  background: var(--d4-warm); color: var(--d4-warm-ink); font-weight: 600;
+  box-shadow: inset 4px 0 0 var(--d3-dot); animation: hd-d4-fade .3s ease-out;
+}
+.hd-d4-guide { margin: 0 0 8px; font-size: .85rem; line-height: 1.4; color: var(--d4-muted); }
+
+/* The ask (d4-ask.js): Designer 3's save box, stacked, since the button says more. */
+.hd-d4-ask__row { display: flex; flex-direction: column; gap: 8px; }
+.hd-d4-ask__label { display: block; min-width: 0; }
+.hd-d4-ask__input {
+  width: 100%; height: 48px; padding: 0 12px; border: 1px solid var(--d4-input-line); border-radius: 8px;
+  font: inherit; font-size: 16px; background: #fff; color: var(--d4-ink);
+}
+.hd-d4-ask__btn {
+  width: 100%; min-height: 48px; padding: 8px 16px; border: 0; border-radius: 8px;
+  background: var(--d3-accent); color: #fff; font: inherit; font-weight: 700; line-height: 1.25; cursor: pointer;
+}
+.hd-d4-ask__btn:disabled { opacity: .6; cursor: default; }
+.hd-d4-ask__note { margin: 6px 0 0; font-size: .8rem; line-height: 1.4; color: var(--d4-muted); }
+.hd-d4-ask__error { margin-top: 6px; color: var(--d4-danger); font-size: .88rem; font-weight: 600; }
+.hd-d4-ask__status { margin-top: 4px; font-size: .85rem; color: #4a4f57; }
+.hd-d4-ask__error:empty, .hd-d4-ask__status:empty { display: none; }
+.hd-d4-ask--done { display: flex; flex-direction: column; gap: 8px; }
+.hd-d4-ask__done { font-size: .9rem; font-weight: 600; color: var(--d3-accent); }
+
+/* 3. Progress strip and the green line -------------------------------------------------- */
+.hd-d4-strip { display: flex; gap: 6px; margin: 12px 0 10px; padding: 0; list-style: none; }
+.hd-d4-strip__step {
+  flex: 1 1 0; min-width: 0; margin: 0; padding: 6px 0 0; border-top: 4px solid var(--d3-line);
+  font-size: .78rem; font-weight: 600; line-height: 1.3; color: var(--d4-muted);
+}
+.hd-d4-strip__step.is-done { border-top-color: var(--d3-accent); color: var(--d3-accent); }
+.hd-d4-strip__step.is-now { border-top-color: var(--d3-dot); color: var(--d4-warm-strong); }
+.hd-d4-okline {
+  margin: 0 0 4px; padding: 8px 12px; border-radius: 10px;
+  background: var(--d3-soft); color: var(--d3-accent); font-size: .92rem; font-weight: 600;
+}
+
+/* 4. Doorway ------------------------------------------------------------------------------ */
+.hd-d4-doorway { display: grid; gap: 14px; margin-bottom: 24px; }
+.hd-d4-doorway .hd-d3-stage--after .hd-d3-frame { width: 150px; }
+.hd-d4-question { margin: 14px 0 8px; font-size: 1rem; font-weight: 700; }
+.hd-d4-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hd-d4-tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px;
+  min-height: 44px; margin: 0; padding: 10px 8px; border: 2px solid var(--d3-line); border-radius: 10px;
+  background: var(--paper, #fff); color: var(--d4-ink); font: inherit; font-size: .85rem; line-height: 1.25;
+  text-align: center; cursor: pointer; transition: border-color .15s, background-color .15s;
+}
+.hd-d4-tile:hover { border-color: var(--muted, #8a8e96); }
+.hd-d4-tile img { display: block; width: 100%; max-width: 120px; height: auto; margin: 0 auto; }
+.hd-d4-tile__label { overflow-wrap: anywhere; }
+.hd-d4-tile.is-on { border-color: var(--d3-accent); background: var(--d3-soft); box-shadow: 0 0 0 1px var(--d3-accent); }
+.hd-d4-tile.is-on .hd-d4-tile__label { font-weight: 700; color: var(--d3-accent); }
+.hd-d4-tile.is-on::after {
+  content: '\2713'; position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--d3-accent); color: #fff; font-size: 14px; font-weight: 700; line-height: 24px; text-align: center;
+}
+.hd-d4-doorway__glass { margin-top: 14px; padding-top: 6px; border-top: 1px solid var(--d3-line); }
+.hd-d4-sideglass .hd-d3-chip { min-height: 44px; justify-content: center; }
+.hd-d4 .hd-d3-chip:focus-visible { outline: 3px solid var(--d4-ink); outline-offset: 2px; }
+.hd-d4-doorway__foot { display: flex; flex-direction: column; align-items: stretch; gap: 4px; margin-top: 18px; }
+.hd-d4-doorway__foot .hd-d4-next { margin: 0; }
+.hd-d4-skip {
+  min-height: 44px; padding: 8px 4px; border: 0; background: none; font: inherit; font-size: .92rem;
+  color: var(--d4-muted); text-decoration: underline; cursor: pointer;
+}
+
+/* 5. Details and finished ------------------------------------------------------------------ */
+.hd-d4-details { max-width: 480px; margin: 4px 0 24px; }
+.hd-d4-details__field { margin: 0 0 14px; }
+.hd-d4-details__label { display: block; margin: 0 0 4px; font-weight: 700; font-size: .92rem; }
+.hd-d4-details__input {
+  display: block; width: 100%; height: 48px; padding: 0 12px; border: 1px solid var(--d4-input-line); border-radius: 8px;
+  font: inherit; font-size: 16px; background: #fff; color: var(--d4-ink);
+}
+.hd-d4-details__hint { margin: 4px 0 0; font-size: .82rem; color: var(--d4-muted); }
+.hd-d4-details__error { margin: 4px 0 0; font-size: .88rem; font-weight: 600; color: var(--d4-danger); }
+.hd-d4-details__status { margin: 0; font-size: .9rem; color: var(--d4-danger); }
+.hd-d4-details__error:empty, .hd-d4-details__status:empty { display: none; }
+.hd-d4-done {
+  margin: 8px 0 24px; padding: 22px 16px; border-radius: 14px; background: var(--d3-soft); text-align: center;
+}
+.hd-d4-done .hd-d3-title { color: var(--d3-accent); }
+.hd-d4-done .hd-d3-help { max-width: 34em; margin: 8px auto 4px; }
+.hd-d4-done__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 22px; }
+.hd-d4-done__links .hd-d3-textlink, .hd-d4-card .hd-d3-textlink, .hd-d4-designs__status .hd-d3-textlink {
+  min-height: 44px; margin: 0; padding: 10px 2px;
+}
+
+/* 6. My designs ------------------------------------------------------------------------------ */
+.hd-d4-designs { padding: 12px 0 28px; }
+.hd-d4-designs__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.hd-d4-designs__who { margin: 0; font-size: .88rem; color: var(--d4-muted); overflow-wrap: anywhere; }
+.hd-d4-designs .hd-d3-help { margin: 6px 0 14px; }
+.hd-d4-designs__notice {
+  margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid #f1b8b3;
+  background: #fdecea; color: #8c1d18; font-weight: 600; font-size: .92rem;
+}
+.hd-d4-designs__status { padding: 28px 8px; text-align: center; color: var(--d4-muted); }
+.hd-d4-designs__missing {
+  display: block; width: 100%; min-height: 48px; margin: 0 0 14px; padding: 10px 14px;
+  border: 1px solid var(--d4-warm-line); border-radius: 10px; background: var(--d4-warm);
+  color: var(--d4-warm-strong); font: inherit; font-weight: 700; text-align: left; cursor: pointer;
+}
+.hd-d4-designs__older { margin: 14px 0 0; font-size: .88rem; color: var(--d4-muted); }
+.hd-d4-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.hd-d4-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 0; padding: 14px 12px 12px; border: 1px solid var(--d3-line); border-radius: 12px;
+  background: var(--paper, #fff); text-align: center;
+}
+.hd-d4-card__pic { display: block; width: 100%; height: 170px; margin: 26px 0 10px; object-fit: contain; }
+.hd-d4-card__name { margin: 0; font-weight: 700; font-size: .98rem; line-height: 1.3; }
+.hd-d4-card__date { margin: 0 0 6px; font-size: .82rem; color: var(--d4-muted); }
+.hd-d4-card__tag {
+  margin: 0 0 10px; padding: 3px 10px; border-radius: 999px;
+  background: var(--d3-soft); color: var(--d3-accent); font-size: .8rem; font-weight: 600;
+}
+.hd-d4-card__doorway { width: 100%; margin: 0 0 8px; font-size: .85rem; color: #4a4f57; }
+.hd-d4-card__ask {
+  min-height: 44px; padding: 8px 10px; border: 1px solid var(--d4-warm-line); border-radius: 8px;
+  background: var(--d4-warm); color: var(--d4-warm-ink); font: inherit; font-size: .85rem; line-height: 1.35; cursor: pointer;
+}
+.hd-d4-card__ask b { display: block; margin-top: 3px; color: var(--d4-warm-strong); }
+.hd-d4-card__open {
+  width: 100%; min-height: 44px; margin-top: auto; padding: 8px 12px; border: 2px solid var(--d3-accent); border-radius: 8px;
+  background: var(--paper, #fff); color: var(--d3-accent); font: inherit; font-weight: 700; cursor: pointer;
+}
+.hd-d4-card__open:hover { background: var(--d3-soft); }
+/* Remove: a small pill at the top right, with a 44px tap area around it. */
+.hd-d4-card__remove {
+  position: absolute; top: 2px; right: 2px; isolation: isolate;
+  min-width: 44px; min-height: 44px; padding: 0 14px; border: 0; background: none;
+  color: var(--d4-muted); font: inherit; font-size: .8rem; cursor: pointer;
+}
+.hd-d4-card__remove::before {
+  content: ''; position: absolute; z-index: -1; inset: 9px 4px; border: 1px solid var(--d3-line); border-radius: 999px; background: #fff;
+}
+.hd-d4-card__remove:hover { color: var(--d4-danger); }
+.hd-d4-card__error { margin: 8px 0 0; font-size: .85rem; font-weight: 600; color: var(--d4-danger); }
+.hd-d4-card.is-removing { justify-content: center; min-height: 280px; border-color: var(--d4-danger); box-shadow: 0 0 0 1px var(--d4-danger); }
+.hd-d4-card__q { margin: 0 0 4px; font-weight: 700; font-size: 1rem; }
+.hd-d4-card__sub { margin: 0 0 14px; font-size: .88rem; color: var(--d4-muted); }
+.hd-d4-card__two { display: flex; gap: 8px; width: 100%; }
+.hd-d4-card__yes, .hd-d4-card__keep {
+  flex: 1 1 0; min-height: 44px; padding: 8px; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer;
+}
+.hd-d4-card__yes { border: 0; background: var(--d4-danger); color: #fff; }
+.hd-d4-card__keep { border: 1px solid var(--d4-input-line); background: #fff; color: var(--d4-ink); }
+.hd-d4-card__yes:disabled, .hd-d4-card__keep:disabled { opacity: .6; cursor: progress; }
+.hd-d4-card.is-closed { background: #f6f6f4; }
+.hd-d4-card.is-closed .hd-d4-card__pic { filter: grayscale(1); opacity: .75; }
+.hd-d4-card--new { padding: 0; border: 0; background: none; }
+.hd-d4-card__add {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; height: 100%; min-height: 220px; padding: 16px; border: 2px dashed var(--d4-input-line); border-radius: 12px;
+  background: transparent; color: #4a4f57; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+.hd-d4-card__add:hover { border-color: var(--d3-accent); color: var(--d3-accent); }
+.hd-d4-card__plus { font-size: 2.2rem; line-height: 1; color: var(--d3-accent); }
+
+/* 7. Wider screens -------------------------------------------------------------------------- */
+@media (min-width: 560px) {
+  .hd-d4-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 720px) {
+  .hd-d4-doorway { grid-template-columns: minmax(260px, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+  .hd-d4-doorway .hd-d3-stage--after { position: sticky; top: 12px; }
+  .hd-d4-doorway .hd-d3-stage--after .hd-d3-frame { width: 260px; }
+  .hd-d4-doorway__foot { flex-direction: row; align-items: center; gap: 18px; }
+  .hd-d4-doorway__foot .hd-d4-next { width: auto; padding: 0 28px; }
+  .hd-d4-strip { max-width: 560px; }
+  .hd-d4-card__remove { min-height: 36px; top: 6px; right: 6px; }
+  .hd-d4-card__remove::before { inset: 5px 4px; }
+}
+
+/* 8. Motion ------------------------------------------------------------------------------- */
+@keyframes hd-d4-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 124, 30, 0); }
+  50% { box-shadow: 0 0 0 5px rgba(240, 124, 30, .35); }
+}
+@keyframes hd-d4-glow-in {
+  0%, 100% { box-shadow: inset 4px 0 0 #f07c1e, inset 0 0 0 0 rgba(240, 124, 30, 0); }
+  50% { box-shadow: inset 4px 0 0 #f07c1e, inset 0 0 14px 2px rgba(240, 124, 30, .35); }
+}
+@keyframes hd-d4-pop {
+  from { transform: translate(-50%, calc(-100% - 24px)) scale(.7); opacity: 0; }
+  to { transform: translate(-50%, calc(-100% - 24px)) scale(1); opacity: 1; }
+}
+@keyframes hd-d4-fade { from { opacity: .4; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .hd-d4.hd-d4-needhandle .hd-d3-dot--handle,
+  .hd-d4.hd-d4-needhandle [data-k="tab:handle"],
+  .hd-d4.hd-d4-needhandle [data-k="row:handle"],
+  .hd-d4-bubble,
+  .hd-d4 .hd-d3-banner.hd-d4-banner--preview { animation: none; }
+  /* Without the pulse the handle controls still stand out: a solid ring instead. */
+  .hd-d4.hd-d4-needhandle .hd-d3-dot--handle { box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 0 0 4px rgba(240, 124, 30, .45); }
+  .hd-d4.hd-d4-needhandle [data-k="tab:handle"] { box-shadow: 0 0 0 2px var(--d3-dot); }
+  .hd-d4-tile { transition: none; }
+}

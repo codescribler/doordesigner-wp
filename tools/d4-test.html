@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HD Door Designer — Designer 4 QA harness</title>
+<!--
+  Visual QA for DESIGNER 4 without WordPress. Serve the plugin folder and open this page:
+      python -m http.server 8000        (or: npx http-server -p 8000)   from the plugin root
+      -> http://localhost:8000/tools/d4-test.html
+
+  The plugin's real scripts and stylesheets load in the order includes/class-hd-assets.php
+  registers them (Designer 4's dependency chain; Classic, Swipe and boot.js are left out because
+  the app is started directly). HD_DD_CONFIG has no restUrl, so the email box runs in its preview
+  mode and nothing is sent anywhere. The d4/* calls the app makes (My designs, details, doorway,
+  remove, reopening a door) are answered from memory by the fake API in this page; it starts with
+  three doors: one waiting for a price with no doorway answered, one "Estimate sent" with a
+  doorway, one on a closed deal; the reply says the postcode is missing and there are older designs.
+  Funnel steps are logged to the console ([hdAnalytics]) and kept in window.__analytics; every
+  fake API call is kept in window.__api. The memory resets on reload.
+
+  URL switches (combine with &):
+    ?screen=designs   open My designs directly, as the emailed link does (loadDesigns)
+    ?design=tA        reopen a saved door, as a ?design= link does (tA, tB; tC is closed -> My designs)
+    ?door_type=Single%20Door   start with the type chosen, as the site's door_type links do
+    ?lead=fake        give the app a restUrl so the email box really "sends" to the fake d4/lead
+                      (the token, doorway saves and "Add this door" then go through d4/lead and d4/door)
+    ?fail=designs,remove,open,details   make those fake calls fail, to see the error lines
+    ?slow=1           answer the fake calls after 1.5s instead of 0.25s, to see the loading lines
+    ?motion=reduce    tell the app reduced motion is on (no handle preview) and switch off every
+                      CSS animation on the page; the real check is the OS / devtools setting
+    ?base=live        load door images through the live site's image cache instead of Endurance's host
+-->
+<link rel="stylesheet" href="../assets/css/hd-door-designer.css">
+<link rel="stylesheet" href="../assets/css/hd-swipe.css">
+<link rel="stylesheet" href="../assets/css/hd-designer3.css">
+<link rel="stylesheet" href="../assets/css/hd-designer4.css">
+<style>
+  /* Harness chrome only: the flow is styled solely by the plugin stylesheets above. */
+  body { font-family: system-ui, sans-serif; margin: 0; color: #222; background: #fff; }
+  #harness-bar { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 16px; background: #222; color: #fff; font-size: 12px; }
+  #harness-bar a { color: #fff; }
+  #harness-status { color: #666; font-size: .8rem; text-align: center; padding: 8px; }
+</style>
+<script>
+  window.__analytics = [];
+  window.hdAnalytics = {
+    step: function (f, s, o) { window.__analytics.push(['step', f, s, o]); console.log('[hdAnalytics] step', f, s, JSON.stringify(o)); },
+    lead: function (f, o) { window.__analytics.push(['lead', f, o]); console.log('[hdAnalytics] lead', f, JSON.stringify(o || {})); }
+  };
+  (function () {
+    var q = new URLSearchParams(location.search);
+    // Set before the scripts load: the render model is where WordPress localises it.
+    window.HD_DD_CONFIG = {
+      version: 'harness',
+      pluginUrl: new URL('../', location.href).href,
+      trust: { guidePrice: 'Fitted doors typically cost £1,500 to £4,000. Most of our customers pay around £2,000.', rating: '10', count: '79', url: '', quotes: [] },
+      i18n: {}
+    };
+    if (q.get('lead') === 'fake') { window.HD_DD_CONFIG.restUrl = '/fake-rest/'; }
+    if (q.get('motion') === 'reduce') {
+      var s = document.createElement('style');
+      s.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+      document.head.appendChild(s);
+    }
+  })();
+</script>
+</head>
+<body>
+<div id="harness-bar">
+  <strong>Designer 4 harness</strong>
+  <a href="d4-test.html">Start</a>
+  <a href="d4-test.html?screen=designs">My designs</a>
+  <a href="d4-test.html?design=tA">Reopen door tA</a>
+  <a href="d4-test.html?lead=fake">With fake lead</a>
+  <a href="d4-test.html?screen=designs&amp;fail=designs">Designs fail</a>
+</div>
+<div id="mount">Loading…</div>
+<div id="harness-status"></div>
+
+<script src="../assets/js/render-model.js"></script>
+<script src="../assets/js/preview.js"></script>
+<script src="../assets/js/wizard/step-config.js"></script>
+<script src="../assets/js/wizard/wizard-controller.js"></script>
+<script src="../assets/js/wizard/funnel.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/design-shared.js"></script>
+<script src="../assets/js/enquiry.js"></script>
+<script src="../assets/js/trust.js"></script>
+<script src="../assets/js/swipe/swipe-parts.js"></script>
+<script src="../assets/js/swipe/review-save.js"></script>
+<script src="../assets/js/designer3/d3-defaults.js"></script>
+<script src="../assets/js/designer3/d3-frame.js"></script>
+<script src="../assets/js/designer3/d3-hotspots.js"></script>
+<script src="../assets/js/designer3/d3-nudge.js"></script>
+<script src="../assets/js/designer3/d3-save.js"></script>
+<script src="../assets/js/designer3/d3-toolbox.js"></script>
+<script src="../assets/js/designer3/d3-type-art.js"></script>
+<script src="../assets/js/designer3/d3-screens.js"></script>
+<script src="../assets/js/designer3/d3-frame-step.js"></script>
+<script src="../assets/js/designer3/d3-callback.js"></script>
+<script src="../assets/js/designer3/d3-after-save.js"></script>
+<script src="../assets/js/designer3/d3-app.js"></script>
+<script src="../assets/js/designer4/d4-handle.js"></script>
+<script src="../assets/js/designer4/d4-doorway.js"></script>
+<script src="../assets/js/designer4/d4-store.js"></script>
+<script src="../assets/js/designer4/d4-ask.js"></script>
+<script src="../assets/js/designer4/d4-door.js"></script>
+<script src="../assets/js/designer4/d4-sideglass.js"></script>
+<script src="../assets/js/designer4/d4-doorway-screen.js"></script>
+<script src="../assets/js/designer4/d4-steps.js"></script>
+<script src="../assets/js/designer4/d4-card.js"></script>
+<script src="../assets/js/designer4/d4-mydesigns.js"></script>
+<script src="../assets/js/designer4/d4-app.js"></script>
+<script src="harness-data.js"></script>
+<script src="d4-fake-api.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var mount = document.getElementById('mount');
+  var statusEl = document.getElementById('harness-status');
+  Promise.all([
+    window.HD_DD_HarnessData.load(),
+    fetch('../data/designer3-defaults.json').then(function (r) { return r.json(); }).catch(function () { return null; })
+  ]).then(function (res) {
+    var data = res[0];
+    var live = q.get('base') === 'live';
+    window.HD_DD_CONFIG.assetBase = live ? 'https://hertfordshiredoors.co.uk/wp-json/hd-door-designer/v1/img' : data.model._assetBase;
+    if (res[1]) { window.HD_DD_CONFIG.d3Defaults = res[1]; }
+    statusEl.textContent = 'Designer 4 harness · ' + (window.HD_DD_CONFIG.restUrl ? 'fake lead on' : 'preview mode (nothing sent)') + ' · assetBase ' + window.HD_DD_CONFIG.assetBase;
+    mount.innerHTML = '';
+    var reduce = q.get('motion') === 'reduce';
+    var app = new window.HD_DD_Designer4App(mount, data.customerView, data.model, data.categories, {
+      api: window.HD_DD_D4FakeApi.create(q),
+      funnel: window.HD_DD_Funnel.create('door-designer-v5', window.HD_DD_Funnel.ORDER_V5),
+      doorType: q.get('door_type') || '',
+      matchMedia: reduce ? function (m) { return { matches: /reduced-motion/.test(m) }; } : undefined
+    });
+    window.d4App = app;
+    if (q.get('screen') === 'designs') { app.loadDesigns('tA', 'harness-key'); }
+    else if (q.get('design')) { app.loadSaved(q.get('design')); }
+    else { app.render(); app.funnel.step('opened'); }
+  }).catch(function (e) { mount.textContent = 'Failed to load data — serve the plugin folder over http. ' + e; });
+})();
+</script>
+</body>
+</html>

@@ -27,6 +27,7 @@ preserved exactly.
 | Image mirroring (download Endurance assets, serve locally) | ✅ built (`tools/mirror-images.js`) — downloads all captured image URLs to `assets/img/endurance/`; set **Preview image base URL** in Settings to the mirror |
 | Handle/knocker hardware-colour recolour | ⚙️ best-effort (uses captured baseline colour); full recolour is a fast-follow |
 | Designer 3 (`designer3`, funnel `door-designer-v4`) | ✅ built (v0.5.0) — type and style, then the finished door with "+" dots and a toolbox; email save; then side/top lights, the quote or a call back. See **Designer 3** below |
+| Designer 4 (`designer4`, funnel `door-designer-v5`) | ✅ built (v0.8.0, not yet released) — Designer 3's door with no handle until one is picked, the email as the lead, then the doorway by picture, details, and a My designs page from the emailed link. See **Designer 4** below |
 | Brand styling (fonts/colours of hertfordshiredoors.co.uk) | ⚙️ brand accent colour + Glazed/Contemporary category split are tunables in `assets/css`; base templates shipped |
 
 ## Installation
@@ -177,6 +178,9 @@ detail view.
 - **Designer 3** (`assets/js/designer3/`, `assets/css/hd-designer3.css`): door type, then
   style, then the finished door straight away. Reports to funnel **`door-designer-v4`**. See
   **Designer 3** below.
+- **Designer 4** (`assets/js/designer4/`, `assets/css/hd-designer4.css`): Designer 3's type,
+  style and door, then three short steps and My designs. Reports to funnel
+  **`door-designer-v5`**. See **Designer 4** below.
 
 `assets/js/boot.js` starts whichever flow a visitor gets (forced by `?flow=` / shortcode
 `flow=""`, else the running A/B test's arm, else the default flow). Shared by all of them:
@@ -189,6 +193,7 @@ detail view.
   test; REST calls (exposure, enquiry) are logged to `window.__rest` instead of sent. It loads
   Classic and Swipe 2; Designer 3's scripts come from `includes/class-hd-assets.php` (the
   `-d3*` handles), which `tests/php/assets-designer3.test.php` checks.
+- `tools/d4-test.html` — Designer 4 on its own, with a fake API in memory. See **Designer 4**.
 
 ### Keeping your own visits out of the stats
 
@@ -360,6 +365,45 @@ Files: `assets/js/designer3/` (`d3-app.js` the controller; `d3-screens.js`, `d3-
 `includes/class-hd-assets.php` (loads it all; the JS version is the newest file under `assets/js`).
 Design: `docs/superpowers/specs/2026-10-21-designer-3-design.md`.
 
+## Designer 4
+
+**Flow** `designer4` (label "Designer 4"), funnel **`door-designer-v5`**. Open it yourself with
+`?flow=designer4&notrack=1` (never counted in a test, and your visit is kept out of the stats).
+It is Designer 3's type, style and door screen, changed so the handle is the visitor's choice:
+
+1. **Your door** (step 1 of 3). The door is shown without a handle (a one-second preview of each
+   kind of handle plays once, skipped with reduced motion). The Handle row, tab and dot glow until
+   one is picked. The email box, "Email me this design and its price", is the lead: it sends a
+   link to the design straight away and the price follows within 1 working day. Sending with no
+   handle shows a speech bubble by the handle dot instead. A handle is required for a Designer 4
+   door to be stored, in the browser and on the server.
+2. **Your doorway** (step 2 of 3), when the door type offers side or top lights: pick the closest
+   of six pictures, then the exact layout; side glass choices follow. It can be skipped.
+3. **Your details** (step 3 of 3): name, postcode and phone, none required. Then "✓ Your estimate
+   is on its way".
+
+The email carries a link to **My designs**: every door saved under that email, each with its
+price status, its doorway (or a prompt to add it), Open and adjust, and Remove (asks first).
+A door on a closed deal shows its picture, name and date only. "Design another door" adds a door
+to the same estimate.
+
+Files: `assets/js/designer4/` (`d4-app.js` the controller; `d4-door.js`, `d4-ask.js`,
+`d4-steps.js`, `d4-doorway-screen.js`, `d4-sideglass.js`, `d4-mydesigns.js`, `d4-card.js` the
+screens; `d4-handle.js`, `d4-doorway.js`, `d4-store.js` the rules and the REST calls),
+`assets/css/hd-designer4.css` (loaded after Designer 3's, everything scoped under `.hd-d4`),
+`includes/class-hd-d4*.php` (the `d4/*` routes, the email, the manager events).
+Design: `docs/superpowers/specs/2026-11-10-designer-4-design.md`.
+
+**Look at it without WordPress:** from the plugin root run `python -m http.server 8000` (or
+`npx http-server -p 8000`) and open `http://localhost:8000/tools/d4-test.html`. There is no
+REST URL, so the email box runs in preview mode and nothing is sent; a fake API in the page
+(`tools/d4-fake-api.js`) answers the `d4/*` calls from memory, starting with three doors (price
+on its way with no doorway, estimate sent, closed deal), a missing postcode and older designs.
+Switches, listed at the top of the file: `?screen=designs` (My designs, as the emailed link
+opens it), `?design=tA` (reopen a door), `?lead=fake` (the email really goes to the fake
+`d4/lead`), `?fail=designs,remove,open,details` (the error lines), `?slow=1` (the loading lines),
+`?motion=reduce`.
+
 ## Tests
 
 No framework — plain Node and PHP scripts that exit non-zero on failure:
@@ -396,6 +440,17 @@ node tests/js/d3-toolbox.test.js      # toolbox rows, phone sheet, focus through
 node tests/js/d3-app.test.js          # type -> style -> complete door, restyling, funnel
 node tests/js/d3-after-save.test.js   # lights, quote, call back, saved links
 node tests/js/render-toplight.test.js # top-light artwork drawn only on request
+node tests/js/designer4-wiring.test.js # boot starts Designer 4 with funnel door-designer-v5
+node tests/js/funnel-v5.test.js       # Designer 4 funnel order (ORDER_V5)
+node tests/js/d4-handle.test.js       # handle preview rules: "No Handle", which handles to preview
+node tests/js/d4-doorway.test.js      # the six doorway families and their layouts
+node tests/js/d4-store.test.js        # session tokens, the d4/* REST calls
+node tests/js/d4-ask.test.js          # the email box: the lead, no handle, updates
+node tests/js/d4-door.test.js         # door screen: preview, glow, guide price, speech bubble
+node tests/js/d4-app.test.js          # Designer 4 controller: routing, saved doors, the lead
+node tests/js/d4-steps.test.js        # progress strip, doorway, details, finished
+node tests/js/d4-doorway-screen.test.js # doorway picks, focus, saves
+node tests/js/d4-mydesigns.test.js    # My designs: cards, remove, closed, prompts
 node tools/build-designer3-defaults.js --test  # the defaults table rules
 node tools/tests/test-*.js            # wizard, render model, step config…
 php tests/php/run.php                 # all PHP tests below, run together:
@@ -403,7 +458,8 @@ php tests/php/run.php                 # all PHP tests below, run together:
 #   repository-kind, save-mailer, save-emails, save-endpoints, save-claim
 #   admin-kind, admin-status, trust-settings
 #   experiment-flows, -admin, -conversion, -expose, -stats, -snapshot
-#   save-callback, assets-designer3
+#   save-callback, assets-designer3, assets-designer4
+#   d4-lead, d4-doors, d4-mailer, repository-d4, experiment-d4, admin-d4, follow-up-d4
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
 
