@@ -19,9 +19,17 @@ class HD_DD_D4 {
 	/** @var HD_DD_Enquiry Shared validation, payload and image helpers. */
 	private $enquiry;
 
+	/** @var HD_DD_D4_Doors The endpoints used after the lead (list, add, change, remove). */
+	public $doors;
+
+	/** @var HD_DD_D4_Details The details endpoint. */
+	public $details;
+
 	public function __construct( HD_DD_Repository $repository, HD_DD_Enquiry $enquiry ) {
 		$this->repository = $repository;
 		$this->enquiry    = $enquiry;
+		$this->doors      = new HD_DD_D4_Doors( $this, $repository, $enquiry );
+		$this->details    = new HD_DD_D4_Details( $this, $this->doors, $repository, $enquiry );
 	}
 
 	public function register() {
@@ -38,6 +46,17 @@ class HD_DD_D4 {
 				'permission_callback' => array( $this->enquiry, 'check_nonce' ),
 			)
 		);
+		$token = '(?P<token>[A-Za-z0-9]+)';
+		$posts = array(
+			'/d4/designs'                  => array( $this->doors, 'rest_designs' ),
+			'/d4/door'                     => array( $this->doors, 'rest_add' ),
+			'/d4/door/' . $token           => array( $this->doors, 'rest_change' ),
+			'/d4/door/' . $token . '/remove' => array( $this->doors, 'rest_remove' ),
+			'/d4/details'                  => array( $this->details, 'rest_details' ),
+		);
+		foreach ( $posts as $route => $callback ) {
+			register_rest_route( HD_DD_REST_NS, $route, array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => $callback, 'permission_callback' => array( $this->enquiry, 'check_nonce' ) ) );
+		}
 	}
 
 	// -------------------------------------------------------------------
@@ -126,7 +145,7 @@ class HD_DD_D4 {
 		return $own ? $this->change_door( $own, $design, $name, $p ) : $this->add_door( $email, $design, $name, $flagged, $p );
 	}
 
-	private function design_name( array $design ) {
+	public function design_name( array $design ) {
 		$name = HD_DD_Enquiry::default_design_name( $design );
 		return function_exists( 'mb_substr' ) ? mb_substr( $name, 0, 80 ) : substr( $name, 0, 80 );
 	}
