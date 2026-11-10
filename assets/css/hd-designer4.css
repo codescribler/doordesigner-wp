@@ -37,6 +37,8 @@
 /* 2. Door screen ------------------------------------------------------------------------ */
 /* While the door has no handle, the three ways to the handle choices glow. */
 .hd-d4.hd-d4-needhandle .hd-d3-dot--handle { animation: hd-d3-pulse 1.4s ease-out infinite; }
+/* While the handle preview plays (d4-door.js), the dots step aside so each handle shows. */
+.hd-d4.hd-d4-previewing .hd-d3-dots { visibility: hidden; }
 .hd-d4.hd-d4-needhandle [data-k="tab:handle"] {
   border-color: var(--d3-dot); background: var(--d4-warm);
   animation: hd-d4-glow 1.8s ease-in-out infinite;

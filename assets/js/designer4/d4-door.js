@@ -84,13 +84,18 @@
 				setClass(banner, 'hd-d4-banner--preview', playing());
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);
+			setClass(shell, 'hd-d4-previewing', playing());   // the dots hide so the handle shows
 			if (!app.needHandle) { hideBubble(); }
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
 
 		// True when a playing preview was stopped (the caller then owes the real door a redraw).
-		view.stopPreview = function () { var r = runner; runner = null; return !!(r && r.stop()); };
+		view.stopPreview = function () {
+			var r = runner; runner = null;
+			setClass(shell, 'hd-d4-previewing', false);
+			return !!(r && r.stop());
+		};
 
 		view.refresh = function () {
 			view.stopPreview();

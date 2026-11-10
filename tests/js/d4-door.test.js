@@ -108,6 +108,7 @@ var C = Door.COPY;
   assert.strictEqual(banner.textContent, C.preview);
   assert.ok(has(banner, 'hd-d4-banner--preview'));
   assert.ok(has(shell, 'hd-d4-needhandle'), 'the handle control glows');
+  assert.ok(has(shell, 'hd-d4-previewing'), 'the dots are hidden while the preview plays');
   assert.strictEqual(app.previewDue, false, 'played once');
   assert.deepStrictEqual(app.log, ['handle_preview']);
   await tick();
@@ -126,6 +127,7 @@ var C = Door.COPY;
   assert.strictEqual(app.timers.q.length, 0, 'nothing more scheduled');
   assert.strictEqual(banner.textContent, C.choose);
   assert.ok(!has(banner, 'hd-d4-banner--preview'));
+  assert.ok(!has(shell, 'hd-d4-previewing'), 'the dots are back when the preview ends');
   assert.deepStrictEqual(app.log, ['handle_preview'], 'nothing per frame');
 
   // a handle picked: glow off, Designer 3's banner back
@@ -152,6 +154,7 @@ var C = Door.COPY;
   assert.strictEqual(shell2.querySelector('.hd-d3-banner').textContent, C.choose);
   assert.ok(!has(shell2.querySelector('.hd-d3-banner'), 'hd-d4-banner--preview'));
   assert.deepStrictEqual(renders, ['Lever/Lever'], 'no more frames');
+  assert.ok(!has(shell2, 'hd-d4-previewing'), 'a pick during the preview brings the dots back');
   retries[retries.length - 1]();
   assert.deepStrictEqual(renders, ['Lever/Lever'], 'a stopped frame never redraws');
 
@@ -161,7 +164,9 @@ var C = Door.COPY;
   var shell2b = node('div');
   var v2b = Door.door(app2b, shell2b);
   await tick();
+  assert.ok(has(shell2b, 'hd-d4-previewing'));
   assert.strictEqual(v2b.stopPreview(), true, 'stopped a playing preview');
+  assert.ok(!has(shell2b, 'hd-d4-previewing'), 'the dots are back when the preview is stopped');
   assert.strictEqual(v2b.stopPreview(), false, 'nothing left to stop');
   assert.strictEqual(app2b.timers.q.length, 0);
   var r2 = base.refreshes;
