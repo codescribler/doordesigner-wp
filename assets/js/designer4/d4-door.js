@@ -76,6 +76,11 @@
 
 		function playing() { return !!(runner && runner.playing()); }
 		function hideBubble() { drop(bubbleEl); bubbleEl = null; setClass(shell, 'hd-d4-bubbling', false); }
+		// The bubble sits on the handle dot, which moves when the hinge side changes.
+		function placeBubble() {
+			var dot = bubbleEl && (app.dots() || []).filter(function (d) { return d.key === 'handle'; })[0];
+			if (dot) { bubbleEl.style.left = (dot.x * 100) + '%'; bubbleEl.style.top = (dot.y * 100) + '%'; }
+		}
 		// Once the door has a handle, the ask's "needs a handle" line is no longer true.
 		function clearNoHandleLine() {
 			var err = q(shell, 'hd-d4-ask__error'), line = W.HD_DD_D4Ask && W.HD_DD_D4Ask.COPY.noHandle;
@@ -90,7 +95,7 @@
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);
 			setClass(shell, 'hd-d4-previewing', playing());   // the dots hide so the handle shows
-			if (!app.needHandle) { hideBubble(); clearNoHandleLine(); }
+			if (!app.needHandle) { hideBubble(); clearNoHandleLine(); } else { placeBubble(); }
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
@@ -121,14 +126,13 @@
 			if (!app.noHandleSent) { app.noHandleSent = true; app.funnel.step('nohandle'); }
 			hideBubble();
 			var host = q(shell, 'hd-d3-frame') || shell;
-			var dot = (app.dots() || []).filter(function (d) { return d.key === 'handle'; })[0];
 			var b = el('button', 'hd-d4-bubble', COPY.bubble);
 			b.type = 'button';
 			b.setAttribute('role', 'status');
-			if (dot) { b.style.left = (dot.x * 100) + '%'; b.style.top = (dot.y * 100) + '%'; }
 			b.addEventListener('click', function () { if (app.toolbox) { app.toolbox.open('handle', 'dot:handle'); } });
 			host.appendChild(b);
 			bubbleEl = b;
+			placeBubble();
 			setClass(shell, 'hd-d4-bubbling', true);
 		};
 

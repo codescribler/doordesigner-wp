@@ -251,6 +251,11 @@ var C = Door.COPY;
   assert.deepStrictEqual(app9.log, ['nohandle'], 'still once after the screen is drawn again');
   v9.refresh();
   assert.ok(shell9.querySelector('.hd-d4-bubble'), 'stays while the handle is missing');
+  // the handle dot moves (hinge side changed): the bubble follows it on the next redraw
+  app9.dots = function () { return [{ key: 'handle', x: 0.25, y: 0.5 }]; };
+  v9.refresh();
+  assert.strictEqual(shell9.querySelector('.hd-d4-bubble').style.left, '25%', 'the bubble follows the dot');
+  assert.strictEqual(shell9.querySelector('.hd-d4-bubble').style.top, '50%');
   // the ask's "needs a handle" line (in the save slot) goes with the bubble; any other line stays
   var err = shell9.querySelector('.hd-d3-saveslot').appendChild(el('div', 'hd-d4-ask__error', 'Oops, your door needs a handle to be saved.'));
   app9.needHandle = false;
