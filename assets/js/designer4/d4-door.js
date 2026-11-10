@@ -39,10 +39,13 @@
 	function previewRunner(app, labels, onEnd) {
 		var Hd = W.HD_DD_D4Handle, timers = app.timers, i = 0, t = null, live = true;
 		var comp = (W.HD_DD_Preview && app.canvas && app.model) ? W.HD_DD_Preview.create(app.canvas, { model: app.model, assetBase: app.assetBase() }) : null;
+		// Supersede any frame still loading (or waiting to redraw a slow picture: preview.js
+		// retryWhenLoaded), so it can't draw over the real door. Used by stop and by the end.
+		function supersede() { live = false; if (comp) { comp._token = (comp._token || 0) + 1; } }
 		function frame() {
 			t = null;
 			if (!live) { return; }
-			if (i >= labels.length) { live = false; onEnd(); return; }
+			if (i >= labels.length) { supersede(); onEnd(); return; }
 			if (comp) { try { comp.render(app.type(), Hd.withHandle(app.design(), labels[i]), app.OPTS); } catch (e) { /* missing asset */ } }
 			i++;
 			t = timers.set(frame, FRAME_MS);
@@ -52,11 +55,10 @@
 		return {
 			playing: function () { return live; },
 			stop: function () {
-				if (!live) { return; }
-				live = false;
+				if (!live) { return false; }
+				supersede();
 				if (t != null) { timers.clear(t); t = null; }
-				// Supersede a frame still loading its pictures, so it can't draw over the real door.
-				if (comp) { comp._token = (comp._token || 0) + 1; }
+				return true;
 			}
 		};
 	}
@@ -87,7 +89,8 @@
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
 
-		view.stopPreview = function () { if (runner) { runner.stop(); runner = null; } };
+		// True when a playing preview was stopped (the caller then owes the real door a redraw).
+		view.stopPreview = function () { var r = runner; runner = null; return !!(r && r.stop()); };
 
 		view.refresh = function () {
 			view.stopPreview();
@@ -103,8 +106,9 @@
 		};
 
 		// No handle on submit: a bubble by the handle dot; it (or the dot) opens the handle choices.
+		// "nohandle" is reported once per door (app.noHandleSent, reset by app.newDoor()).
 		view.bubble = function () {
-			app.funnel.step('nohandle');
+			if (!app.noHandleSent) { app.noHandleSent = true; app.funnel.step('nohandle'); }
 			hideBubble();
 			var host = q(shell, 'hd-d3-frame') || shell;
 			var dot = (app.dots() || []).filter(function (d) { return d.key === 'handle'; })[0];

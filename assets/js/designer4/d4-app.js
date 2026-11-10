@@ -1,11 +1,8 @@
 // assets/js/designer4/d4-app.js
-// Designer 4's controller: Designer 3's app (HD_DD_Designer3App) with the door left without a
-// handle, the handle required before the email can be sent, and the screens after it. State and
-// routing only: the door screen's drawing is d4-door.js, the ask is d4-ask.js, the session store
-// is d4-store.js, the later screens are d4-steps.js and d4-mydesigns.js.
-//
-// Journey: type -> style -> door (no handle, after a short handle preview) -> doorway -> details
-// -> done. The emailed link opens My designs (screen `designs`).
+// Designer 4's controller: Designer 3's app with the door left without a handle and the handle
+// required before the email is sent. State and routing only (drawing: d4-door.js, d4-steps.js,
+// d4-mydesigns.js). Journey: type -> style -> door -> doorway -> details -> done; the emailed
+// link opens My designs (screen `designs`).
 (function (W) {
 	'use strict';
 
@@ -22,16 +19,15 @@
 	function anyMissing(m) { return !m || Object.keys(m).some(function (k) { return !!m[k]; }); }
 
 	function App(root, cv, rm, categories, opts) {
-		opts = opts || {};
 		var o = {};
-		Object.keys(opts).forEach(function (k) { o[k] = opts[k]; });
+		Object.keys(opts = opts || {}).forEach(function (k) { o[k] = opts[k]; });
 		o.flow = 'designer4';
 		D3.call(this, root, cv, rm, categories, o);
 		this.store = opts.store || (W.HD_DD_D4Store ? W.HD_DD_D4Store.create({ api: this.api }) : null);
 		this.known = false;       // started from My designs: the person is already known
 		this.missing = null;      // {name, postcode, phone} still missing, once a designs list has said
-		this.freshDoor = true;    // the handle preview plays once per new door
 		this.previewDue = false;  // the door screen plays the preview when it next draws
+		this.newDoor();           // freshDoor: the preview plays once per new door; noHandleSent
 		this.timers = opts.timers || { set: function (f, ms) { return setTimeout(f, ms); }, clear: function (t) { clearTimeout(t); } };
 		this.matchMedia = opts.matchMedia || (typeof W.matchMedia === 'function' ? function (q) { return W.matchMedia(q); } : null);
 	}
@@ -55,8 +51,7 @@
 		return (step && Hd()) ? Hd().previewLabels(this.model, this.type(), this.design(), step.choices) : [];
 	};
 
-	// Select "No Handle" without making it one of their picks (no `mine`, no funnel step), unless
-	// they already chose a real handle themselves.
+	// Select "No Handle" (not one of their picks: no `mine`, no funnel step) unless they chose a real handle.
 	P.leaveHandleOff = function () {
 		var step = this.stepFor('Handle');
 		var none = step && Hd() ? Hd().noHandle(step.choices) : null;
@@ -66,8 +61,17 @@
 		return true;
 	};
 
+	// A new door: the preview may play again and "nohandle" may be reported again.
+	P.newDoor = function () { this.freshDoor = true; this.noHandleSent = false; };
+
 	// ---- Choosing -------------------------------------------------------------------------
-	// Designer 3's chooseStyle, with the handle taken off before the door screen draws.
+	// Mirrors Designer 3's chooseType: a different type is a new door.
+	P.chooseType = function (label) {
+		if (this.cv.byType[label] && label !== this.type()) { this.newDoor(); }
+		return D3P.chooseType.call(this, label);
+	};
+
+	// Mirrors Designer 3's chooseStyle, with the handle taken off before the door screen draws.
 	P.chooseStyle = function (label) {
 		if (!this.choiceFor('Door Design', label)) { return; }
 		if (this.style()) { this.restyle(label); } else { this.build(label, prefsFrom(this.defaultsFor(label))); }
@@ -77,13 +81,16 @@
 		this.go('door');
 	};
 
-	// A pick stops the preview at once (the redraw shows the real design).
+	// Mirrors Designer 3's pick. A pick stops the preview at once; D3's redraw shows the real
+	// design, but a pick of the option already on the door redraws nothing, so redraw here.
 	P.pick = function (section, heading, label) {
-		if (this.doorView && this.doorView.stopPreview) { this.doorView.stopPreview(); }
-		return D3P.pick.call(this, section, heading, label);
+		var stopped = !!(this.doorView && this.doorView.stopPreview && this.doorView.stopPreview());
+		var ok = D3P.pick.call(this, section, heading, label);
+		if (!ok && stopped) { this.refresh(); }
+		return ok;
 	};
 
-	// With no handle on the door, the handle dot goes where a handle would be drawn.
+	// Mirrors Designer 3's dots. With no handle on the door, the handle dot goes where a handle would be drawn.
 	P.dots = function () {
 		var H = W.HD_DD_D3Hotspots, stand = this.needHandle ? this.previewLabels()[0] : null;
 		if (!stand || !H || !H.display || !this.model) { return D3P.dots.call(this); }
@@ -96,6 +103,8 @@
 		return !!(this.known || (a && a.token) || (this.store && this.store.email && this.store.email()));
 	};
 
+	// Mirrors Designer 3's saver. While the door has no handle, autosave waits (the server refuses
+	// a design with no handle); the next handle pick sends it.
 	P.saver = function () {
 		var self = this, Ask = W.HD_DD_D4Ask;
 		if (!this._saver) {
@@ -111,6 +120,8 @@
 				onLead: function (body) { self.onLead(body); }
 			}) : { render: noop, saved: function () { return false; }, token: function () { return null; }, update: function () { return Promise.resolve(false); } };
 			if (this._token && this._saver.setToken) { this._saver.setToken(this._token); }
+			var update = this._saver.update;
+			this._saver.update = function () { return self.needHandle ? Promise.resolve(false) : update(); };
 		}
 		return this._saver;
 	};
@@ -144,6 +155,7 @@
 	};
 
 	// ---- Navigation and drawing -------------------------------------------------------------
+	// Mirrors Designer 3's back: the later screens go back to the door.
 	P.back = function () {
 		if (LATER[this.screen]) { return this.go(this.style() ? 'door' : 'type'); }
 		return D3P.back.call(this);
@@ -156,8 +168,8 @@
 		return null;
 	}
 
-	// type and style are Designer 3's; the door and every later screen are Designer 4's. A screen
-	// whose module is still an empty shell gets Designer 3's placeholder.
+	// Mirrors Designer 3's render. type and style are Designer 3's; the door and later screens are
+	// Designer 4's. A screen whose module is still an empty shell gets Designer 3's placeholder.
 	P.render = function () {
 		if (this.screen !== 'door' && !LATER[this.screen]) {
 			D3P.render.call(this);
@@ -183,10 +195,11 @@
 	};
 
 	// ---- Entry points (boot.js and My designs) -------------------------------------------------
-	// A door link: the door as saved (it always has a handle), the ask in its sent state. A door
-	// removed, or whose deal is closed, opens My designs instead (the list omits removed doors).
+	// Mirrors Designer 3's loadSaved. The door as saved (it always has a handle), the ask "sent". A
+	// door removed, or whose deal is closed, opens My designs (the list omits removed doors).
 	P.loadSaved = function (token) {
 		var self = this;
+		this.newDoor();
 		this.freshDoor = false;
 		this.previewDue = false;
 		if (W.HD_DD_D3Screens && W.HD_DD_D3Screens.loading) { W.HD_DD_D3Screens.loading(this); }
@@ -231,7 +244,7 @@
 		this.mine = {}; this.auto = {};
 		this.wiz = W.HD_DD_Wizard.create(this.cv, W.HD_DD_StepConfig);
 		this.known = true;
-		this.freshDoor = true;
+		this.newDoor();
 		this.previewDue = false;
 		this.nudgeOn = false;
 		this.go('type');

@@ -210,6 +210,41 @@ assert.strictEqual(t.reducedMotion(), true);
 assert.strictEqual(make({ matchMedia: function () { return { matches: false }; } }).reducedMotion(), false);
 assert.strictEqual(typeof make().timers.set, 'function');
 
+// ---- a pick during the preview: the option already on the door still redraws the real door ----
+var pv = door(make());
+var redraws = 0, live = true;
+pv.doorView = { stopPreview: function () { var was = live; live = false; return was; }, refresh: function () { redraws++; } };
+var curColour = pv.design()['Door Colour (External)'].label;
+assert.strictEqual(pv.pick('colour', 'Door Colour (External)', curColour), false, 'not a change');
+assert.strictEqual(redraws, 1, 'the stopped preview is replaced by the real door');
+assert.strictEqual(pv.pick('colour', 'Door Colour (External)', curColour), false);
+assert.strictEqual(redraws, 1, 'no preview playing: nothing to redraw');
+live = true;
+pv.pick('colour', 'Door Colour (External)', colours.filter(function (l) { return l !== curColour; })[0]);
+assert.strictEqual(redraws, 2, 'a real change redraws once: Designer 3 does it');
+
+// ---- a new door type is a new door: the preview plays again, nohandle may be reported again ----
+var nt = door(make());
+assert.strictEqual(nt.previewDue, true);
+nt.previewDue = false;          // the door screen played it
+nt.noHandleSent = true;         // and the visitor pressed the button with no handle
+nt.go('type');
+nt.select('Door Type', 'Single Door');
+nt.select('Door Design', 'Abbott');
+assert.strictEqual(nt.previewDue, false, 'the same type again: the same door');
+assert.strictEqual(nt.noHandleSent, true);
+nt.go('type');
+nt.select('Door Type', 'Stable Door');
+assert.strictEqual(nt.noHandleSent, false, 'a different type resets nohandle');
+nt.select('Door Design', nt.styles()[0].label);
+assert.strictEqual(nt.design().Handle.label.trim(), 'No Handle');
+assert.strictEqual(nt.previewDue, true, 'a different type: the preview plays for the new door');
+var sd = make();
+sd.noHandleSent = true;
+sd.startDoor();
+assert.strictEqual(sd.noHandleSent, false, 'startDoor is a new door');
+assert.strictEqual(make().noHandleSent, false);
+
 // ---- loadSaved: the door (no preview), or My designs for a removed or closed door ------------
 function opened(design, doors) {
   var store = fakeStore();
@@ -240,6 +275,24 @@ function opened(design, doors) {
   var closed = await opened(src.design(), [{ token: 'tok1', status: 'closed' }]);
   assert.strictEqual(closed.screen, 'designs', 'a closed door opens My designs');
   assert.strictEqual(closed.previewDue, false);
+
+  // ---- after a lead, no autosave while the door has no handle; the next handle sends it --------
+  window.HD_DD_CONFIG = { d3Defaults: table, restUrl: 'https://example.test/wp-json/hd/v1/' };
+  var updates = [];
+  var au = door(make({ store: fakeStore({ update: function (t, b) { updates.push([t, b.design.Handle.label]); return Promise.resolve({ ok: true }); } }) }));
+  au.pick('handle', 'Handle', 'Lever/Lever');
+  au.savedToken = 'tokA';               // the ask's lead went through
+  assert.strictEqual(au.saver().saved(), true);
+  au.pick('handle', 'Handle', 'No Handle ');
+  await tick(); await tick();
+  assert.deepStrictEqual(updates, [], 'nothing sent for a door with no handle');
+  au.pick('colour', 'Door Colour (External)', colours.filter(function (l) { return l !== au.design()['Door Colour (External)'].label; })[0]);
+  await tick(); await tick();
+  assert.deepStrictEqual(updates, [], 'still nothing while the handle is missing');
+  au.pick('handle', 'Handle', '400mm Pull Handle');
+  await tick(); await tick();
+  assert.deepStrictEqual(updates, [['tokA', '400mm Pull Handle']], 'the next handle pick sends the update');
+  window.HD_DD_CONFIG = { d3Defaults: table };
 
   // ---- Designer 3 untouched in the same process -------------------------------------------
   var d3 = make({ flow: 'designer3' }, null, D3App);

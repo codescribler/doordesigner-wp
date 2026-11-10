@@ -31,9 +31,16 @@ global.document = { createElement: node };
 
 var base = { refreshes: 0, destroyed: 0 };
 var renders = [];
+var retries = [];
 global.window = {
   HD_DD_D4Handle: require('../../assets/js/designer4/d4-handle.js'),
-  HD_DD_Preview: { create: function () { return { _token: 0, render: function (type, design) { renders.push(design.Handle.label); return Promise.resolve(); } }; } },
+  // Like preview.js: each render takes a token; a slow layer redraws later only if still current.
+  HD_DD_Preview: { create: function () { return { _token: 0, render: function (type, design) {
+    var me = this, tok = ++me._token, label = design.Handle.label;
+    renders.push(label);
+    retries.push(function () { if (tok === me._token) { renders.push('retry:' + label); } });
+    return Promise.resolve();
+  } }; } },
   HD_DD_D3Screens: {
     // The slots Designer 3's door() builds: banner, frame (canvas + dots), dock (sheet, nudge, save).
     door: function (app, shell) {
@@ -109,9 +116,13 @@ var C = Door.COPY;
   assert.deepStrictEqual(renders, ['Lever/Lever', 'Finger Pull']);
   app.timers.step();
   assert.deepStrictEqual(renders, ['Lever/Lever', 'Finger Pull', '400mm Pull Handle']);
+  retries[retries.length - 1]();
+  assert.strictEqual(renders.pop(), 'retry:400mm Pull Handle', 'while playing, a slow layer redraws its frame');
   var r0 = base.refreshes;
   app.timers.step();
   assert.strictEqual(base.refreshes, r0 + 1, 'the real design is drawn again');
+  retries[retries.length - 1]();
+  assert.deepStrictEqual(renders, ['Lever/Lever', 'Finger Pull', '400mm Pull Handle'], 'after the end, a late layer never redraws a handle over the real door');
   assert.strictEqual(app.timers.q.length, 0, 'nothing more scheduled');
   assert.strictEqual(banner.textContent, C.choose);
   assert.ok(!has(banner, 'hd-d4-banner--preview'));
@@ -141,6 +152,23 @@ var C = Door.COPY;
   assert.strictEqual(shell2.querySelector('.hd-d3-banner').textContent, C.choose);
   assert.ok(!has(shell2.querySelector('.hd-d3-banner'), 'hd-d4-banner--preview'));
   assert.deepStrictEqual(renders, ['Lever/Lever'], 'no more frames');
+  retries[retries.length - 1]();
+  assert.deepStrictEqual(renders, ['Lever/Lever'], 'a stopped frame never redraws');
+
+  // stopPreview says whether it stopped a playing preview (the app then redraws the real door
+  // for a pick that changed nothing: picking the option already on the door)
+  var app2b = fakeApp();
+  var shell2b = node('div');
+  var v2b = Door.door(app2b, shell2b);
+  await tick();
+  assert.strictEqual(v2b.stopPreview(), true, 'stopped a playing preview');
+  assert.strictEqual(v2b.stopPreview(), false, 'nothing left to stop');
+  assert.strictEqual(app2b.timers.q.length, 0);
+  var r2 = base.refreshes;
+  v2b.refresh();
+  assert.strictEqual(base.refreshes, r2 + 1, 'one redraw of the real door');
+  assert.strictEqual(shell2b.querySelector('.hd-d3-banner').textContent, C.choose);
+  assert.ok(!has(shell2b.querySelector('.hd-d3-banner'), 'hd-d4-banner--preview'));
 
   // leaving the screen stops it, even before the first frame
   renders.length = 0;
@@ -212,6 +240,9 @@ var C = Door.COPY;
   assert.deepStrictEqual(app9.opened, [['handle', 'dot:handle']], 'a tap opens the handle choices');
   v9.bubble();
   assert.strictEqual(shell9.querySelector('.hd-d3-frame').children.filter(function (c) { return has(c, 'hd-d4-bubble'); }).length, 1, 'one bubble at a time');
+  assert.deepStrictEqual(app9.log, ['nohandle'], 'reported once per door, however many presses');
+  Door.door(app9, node('div')).bubble();
+  assert.deepStrictEqual(app9.log, ['nohandle'], 'still once after the screen is drawn again');
   v9.refresh();
   assert.ok(shell9.querySelector('.hd-d4-bubble'), 'stays while the handle is missing');
   app9.needHandle = false;
