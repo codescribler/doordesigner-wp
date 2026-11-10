@@ -203,7 +203,7 @@ class HD_DD_Experiments_Admin {
 					<tr>
 						<td><strong><?php echo esc_html( $arm['label'] ); ?></strong> <small>(<?php echo esc_html( $key ); ?>)</small></td>
 						<td><?php echo (int) $arm['visitors']; ?></td>
-						<td><?php echo (int) $arm['leads']; ?></td>
+						<td><?php echo (int) $arm['leads']; ?><?php echo HD_DD_D4_Admin::leads_note( isset( $arm['flow'] ) ? $arm['flow'] : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in HD_DD_D4_Admin. ?></td>
 						<td><?php echo esc_html( HD_DD_Experiment_Notifier::pct( $decision['rates'][ $key ], 1 ) ); ?></td>
 						<td><?php echo isset( $arm['saves'] ) ? (int) $arm['saves'] : 0; ?></td>
 						<td><?php echo isset( $arm['anyLeads'] ) ? (int) $arm['anyLeads'] : 0; ?></td>

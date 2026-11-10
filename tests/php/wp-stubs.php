@@ -306,6 +306,7 @@ require_once HD_DD_DIR . 'includes/class-hd-d4-view.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-doors.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-details.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-admin.php';
 require_once HD_DD_DIR . 'includes/class-hd-trust-settings.php';
 require_once HD_DD_DIR . 'includes/class-hd-plugin.php';
 

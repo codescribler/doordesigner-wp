@@ -165,6 +165,7 @@ class HD_DD_Admin {
 						<td>
 							<input name="<?php echo esc_attr( self::OPTION ); ?>[manager_key]" id="hd_manager_key" type="password" class="regular-text" autocomplete="new-password" value="" placeholder="<?php echo '' !== (string) $s['manager_key'] ? esc_attr__( '(saved, leave blank to keep)', 'hd-door-designer' ) : ''; ?>" />
 							<p class="description"><?php esc_html_e( 'Leave blank to keep the saved key.', 'hd-door-designer' ); ?></p>
+							<?php echo HD_DD_D4_Admin::waiting_note(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in HD_DD_D4_Admin. ?>
 						</td>
 					</tr>
 					<tr>
@@ -262,7 +263,7 @@ class HD_DD_Admin {
 							?>
 							<tr>
 								<th scope="row" class="check-column"><input type="checkbox" name="enquiry_ids[]" value="<?php echo (int) $row->id; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'Select %s', 'hd-door-designer' ), $row->reference ) ); ?>" /></th>
-								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php if ( ! empty( $row->design_name ) ) : ?><br><small><?php echo esc_html( $row->design_name ); ?></small><?php endif; ?><?php echo self::kind_badge( isset( $row->kind ) ? $row->kind : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in kind_badge(). ?><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
+								<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MENU_SLUG . '&enquiry=' . (int) $row->id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: enquiry reference */ __( 'View details for %s', 'hd-door-designer' ), $row->reference ) ); ?>"><strong><?php echo esc_html( $row->reference ); ?></strong></a><?php if ( ! empty( $row->design_name ) ) : ?><br><small><?php echo esc_html( $row->design_name ); ?></small><?php endif; ?><?php echo self::kind_badge( isset( $row->kind ) ? $row->kind : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in kind_badge(). ?><?php echo HD_DD_D4_Admin::badges( $row ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in HD_DD_D4_Admin. ?><?php echo self::status_badge( $row->status, $payload ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in status_badge(). ?></td>
 								<td><?php echo esc_html( mysql2date( 'j M Y H:i', $row->created_at ) ); ?></td>
 								<td><?php echo '' === (string) $row->customer_name ? '&mdash;' : esc_html( $row->customer_name ); ?><br><small><?php echo esc_html( $row->customer_postcode ); ?></small></td>
 								<td>
@@ -341,6 +342,9 @@ class HD_DD_Admin {
 			<?php $status_label = self::status_label( $row->status, $payload ); ?>
 			<?php if ( '' !== $status_label ) : ?>
 				<div class="notice <?php echo 'failed' === (string) $row->status ? 'notice-error' : 'notice-warning'; ?>"><p><?php echo esc_html( $status_label ); ?></p></div>
+			<?php endif; ?>
+			<?php if ( '' !== HD_DD_D4_Admin::badges( $row ) ) : ?>
+				<p><?php echo HD_DD_D4_Admin::badges( $row ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in HD_DD_D4_Admin. ?></p>
 			<?php endif; ?>
 			<?php HD_DD_Follow_Up_Admin::render_detail_box( $row ); ?>
 			<p>
