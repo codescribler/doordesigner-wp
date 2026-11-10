@@ -122,21 +122,24 @@ class HD_DD_Assets {
 		);
 		wp_register_script( self::HANDLE . '-swipeapp', HD_DD_URL . 'assets/js/swipe/swipe-app.js', array( self::HANDLE . '-swipeview', self::HANDLE . '-wizard' ), $ver_js, true );
 		$this->register_designer3( $ver_js );
+		$this->register_designer4( $ver_js );
 
 		// Entry point: picks the flow (forced / A/B arm / default) and starts it.
 		wp_register_script(
 			self::HANDLE . '-boot',
 			HD_DD_URL . 'assets/js/boot.js',
-			array( self::HANDLE, self::HANDLE . '-swipeapp', self::HANDLE . '-d3app', self::HANDLE . '-experiment', self::HANDLE . '-funnel', self::HANDLE . '-apiclient' ),
+			array( self::HANDLE, self::HANDLE . '-swipeapp', self::HANDLE . '-d3app', self::HANDLE . '-d4app', self::HANDLE . '-experiment', self::HANDLE . '-funnel', self::HANDLE . '-apiclient' ),
 			$ver_js,
 			true
 		);
 		wp_register_style( self::HANDLE . '-swipe', HD_DD_URL . 'assets/css/hd-swipe.css', array( self::HANDLE ), $this->asset_version( 'assets/css/hd-swipe.css' ) );
 		wp_register_style( self::HANDLE . '-d3', HD_DD_URL . 'assets/css/hd-designer3.css', array( self::HANDLE ), $this->asset_version( 'assets/css/hd-designer3.css' ) );
+		wp_register_style( self::HANDLE . '-d4', HD_DD_URL . 'assets/css/hd-designer4.css', array( self::HANDLE . '-d3' ), $this->asset_version( 'assets/css/hd-designer4.css' ) );
 
 		wp_enqueue_style( self::HANDLE );
 		wp_enqueue_style( self::HANDLE . '-swipe' );
 		wp_enqueue_style( self::HANDLE . '-d3' );
+		wp_enqueue_style( self::HANDLE . '-d4' );
 		wp_enqueue_script( self::HANDLE . '-boot' );
 
 		// Localised onto the render model — the first script in every flow's dependency chain —
@@ -211,6 +214,29 @@ class HD_DD_Assets {
 			);
 			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer3/' . $def[0], $deps, $ver_js, true );
 		}
+	}
+
+	/** Designer 4 modules (assets/js/designer4/). Always loaded, like Designer 3's. */
+	private function register_designer4( $ver_js ) {
+		$h   = self::HANDLE . '-';
+		$mod = array(
+			'd4handle'    => 'd4-handle.js',
+			'd4doorway'   => 'd4-doorway.js',
+			'd4store'     => 'd4-store.js',
+			'd4ask'       => 'd4-ask.js',
+			'd4door'      => 'd4-door.js',
+			'd4sideglass' => 'd4-sideglass.js',
+			'd4steps'     => 'd4-steps.js',
+			'd4mydesigns' => 'd4-mydesigns.js',
+		);
+		foreach ( $mod as $key => $file ) {
+			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer4/' . $file, array(), $ver_js, true );
+		}
+		$deps = array( $h . 'd3app' );
+		foreach ( array_keys( $mod ) as $key ) {
+			$deps[] = $h . $key;
+		}
+		wp_register_script( $h . 'd4app', HD_DD_URL . 'assets/js/designer4/d4-app.js', $deps, $ver_js, true );
 	}
 
 	/** Decoded data/designer3-defaults.json, or null when it is missing or not valid JSON. */

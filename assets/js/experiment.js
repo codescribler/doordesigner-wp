@@ -26,13 +26,14 @@
 
   // The flow a saved design should reopen in, from GET design/{token}. '' = not recorded
   // (rows saved before this was stored): the caller falls back to the normal assignment.
-  // `caps` is a boolean (can run swipe2, the old form) or {swipe2:bool, designer3:bool}.
+  // `caps` is a boolean (can run swipe2, the old form) or {swipe2:bool, designer3:bool, designer4:bool}.
   function storedFlow(body, caps) {
     var f = canonical(body && body.flow);
     var c = (caps && typeof caps === 'object') ? caps : { swipe2: !!caps, designer3: false };
     if (f === 'classic') { return 'classic'; }
     if (f === 'swipe2') { return c.swipe2 ? 'swipe2' : 'classic'; }
     if (f === 'designer3') { return c.designer3 ? 'designer3' : 'classic'; }
+    if (f === 'designer4') { return c.designer4 ? 'designer4' : 'classic'; }
     return '';
   }
 
@@ -50,9 +51,15 @@
     return !!(renderModel && win) && D3_NEEDS.every(function (k) { return !!win[k]; });
   }
 
+  // Designer 4 needs everything Designer 3 does, plus its own app and modules.
+  var D4_NEEDS = D3_NEEDS.concat(['HD_DD_Designer4App', 'HD_DD_D4Handle', 'HD_DD_D4Doorway', 'HD_DD_D4Store', 'HD_DD_D4Ask', 'HD_DD_D4Door', 'HD_DD_D4SideGlass', 'HD_DD_D4Steps', 'HD_DD_D4MyDesigns']);
+  function canRunDesigner4(win, renderModel) {
+    return !!(renderModel && win) && D4_NEEDS.every(function (k) { return !!win[k]; });
+  }
+
   // Flows a forced value may name: the built-in ones plus whatever the config mentions.
   function knownFlows(cfg) {
-    var known = { classic: true, swipe2: true, designer3: true };
+    var known = { classic: true, swipe2: true, designer3: true, designer4: true };
     cfg = cfg || {};
     if (cfg['default']) { known[cfg['default']] = true; }
     if (cfg.experiment) {
@@ -221,5 +228,5 @@
     return (a && a.counted && a.experimentId) ? { experimentId: a.experimentId, visitorId: a.visitorId, arm: a.arm } : null;
   }
 
-  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, canRunDesigner3: canRunDesigner3, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, deviceKind: deviceKind, STORAGE_KEY: KEY };
+  return { canonical: canonical, storedFlow: storedFlow, canRunSwipe: canRunSwipe, canRunDesigner3: canRunDesigner3, canRunDesigner4: canRunDesigner4, assign: assign, resolve: resolve, expose: expose, forcedFlow: forcedFlow, enquiryRef: enquiryRef, deviceKind: deviceKind, STORAGE_KEY: KEY };
 }));

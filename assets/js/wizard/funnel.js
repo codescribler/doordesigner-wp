@@ -31,6 +31,15 @@
     more: 8, saved: 9, frame: 10, quoteform: 11, callback: 12
   };
 
+  // Designer 4 reports as 'door-designer-v5'. The email ask is the lead (funnel.lead()) and
+  // the step 'lead'; the doorway and details steps follow it.
+  var ORDER_V5 = {
+    opened: 0, type: 1, style: 2, shown: 3, handle_preview: 4, colour: 5, handle: 6, letterplate: 7,
+    knocker: 8, more: 9, nohandle: 10, lead: 11, doorway: 12, doorway_group: 13, doorway_exact: 14,
+    doorway_change: 15, doorway_skip: 16, details: 17, finished: 18, mydesigns: 19, door_added: 20,
+    door_removed: 21
+  };
+
   // "Don't count me": ?notrack=1 switches every designer analytics call off in this browser
   // and remembers it (localStorage), so the owner can use the live designer without skewing
   // the stats; ?notrack=0 switches it back on. Covers hdAnalytics funnel events and leads,
@@ -73,12 +82,15 @@
   var MILESTONES = {
     'door-designer': { shown: 'review', form: 'details' },     // classic: Review, then the form
     'door-designer-v3': { shown: 'review' },
-    'door-designer-v4': { shown: 'shown', form: 'quoteform' }  // Designer 3: the complete door
+    'door-designer-v4': { shown: 'shown', form: 'quoteform' }, // Designer 3: the complete door
+    // Designer 4: the email ask is the form; `extra` maps steps to their own milestones.
+    'door-designer-v5': { shown: 'shown', form: 'lead', extra: { doorway: 'doorway', doorway_exact: 'doorwaypicked', finished: 'details' } }
   };
   var BEFORE_CHOICE = { opened: true, browsed: true };
   function milestoneFor(name, key) {
     var m = MILESTONES[name];
     if (!m || !key || BEFORE_CHOICE[key]) { return ''; }
+    if (m.extra && m.extra[key]) { return m.extra[key]; }
     if (m.form === key) { return 'form'; }
     if (m.shown === key) { return 'shown'; }
     return 'started';
@@ -130,5 +142,5 @@
 
   var classic = create(FUNNEL, ORDER);
 
-  return { ORDER: ORDER, ORDER_V3: ORDER_V3, ORDER_V4: ORDER_V4, create: create, step: classic.step, lead: classic.lead, muted: muted, attach: attach, milestoneFor: milestoneFor };
+  return { ORDER: ORDER, ORDER_V3: ORDER_V3, ORDER_V4: ORDER_V4, ORDER_V5: ORDER_V5, create: create, step: classic.step, lead: classic.lead, muted: muted, attach: attach, milestoneFor: milestoneFor };
 }));
