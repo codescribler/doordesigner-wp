@@ -40,6 +40,7 @@ $files = array(
 	'd4steps'         => 'd4-steps.js',
 	'd4card'          => 'd4-card.js',
 	'd4mydesigns'     => 'd4-mydesigns.js',
+	'd4saved'         => 'd4-saved.js',
 	'd4app'           => 'd4-app.js',
 );
 foreach ( $files as $key => $file ) {

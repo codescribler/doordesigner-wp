@@ -13,7 +13,6 @@
 	var STEPS = { doorway: 1, details: 1, done: 1 };
 
 	function noop() {}
-	function trim(s) { return String(s == null ? '' : s).trim(); }
 	function Hd() { return W.HD_DD_D4Handle; }
 	function prefsFrom(map) { var out = {}; Object.keys(map || {}).forEach(function (h) { out[h] = [map[h]]; }); return out; }
 	function anyMissing(m) { return !m || Object.keys(m).some(function (k) { return !!m[k]; }); }
@@ -203,52 +202,10 @@
 	};
 
 	// ---- Entry points (boot.js and My designs) -------------------------------------------------
-	// Mirrors Designer 3's loadSaved. The door as saved (it always has a handle), the ask "sent". A
-	// door removed, or whose deal is closed, opens My designs (the list omits removed doors).
-	// screen: where a live door lands, 'door' (default) or 'doorway' (My designs). Nothing of a door
-	// open before carries over (My designs opens one door after another in the same visit).
-	P.loadSaved = function (token, screen) {
-		var self = this, fromDesigns = this.screen === 'designs';
-		// A late update from the previous door's saver must never send this door under its token.
-		if (this._saver && this._saver.setToken) { this._saver.setToken(null); }
-		this._saver = null; this._token = null; this.savedKind = null;
-		this.mine = {}; this.auto = {};
-		this.newDoor();
-		this.freshDoor = false;
-		this.previewDue = false;
-		this.reopened = true;     // no "we've got your door" line for it (d4-doorway-screen.js)
-		// A door that can't be opened from My designs goes back there with a line saying so.
-		function failed() { if (fromDesigns) { self.openFailed = true; self.go('designs'); } else { self.render(); } }
-		if (W.HD_DD_D3Screens && W.HD_DD_D3Screens.loading) { W.HD_DD_D3Screens.loading(this); }
-		Promise.resolve(this.api('design/' + encodeURIComponent(token), { method: 'GET' })).then(function (res) {
-			var saved = res && res.ok && res.body && res.body.design;
-			var t = saved && saved['Door Type'] && saved['Door Type'].label;
-			var s = saved && saved['Door Design'] && saved['Door Design'].label;
-			if (!t || !self.cv.byType[t]) { failed(); return; }
-			self.wiz.selectType(t);
-			if (!s || !self.build(s, prefsFrom(saved))) { self.go('style'); return; }
-			var defs = self.defaultsFor(s);
-			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design' && !(defs[h] != null && trim(defs[h]) === trim(saved[h].label))) { self.mine[h] = saved[h].label; } });
-			if (self.store) { self.store.addToken(token); }
-			return self.openListed(token, screen);
-		}).catch(failed);
-	};
-
-	P.openListed = function (token, screen) {
-		var self = this;
-		function open(res) {
-			var body = res && res.ok && res.body;
-			if (body && body.missing) { self.missing = body.missing; }
-			var doors = body && Array.isArray(body.doors) ? body.doors : null;
-			var door = doors ? doors.filter(function (d) { return d && d.token === token; })[0] : null;
-			if (doors && (!door || door.status === 'closed')) { self.go('designs'); return; }
-			self.savedToken = token;   // the ask shows "saved" and changes save through update()
-			if (door && door.frame && W.HD_DD_D4Steps) { W.HD_DD_D4Steps.state(self).answered = true; }   // its doorway is on record
-			self.go(screen === 'doorway' ? 'doorway' : 'door');
-		}
-		if (!this.store || !this.store.list) { open(null); return Promise.resolve(); }
-		return Promise.resolve(this.store.list()).then(open, function () { open(null); });
-	};
+	// Opening a stored door lives in d4-saved.js. loadSaved: one of this visitor's doors (My
+	// designs), screen 'door' (default) or 'doorway'.
+	P.loadSaved = function (token, screen) { return W.HD_DD_D4Saved.loadSaved(this, token, screen); };
+	P.openListed = function (token, screen) { return W.HD_DD_D4Saved.openListed(this, token, screen); };
 
 	// The emailed link: {token, k} proves the email, then My designs.
 	P.loadDesigns = function (token, k) {

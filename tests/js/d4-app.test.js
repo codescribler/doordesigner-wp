@@ -45,6 +45,7 @@ window.HD_DD_D3Toolbox = require('../../assets/js/designer3/d3-toolbox.js');
 window.HD_DD_D4Handle = require('../../assets/js/designer4/d4-handle.js');
 window.HD_DD_D4Ask = require('../../assets/js/designer4/d4-ask.js');
 require('../../assets/js/designer3/d3-app.js');
+require('../../assets/js/designer4/d4-saved.js');
 require('../../assets/js/designer4/d4-app.js');
 var App = window.HD_DD_Designer4App;
 var D3App = window.HD_DD_Designer3App;

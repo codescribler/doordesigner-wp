@@ -232,6 +232,7 @@ class HD_DD_Assets {
 			'd4steps'         => 'd4-steps.js',
 			'd4card'          => 'd4-card.js',
 			'd4mydesigns'     => 'd4-mydesigns.js',
+			'd4saved'         => 'd4-saved.js',
 		);
 		foreach ( $mod as $key => $file ) {
 			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer4/' . $file, array(), $ver_js, true );
