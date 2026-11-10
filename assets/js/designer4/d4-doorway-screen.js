@@ -45,15 +45,18 @@
 		return rel && base ? String(base).replace(/\/?$/, '/') + rel : '';
 	}
 
+	function current(app) { return Number((app.design()['Frame Design'] || {}).id) || null; }
+
 	// The per-door state; a door that already carries a doorway (other than the default "just the
-	// door") shows it picked.
+	// door") shows it picked. A remembered pick the design no longer has (the frame was changed
+	// elsewhere) gives way to the design's actual frame.
 	function state(app) {
-		var st = Steps().state(app);
+		var st = Steps().state(app), id = current(app);
 		if (!st.seeded) {
 			st.seeded = true;
-			var id = Number((app.design()['Frame Design'] || {}).id);
 			if (id && id !== 1 && D().familyOf(id)) { st.exact = id; }
 		}
+		if (st.exact != null && st.exact !== id) { st.exact = (id && D().familyOf(id)) ? id : null; }
 		if (st.exact != null) { st.family = D().familyOf(st.exact); }
 		return st;
 	}
@@ -67,19 +70,22 @@
 		});
 	}
 	// Saved to the door's record. Not blocking: a failure shows nothing and the visitor goes on.
-	function send(app, body) {
-		var t = token(app);
+	function send(app, body, t) {
+		t = t || token(app);
 		if (!t || !app.store || !app.store.update) { return; }
 		try { Promise.resolve(app.store.update(t, body)).catch(noop); } catch (e) { /* not blocking */ }
 	}
-	function savePicked(app) {
+	// Only the newest pick is sent, once its paint is done, with this screen's own canvas.
+	function savePicked(app, st, canvas) {
+		var seq = st.seq = (st.seq || 0) + 1, t = token(app);
 		painted(app).then(function () {
+			if (st.seq !== seq || app.d4steps !== st) { return; }   // a later pick, or another door
 			var E = W.HD_DD_Enquiry;
 			var body = { design: E ? E.cleanDesign(app.design()) : app.design(), doorway: 'picked' };
 			var shot = null;
-			try { shot = E ? E.snapshot(app.canvas) : null; } catch (e) { shot = null; }
+			try { shot = E ? E.snapshot(canvas) : null; } catch (e) { shot = null; }
 			if (shot) { body.image = shot; }
-			send(app, body);
+			send(app, body, t);
 		});
 	}
 
@@ -91,15 +97,19 @@
 		frame.appendChild(canvas); box.appendChild(frame); wrap.appendChild(box);
 		app.canvas = canvas;
 		var comp = (W.HD_DD_Preview && app.model) ? W.HD_DD_Preview.create(canvas, { model: app.model, assetBase: app.assetBase() }) : null;
-		return function paint() {
-			var p = null;
-			if (comp) { try { p = comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
-			return app.painted(p);
+		return {
+			canvas: canvas,
+			paint: function () {
+				var p = null;
+				if (comp) { try { p = comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
+				return app.painted(p);
+			}
 		};
 	}
 
-	function tile(app, id, label, on, onPick) {
+	function tile(app, key, id, label, on, onPick) {
 		var b = button('hd-d4-tile' + (on ? ' is-on' : ''), null, onPick);
+		b.setAttribute('data-k', key);
 		b.setAttribute('aria-pressed', on ? 'true' : 'false');
 		var im = el('img'); im.alt = ''; im.src = picUrl(app, id);
 		b.appendChild(im);
@@ -108,7 +118,7 @@
 	}
 
 	function render(app, shell) {
-		var S = Steps(), st = state(app);
+		var S = Steps(), st = state(app), TB = W.HD_DD_D3Toolbox;
 		S.once(app, 'doorway');
 		shell.appendChild(S.strip(app, 'doorway'));
 		var mail = S.email(app);
@@ -118,24 +128,28 @@
 		shell.appendChild(head);
 		shell.appendChild(el('p', 'hd-d3-help', COPY.help));
 		var wrap = el('div', 'hd-d4-doorway');
-		var paint = stage(app, wrap);
+		var view = stage(app, wrap);
 		var side = el('div', 'hd-d4-doorway__side');
 		wrap.appendChild(side);
 		shell.appendChild(wrap);
 		var fams = D().families(frameChoices(app));
 
-		function pickExact(id, changed) {
+		// doorway_change once per change of mind: a different exact layout in the family of the
+		// last exact pick (a pick that completes a just-changed family was counted by the family).
+		function pickExact(id) {
 			var choice = frameChoice(app, id);
 			if (!choice) { return; }
-			if (st.exact === id) { redraw(); return; }
-			if (st.exact != null && !changed) { app.funnel.step('doorway_change', caption(id)); }
+			if (st.exact === id && current(app) === id) { redraw(); return; }
+			if (st.exact != null && st.exact !== id && D().familyOf(st.exact) === D().familyOf(id)) {
+				app.funnel.step('doorway_change', caption(id));
+			}
 			st.exact = id; st.family = D().familyOf(id);
 			app.select('Frame Design', { label: choice.label, id: choice.id });
 			if (W.HD_DD_D4SideGlass) { W.HD_DD_D4SideGlass.glazeSides(app); }
 			if (W.HD_DD_D3FrameStep) { W.HD_DD_D3FrameStep.fixSideGlass(app); }
 			redraw();
 			app.funnel.step('doorway_exact', caption(id));
-			savePicked(app);
+			savePicked(app, st, view.canvas);
 		}
 		function pickFamily(f) {
 			if (st.family === f.key) { return; }
@@ -143,7 +157,14 @@
 			st.family = f.key;
 			app.funnel.step('doorway_group', f.label);
 			if (changed) { app.funnel.step('doorway_change', f.label); }
-			if (f.ids.length === 1) { pickExact(f.ids[0], changed); } else { redraw(); }
+			if (f.ids.length === 1) { pickExact(f.ids[0]); } else { redraw(); }
+		}
+		function skip() {
+			if (st.exact == null) {   // after a pick there is nothing to skip: just go on
+				app.funnel.step('doorway_skip');
+				send(app, { doorway: 'skipped' });
+			}
+			app.go(S.afterDoorway(app));
 		}
 		function row(cls, q, list) {
 			side.appendChild(el('p', 'hd-d4-question', q));
@@ -151,15 +172,14 @@
 			list.forEach(function (t) { tiles.appendChild(t); });
 			side.appendChild(tiles);
 		}
-		function redraw() {
-			side.innerHTML = '';
+		function draw() {
 			row('hd-d4-tiles--family', COPY.closest, fams.map(function (f) {
-				return tile(app, f.pic, f.label, st.family === f.key, function () { pickFamily(f); });
+				return tile(app, 'fam:' + f.key, f.pic, f.label, st.family === f.key, function () { pickFamily(f); });
 			}));
 			var fam = fams.filter(function (f) { return f.key === st.family; })[0];
 			if (fam && fam.ids.length > 1) {
 				row('hd-d4-tiles--exact', COPY.exactly, fam.ids.map(function (id) {
-					return tile(app, id, caption(id), st.exact === id, function () { pickExact(id, false); });
+					return tile(app, 'exact:' + id, id, caption(id), st.exact === id, function () { pickExact(id); });
 				}));
 			}
 			var picked = st.exact != null && D().familyOf(st.exact) === st.family;
@@ -172,13 +192,16 @@
 			var next = button('hd-d3-cta hd-d4-next', COPY.next, function () { if (picked) { app.go(S.afterDoorway(app)); } });
 			next.disabled = !picked;
 			foot.appendChild(next);
-			foot.appendChild(button('hd-d4-skip', COPY.skip, function () {
-				app.funnel.step('doorway_skip');
-				send(app, { doorway: 'skipped' });
-				app.go(S.afterDoorway(app));
-			}));
+			foot.appendChild(button('hd-d4-skip', COPY.skip, skip));
 			side.appendChild(foot);
-			paint();
+		}
+		// Rebuilt on every pick; keyboard focus stays on the tile or chip that was pressed.
+		function redraw() {
+			var keep = TB ? TB.focusedKey([side]) : null;
+			side.innerHTML = '';
+			draw();
+			if (TB) { TB.restoreFocus([side], keep); }
+			view.paint();
 		}
 		redraw();
 	}
