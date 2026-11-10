@@ -59,6 +59,7 @@ require('../../../assets/js/designer3/d3-app.js');
 require('../../../assets/js/designer4/d4-sideglass.js');
 require('../../../assets/js/designer4/d4-doorway-screen.js');
 require('../../../assets/js/designer4/d4-steps.js');
+require('../../../assets/js/designer4/d4-saved.js');
 require('../../../assets/js/designer4/d4-app.js');
 var Doorway = window.HD_DD_D4Doorway;
 
