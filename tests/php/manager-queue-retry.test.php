@@ -58,10 +58,11 @@ HD_DD_Manager_Queue::run();
 $r = $GLOBALS['wpdb']->rows[0];
 check( 1 === (int) $r['attempts'] && ! array_key_exists( 'last_error', $r ), 'on an un-upgraded table the attempt is counted without writing last_error' );
 
-// 4) A row that has failed 8 times no longer blocks newer rows; it is still retried when due.
+// 4) A row that has failed 8 times no longer blocks other customers' newer rows; it is still retried
+// when due. (Its own customer's later rows wait for it: manager-queue-order.test.php.)
 hd_test_q_reset();
 HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-STUCK' ) );
-HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-FRESH' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-FRESH', 'sam@example.com' ) );
 $now = time();
 for ( $i = 0; $i < 7; $i++ ) {
 	$GLOBALS['hd_test_http_replies'][] = hd_test_reply( 500 );
@@ -80,7 +81,7 @@ HD_DD_Manager_Queue::run( $now + 10 );
 check( array( 'HD-FRESH' ) === hd_rq_sent_refs(), 'the next run skips the stuck row and sends the fresh row' );
 check( ! empty( $GLOBALS['wpdb']->rows[1]['done_at'] ) && empty( $GLOBALS['wpdb']->rows[0]['done_at'] ), 'the fresh row is delivered; the stuck row still waits' );
 // When due again the stuck row is retried, and a failure there does not stop the rows after it.
-HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-NEWER' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-NEWER', 'jo@example.com' ) );
 $GLOBALS['hd_test_http'] = array();
 $GLOBALS['hd_test_http_replies'] = array( hd_test_reply( 500 ), hd_test_reply( 200 ) );
 HD_DD_Manager_Queue::run( $now + 3601 );
@@ -90,7 +91,7 @@ check( 9 === (int) $GLOBALS['wpdb']->rows[0]['attempts'] && ! empty( $GLOBALS['w
 // 5) Stuck rows that are not due do not take the batch's places.
 hd_test_q_reset();
 foreach ( range( 1, 26 ) as $i ) { HD_DD_Manager_Queue::enqueue( hd_test_event( "HD-S$i" ) ); }
-HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-LAST' ) );
+HD_DD_Manager_Queue::enqueue( hd_test_event( 'HD-LAST', 'sam@example.com' ) );
 foreach ( range( 0, 25 ) as $i ) {
 	$GLOBALS['wpdb']->rows[ $i ]['attempts'] = 8;
 	$GLOBALS['wpdb']->rows[ $i ]['next_at']  = gmdate( 'Y-m-d H:i:s', time() + 1800 );

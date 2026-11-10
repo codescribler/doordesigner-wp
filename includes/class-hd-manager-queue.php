@@ -169,6 +169,9 @@ class HD_DD_Manager_Queue {
 	 * events reach the manager in the order they happened. The exception is a row that has
 	 * already failed STUCK times: it is skipped while it waits, and its next failure does not stop
 	 * the run, so one event the manager keeps refusing never holds the newer ones back for ever.
+	 * Its own customer's later events (same email or same door reference) are held back untouched
+	 * while it waits or fails, so the manager never sees a customer's events out of order; other
+	 * customers' events keep flowing. A final refusal holds nothing back.
 	 *
 	 * @return int Events delivered.
 	 */
@@ -182,15 +185,20 @@ class HD_DD_Manager_Queue {
 		// Stuck rows that are not due are left out, so they cannot fill the batch.
 		$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $t . ' WHERE done_at IS NULL AND ( attempts < %d OR next_at <= %s ) ORDER BY id ASC LIMIT %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), self::BATCH ) );
 		$sent = 0;
+		$held = self::held_by_earlier( $rows, $now );
 		foreach ( $rows as $row ) {
 			$stuck = (int) $row->attempts >= self::STUCK;
+			$event = json_decode( (string) $row->body, true );
+			if ( self::is_held( $held, $event ) ) {
+				continue; // an earlier event of this customer has not gone yet: untouched this run.
+			}
 			if ( strtotime( $row->next_at . ' UTC' ) > $now || ! self::claim( $row, $now ) ) {
 				if ( $stuck ) {
+					self::hold( $held, $event );
 					continue;
 				}
 				break;
 			}
-			$event = json_decode( (string) $row->body, true );
 			if ( ! is_array( $event ) ) {
 				self::finish( $row, $now, 'bad_body' );
 				continue;
@@ -218,9 +226,52 @@ class HD_DD_Manager_Queue {
 				if ( ! $stuck ) {
 					break;
 				}
+				self::hold( $held, $event );
 			}
 		}
 		return $sent;
+	}
+
+	/**
+	 * The customers held back before the batch starts: those of earlier stuck rows that are not
+	 * due (the batch query leaves them out). One query, undelivered rows only.
+	 *
+	 * @return array{emails:array,refs:array}
+	 */
+	private static function held_by_earlier( array $rows, $now ) {
+		global $wpdb;
+		$held = array( 'emails' => array(), 'refs' => array() );
+		if ( ! $rows ) {
+			return $held;
+		}
+		$last    = (int) end( $rows )->id;
+		$waiting = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT id, body FROM ' . self::table() . ' WHERE done_at IS NULL AND attempts >= %d AND next_at > %s AND id < %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), $last ) );
+		foreach ( $waiting as $w ) {
+			self::hold( $held, json_decode( (string) $w->body, true ) );
+		}
+		return $held;
+	}
+
+	/** The event's customer keys: its email (trimmed, lower case) and its door reference. */
+	private static function keys_of( $event ) {
+		$email = ( is_array( $event ) && isset( $event['email'] ) && is_scalar( $event['email'] ) ) ? strtolower( trim( (string) $event['email'] ) ) : '';
+		$ref   = ( is_array( $event ) && isset( $event['door']['reference'] ) && is_scalar( $event['door']['reference'] ) ) ? trim( (string) $event['door']['reference'] ) : '';
+		return array( $email, $ref );
+	}
+
+	private static function hold( array &$held, $event ) {
+		list( $email, $ref ) = self::keys_of( $event );
+		if ( '' !== $email ) {
+			$held['emails'][ $email ] = true;
+		}
+		if ( '' !== $ref ) {
+			$held['refs'][ $ref ] = true;
+		}
+	}
+
+	private static function is_held( array $held, $event ) {
+		list( $email, $ref ) = self::keys_of( $event );
+		return ( '' !== $email && isset( $held['emails'][ $email ] ) ) || ( '' !== $ref && isset( $held['refs'][ $ref ] ) );
 	}
 
 	/** Hold the row for a while so a second run skips it. False when someone else holds it. */

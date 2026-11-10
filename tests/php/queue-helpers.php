@@ -10,6 +10,8 @@ require_once HD_DD_DIR . 'includes/class-hd-manager-queue.php';
 class HD_Test_Queue_WPDB extends HD_Test_WPDB {
 	/** False = the queue table is missing (SHOW TABLES finds nothing). */
 	public $has_table = true;
+	/** How many times the earlier-stuck-rows query ran. */
+	public $hold_queries = 0;
 	private function pending_rows() {
 		return array_filter( $this->rows, function ( $r ) { return empty( $r['done_at'] ); } );
 	}
@@ -32,6 +34,12 @@ class HD_Test_Queue_WPDB extends HD_Test_WPDB {
 		// Refused for good: failed IS NOT NULL AND done_at >= 'cut' GROUP BY failed.
 		if ( preg_match( "/failed IS NOT NULL AND done_at >= '([^']*)' GROUP BY failed/", $q, $m ) ) {
 			return $this->grouped( array_filter( $this->rows, function ( $r ) use ( $m ) { return ! empty( $r['failed'] ) && ! empty( $r['done_at'] ) && $r['done_at'] >= $m[1]; } ), 'failed' );
+		}
+		// Earlier stuck rows that are not due: SELECT id, body … attempts >= N AND next_at > 'now' AND id < M.
+		if ( preg_match( "/^SELECT id, body FROM wp_hd_dd_manager_queue WHERE done_at IS NULL AND attempts >= (\d+) AND next_at > '([^']*)' AND id < (\d+)/", $q, $m ) ) {
+			$this->hold_queries++;
+			$rows = array_filter( $this->pending_rows(), function ( $r ) use ( $m ) { return (int) $r['attempts'] >= (int) $m[1] && $r['next_at'] > $m[2] && (int) $r['id'] < (int) $m[3]; } );
+			return array_values( array_map( function ( $r ) { return (object) array( 'id' => $r['id'], 'body' => $r['body'] ); }, $rows ) );
 		}
 		$rows = $this->pending_rows();
 		// The batch: AND ( attempts < N OR next_at <= 'now' ) leaves out stuck rows that are not due.
@@ -72,6 +80,6 @@ function hd_test_reply( $code, $body = array() ) {
 function hd_test_error_reply( $code, $error_code ) {
 	return hd_test_reply( $code, array( 'error' => array( 'code' => $error_code, 'message' => 'x' ) ) );
 }
-function hd_test_event( $ref = 'HD-2026-000090' ) {
-	return array( 'type' => 'door_added', 'email' => 'nicola@example.com', 'door' => array( 'reference' => $ref ) );
+function hd_test_event( $ref = 'HD-2026-000090', $email = 'nicola@example.com', $type = 'door_added' ) {
+	return array( 'type' => $type, 'email' => $email, 'door' => array( 'reference' => $ref ) );
 }
