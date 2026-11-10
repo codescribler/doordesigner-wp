@@ -25,7 +25,7 @@
     ?door_type=Single%20Door   start with the type chosen, as the site's door_type links do
     ?lead=fake        give the app a restUrl so the email box really "sends" to the fake d4/lead
                       (the token, doorway saves and "Add this door" then go through d4/lead and d4/door)
-    ?fail=designs,remove,open,details   make those fake calls fail, to see the error lines
+    ?fail=designs,remove,open,details,update   make those fake calls fail, to see the error lines
     ?slow=1           answer the fake calls after 1.5s instead of 0.25s, to see the loading lines
     ?motion=reduce    tell the app reduced motion is on (no handle preview) and switch off every
                       CSS animation on the page; the real check is the OS / devtools setting

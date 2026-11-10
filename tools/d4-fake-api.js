@@ -6,7 +6,7 @@
 // a doorway, tC on a closed deal. The designs reply says the postcode is missing and older: true.
 //
 //   HD_DD_D4FakeApi.create(URLSearchParams) -> api(path, opts) -> Promise<{ ok, status, body }>
-//   ?fail=designs,remove,open,details makes those calls fail; ?slow=1 answers after 1.5s.
+//   ?fail=designs,remove,open,details,update makes those calls fail; ?slow=1 answers after 1.5s.
 (function (W) {
   'use strict';
 
@@ -65,6 +65,7 @@
       return reply(200, { ok: true, token: t, reference: 'HD-2026-0000' + seq });
     }
     function update(d, body) {
+      if (failing('update')) { return reply(500, { ok: false, message: 'Something went wrong. Please try again.' }); }
       if (!d) { return reply(409, { ok: false, code: 'door_removed', message: 'That door has been removed.' }); }
       if (d.status === 'closed') { return reply(409, { ok: false, code: 'deal_closed', message: 'That door can no longer be changed.' }); }
       if (body.design) { d.design = body.design; }
