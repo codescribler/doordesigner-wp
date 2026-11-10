@@ -259,6 +259,8 @@
 @media (max-width: 719px) {   /* labels over the door's edges: a 44px tap area, a smaller pill */
   .hd-d4-callout { height: 44px; padding: 0 9px; font-size: 12.5px; }
   .hd-d4-callout::before { inset: 9px 0; }
+  /* With the options sheet open the door is small: show the door (focus is in the sheet). */
+  .hd-d4.is-sheet .hd-d4-callouts, .hd-d4.is-sheet .hd-d4-bubble { display: none; }
 }
 @media (min-width: 560px) {
   .hd-d4-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }

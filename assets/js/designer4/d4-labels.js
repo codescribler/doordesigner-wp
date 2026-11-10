@@ -36,12 +36,13 @@
 		var C = W.HD_DD_D4Callouts, TB = W.HD_DD_D3Toolbox;
 		var names = (W.HD_DD_D3Screens && W.HD_DD_D3Screens.DOT_NAMES) || {};
 		var frame = q(shell, 'hd-d3-frame'), stage = q(shell, 'hd-d3-stage') || (frame && frame.parentNode);
-		var layer = el('div', 'hd-d4-callouts'), boxes = {}, area = null, watch = null;
+		var layer = el('div', 'hd-d4-callouts'), boxes = {}, area = null;
 		// First in the frame, so focus keeping finds a label before its hidden dot twin.
 		if (frame) { frame.insertBefore(layer, frame.firstChild || null); }
 
+		// The same test Designer 3's door sizing makes (window.matchMedia); app.matchMedia without one.
 		function phone() {
-			var mm = app.matchMedia || (W.matchMedia ? function (s) { return W.matchMedia(s); } : null);
+			var mm = typeof W.matchMedia === 'function' ? function (s) { return W.matchMedia(s); } : app.matchMedia;
 			try { return !!(mm && mm(PHONE).matches); } catch (e) { return false; }
 		}
 		// The door picture and where labels may go, in px from the picture's top-left corner.
@@ -119,18 +120,30 @@
 			if (TB && TB.restoreFocus) { TB.restoreFocus([layer], keep); }
 		}
 
-		// Follow Designer 3's paints (it empties and refills its dots layer on each).
-		var dots = q(shell, 'hd-d3-dots');
+		// Follow Designer 3's paints (it empties and refills its dots layer on each) and the door
+		// picture's size (the canvas takes its height once its picture has loaded, after the paint).
+		function redraw() { draw(); if (onDraw) { onDraw(); } }
+		var dots = q(shell, 'hd-d3-dots'), watch = [], lastW = 0, lastH = 0;
 		if (dots && typeof W.MutationObserver === 'function') {
-			watch = new W.MutationObserver(function () { draw(); if (onDraw) { onDraw(); } });
-			watch.observe(dots, { childList: true });
+			watch.push(new W.MutationObserver(redraw));
+			watch[0].observe(dots, { childList: true });
+		}
+		if (frame && typeof W.ResizeObserver === 'function') {
+			var ro = new W.ResizeObserver(function () {
+				var f = rect(frame);
+				if (!f || (f.width === lastW && f.height === lastH)) { return; }
+				lastW = f.width; lastH = f.height;
+				redraw();
+			});
+			ro.observe(frame);
+			watch.push(ro);
 		}
 
 		return {
 			draw: draw,
 			box: function (key) { return boxes[key] || null; },
 			bounds: function () { return area; },
-			destroy: function () { if (watch) { watch.disconnect(); watch = null; } }
+			destroy: function () { watch.forEach(function (w) { w.disconnect(); }); watch = []; }
 		};
 	}
 
