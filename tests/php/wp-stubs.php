@@ -62,6 +62,8 @@ function hd_test_reset() {
 	$GLOBALS['hd_test_cookie_uid'] = false;
 	$GLOBALS['hd_test_can']        = true;
 	$GLOBALS['hd_test_cron']       = array();
+	$GLOBALS['hd_test_http']       = array();
+	unset( $GLOBALS['hd_test_http_reply'] );
 	$_SERVER['REMOTE_ADDR']        = '203.0.113.5';
 	if ( is_file( HD_TEST_ERROR_LOG ) ) {
 		unlink( HD_TEST_ERROR_LOG );
@@ -168,16 +170,51 @@ class HD_Test_WPDB {
 				if ( isset( $r['token'] ) && $r['token'] === $m[1] ) { return (object) $r; }
 			}
 		}
+		if ( preg_match( '/WHERE id = (\d+)$/', $q, $m ) ) {
+			foreach ( $this->rows as $r ) {
+				if ( (int) $r['id'] === (int) $m[1] ) { return (object) $r; }
+			}
+		}
+		if ( preg_match( "/WHERE customer_email = '([^']*)'/", $q, $m ) ) {
+			$rows = $this->by_email( $q );
+			return $rows ? $rows[0] : null;
+		}
 		return null;
 	}
-	public function get_results( $q ) { return array(); }
+	/** Rows for "WHERE customer_email = '…' [AND flow = '…'] [AND removed_at IS NULL] ORDER BY created_at DESC, id DESC". */
+	private function by_email( $q ) {
+		if ( ! preg_match( "/WHERE customer_email = '([^']*)'/", $q, $m ) ) { return array(); }
+		$email = strtolower( stripslashes( $m[1] ) ); // MySQL's collation ignores case.
+		$flow  = preg_match( "/AND flow = '([^']*)'/", $q, $f ) ? stripslashes( $f[1] ) : null;
+		$live  = false !== strpos( $q, 'AND removed_at IS NULL' );
+		$out   = array();
+		foreach ( $this->rows as $r ) {
+			if ( strtolower( (string) $r['customer_email'] ) !== $email ) { continue; }
+			if ( null !== $flow && ( isset( $r['flow'] ) ? $r['flow'] : '' ) !== $flow ) { continue; }
+			if ( $live && ! empty( $r['removed_at'] ) ) { continue; }
+			$out[] = (object) $r;
+		}
+		usort( $out, function ( $a, $b ) { return strcmp( $b->created_at . sprintf( '%012d', $b->id ), $a->created_at . sprintf( '%012d', $a->id ) ); } );
+		return $out;
+	}
+	public function get_results( $q ) {
+		return false !== strpos( $q, "WHERE customer_email = '" ) ? $this->by_email( $q ) : array();
+	}
 	public function get_var( $q ) {
 		if ( preg_match( "/^SHOW COLUMNS FROM \S+ LIKE '([^']*)'$/", $q, $m ) ) {
 			return ( null === $this->columns || in_array( $m[1], $this->columns, true ) ) ? $m[1] : null;
 		}
 		return count( $this->rows );
 	}
-	public function query( $q ) { return 0; }
+	public function query( $q ) {
+		// "UPDATE … SET <col> = '<time>' WHERE id = N AND <col> IS NULL": set a time column once.
+		if ( preg_match( '/^UPDATE \S+ SET (\w+) = [\x27]([^\x27]*)[\x27] WHERE id = (\d+) AND \w+ IS NULL$/', $q, $m ) ) {
+			foreach ( $this->rows as &$r ) {
+				if ( (int) $r['id'] === (int) $m[3] && empty( $r[ $m[1] ] ) ) { $r[ $m[1] ] = $m[2]; return 1; }
+			}
+		}
+		return 0;
+	}
 	public function get_charset_collate() { return ''; }
 }
 
@@ -223,9 +260,11 @@ function admin_url( $path = '' ) { return 'https://example.test/wp-admin/' . ltr
 function current_user_can( $cap ) { return ! empty( $GLOBALS['hd_test_can'] ); }
 function wp_next_scheduled( $hook ) { return isset( $GLOBALS['hd_test_cron'][ $hook ] ) ? $GLOBALS['hd_test_cron'][ $hook ] : false; }
 function wp_schedule_event( $ts, $recurrence, $hook ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; return true; }
+function wp_schedule_single_event( $ts, $hook, $args = array() ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; return true; }
 function wp_clear_scheduled_hook( $hook ) { unset( $GLOBALS['hd_test_cron'][ $hook ] ); return 1; }
 function delete_transient( $k ) { unset( $GLOBALS['hd_test_transients'][ $k ] ); return true; }
 function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) { $GLOBALS['hd_test_mail'][] = compact( 'to', 'subject', 'message', 'headers', 'attachments' ); return true; }
+function wp_remote_post( $url, $args = array() ) { $GLOBALS['hd_test_http'][] = compact( 'url', 'args' ); return isset( $GLOBALS['hd_test_http_reply'] ) ? $GLOBALS['hd_test_http_reply'] : array( 'response' => array( 'code' => 200 ), 'body' => '{}' ); }
 function wp_create_nonce( $action = -1 ) { return 'test-nonce-uid' . (int) $GLOBALS['hd_test_user_id']; }
 function wp_verify_nonce( $nonce, $action = -1 ) { return $nonce === wp_create_nonce( $action ) ? 1 : false; }
 function wp_validate_auth_cookie( $cookie = '', $scheme = '' ) { return $GLOBALS['hd_test_cookie_uid']; }

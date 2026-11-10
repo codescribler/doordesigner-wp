@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 class HD_DD_Repository {
 
-	const DB_VERSION = '4';
+	const DB_VERSION = '5';
 
 	/** Row kinds: a saved design, a quote request, or a call back request. */
 	const KINDS = array( 'save', 'enquiry', 'callback' );
@@ -34,7 +34,7 @@ class HD_DD_Repository {
 	public static function maybe_upgrade() {
 		if ( ! self::schema_current() ) {
 			self::create_table();
-			if ( self::has_columns( array( 'kind', 'flow' ) ) ) {
+			if ( self::has_columns( array( 'kind', 'flow', 'removed_at', 'doorway_at', 'details_at' ) ) ) {
 				update_option( 'hd_dd_db_version', self::DB_VERSION, false );
 			}
 		}
@@ -86,6 +86,9 @@ class HD_DD_Repository {
 			design_name VARCHAR(120) NOT NULL DEFAULT '',
 			kind VARCHAR(10) NOT NULL DEFAULT 'enquiry',
 			flow VARCHAR(20) NOT NULL DEFAULT '',
+			removed_at DATETIME NULL DEFAULT NULL,
+			doorway_at DATETIME NULL DEFAULT NULL,
+			details_at DATETIME NULL DEFAULT NULL,
 			design LONGTEXT NULL,
 			payload LONGTEXT NULL,
 			source_ip VARCHAR(45) NOT NULL DEFAULT '',
@@ -94,7 +97,8 @@ class HD_DD_Repository {
 			UNIQUE KEY token (token),
 			KEY created_at (created_at),
 			KEY status (status),
-			KEY kind (kind)
+			KEY kind (kind),
+			KEY customer_email (customer_email)
 		) {$charset_collate};";
 
 		dbDelta( $sql );
@@ -318,6 +322,54 @@ class HD_DD_Repository {
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
 		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", (int) $id ) );
+	}
+
+	/**
+	 * A person's doors in one flow, newest first. The email matches without regard to case
+	 * (the column collation does that in MySQL). Removed doors are left out unless asked for.
+	 *
+	 * @return array Row objects.
+	 */
+	public function list_by_email( $email, $flow = 'designer4', $include_removed = false ) {
+		global $wpdb;
+		$email = trim( (string) $email );
+		if ( '' === $email ) {
+			return array();
+		}
+		$table   = self::table();
+		$removed = $include_removed ? '' : ' AND removed_at IS NULL';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name and the removed clause are internal.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE customer_email = %s AND flow = %s{$removed} ORDER BY created_at DESC, id DESC", $email, (string) $flow ) );
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/** Hide a door from its owner's list. The first removal time is kept. */
+	public function mark_removed( $id ) {
+		return $this->set_time_once( $id, 'removed_at' );
+	}
+
+	/** Record when a door first reached a step ('doorway_at' or 'details_at'). Written once. */
+	public function mark_step( $id, $column ) {
+		if ( ! in_array( $column, array( 'doorway_at', 'details_at' ), true ) ) {
+			return false;
+		}
+		return $this->set_time_once( $id, $column );
+	}
+
+	/** Set a time column to now only while it is empty; true when it is set afterwards. */
+	private function set_time_once( $id, $column ) {
+		global $wpdb;
+		$table = self::table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table and column names are internal.
+		$done = $wpdb->query( $wpdb->prepare( "UPDATE {$table} SET {$column} = %s WHERE id = %d AND {$column} IS NULL", current_time( 'mysql' ), (int) $id ) );
+		if ( false === $done ) {
+			return false;
+		}
+		if ( $done > 0 ) {
+			return true;
+		}
+		$row = $this->get( $id );
+		return $row && ! empty( $row->$column );
 	}
 
 	/** @return int */

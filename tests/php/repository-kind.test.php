@@ -42,7 +42,7 @@ check( is_string( $wpdb->rows[1]['payload'] ) && false !== strpos( $wpdb->rows[1
 check( 0 === $repo->update_row( $b['id'], array( 'reference' => 'HACK' ) ), 'nothing writable: nothing done' );
 
 check( array( 'enquiry' => 0, 'save' => 0, 'callback' => 0 ) === $repo->count_by_kind(), 'count_by_kind always has all three keys' );
-check( '4' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the columns are added on update' );
+check( '5' === HD_DD_Repository::DB_VERSION, 'schema version bumped so the columns are added on update' );
 
 // --- Schema upgrade: the version only moves once the new columns really exist (A4) ----------
 hd_test_reset();
@@ -61,7 +61,7 @@ check( 2 === count( $GLOBALS['hd_test_dbdelta'] ) && '3' === get_option( 'hd_dd_
 $wpdb->columns = array( 'id', 'reference', 'token', 'kind' );
 HD_DD_Repository::maybe_upgrade();
 check( '3' === get_option( 'hd_dd_db_version' ), 'one of the two columns is not enough' );
-$wpdb->columns = array( 'id', 'reference', 'token', 'kind', 'flow' );
+$wpdb->columns = array( 'id', 'reference', 'token', 'kind', 'flow', 'removed_at', 'doorway_at', 'details_at' );
 HD_DD_Repository::maybe_upgrade();
 check( HD_DD_Repository::DB_VERSION === get_option( 'hd_dd_db_version' ), 'columns present: the version is stored' );
 $repo->insert( hd_row( array( 'kind' => 'save', 'flow' => 'swipe2' ) ) );
