@@ -61,8 +61,9 @@
 		return true;
 	};
 
-	// A new door: the preview may play again and "nohandle" may be reported again.
-	P.newDoor = function () { this.freshDoor = true; this.noHandleSent = false; };
+	// A new door: the preview may play again, "nohandle" may be reported again, and the steps
+	// after the lead (d4-steps.js: doorway picked, funnel steps fired) start over.
+	P.newDoor = function () { this.freshDoor = true; this.noHandleSent = false; this.d4steps = null; };
 
 	// ---- Choosing -------------------------------------------------------------------------
 	// Mirrors Designer 3's chooseType: a different type is a new door.

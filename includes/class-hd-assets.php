@@ -220,14 +220,15 @@ class HD_DD_Assets {
 	private function register_designer4( $ver_js ) {
 		$h   = self::HANDLE . '-';
 		$mod = array(
-			'd4handle'    => 'd4-handle.js',
-			'd4doorway'   => 'd4-doorway.js',
-			'd4store'     => 'd4-store.js',
-			'd4ask'       => 'd4-ask.js',
-			'd4door'      => 'd4-door.js',
-			'd4sideglass' => 'd4-sideglass.js',
-			'd4steps'     => 'd4-steps.js',
-			'd4mydesigns' => 'd4-mydesigns.js',
+			'd4handle'        => 'd4-handle.js',
+			'd4doorway'       => 'd4-doorway.js',
+			'd4store'         => 'd4-store.js',
+			'd4ask'           => 'd4-ask.js',
+			'd4door'          => 'd4-door.js',
+			'd4sideglass'     => 'd4-sideglass.js',
+			'd4doorwayscreen' => 'd4-doorway-screen.js',
+			'd4steps'         => 'd4-steps.js',
+			'd4mydesigns'     => 'd4-mydesigns.js',
 		);
 		foreach ( $mod as $key => $file ) {
 			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer4/' . $file, array(), $ver_js, true );

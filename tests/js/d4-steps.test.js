@@ -1,0 +1,275 @@
+// Designer 4 steps 2 and 3 and the finished screen: the doorway picked by picture, the details,
+// done. Real Designer 3/4 app and wizard in a stub DOM; the store is a recording fake.
+// `node tests/js/d4-steps.test.js`
+var assert = require('assert');
+
+function node(tag) {
+  var n = {
+    tag: tag, className: '', textContent: '', children: [], attrs: {}, listeners: {}, style: {}, parentNode: null, disabled: false, value: '', type: '', name: '', src: '', alt: null,
+    appendChild: function (c) { if (c.parentNode) { c.parentNode.removeChild(c); } c.parentNode = n; n.children.push(c); return c; },
+    removeChild: function (c) { n.children = n.children.filter(function (x) { return x !== c; }); c.parentNode = null; return c; },
+    setAttribute: function (k, v) { n.attrs[k] = String(v); },
+    getAttribute: function (k) { return k in n.attrs ? n.attrs[k] : null; },
+    addEventListener: function (type, fn) { (n.listeners[type] = n.listeners[type] || []).push(fn); },
+    focus: function () { document.activeElement = n; },
+    scrollIntoView: function () {},
+    classList: { contains: function (c) { return has(n, c); }, toggle: function () {}, add: function () {}, remove: function () {} }
+  };
+  Object.defineProperty(n, 'innerHTML', { set: function () { n.children.forEach(function (c) { c.parentNode = null; }); n.children = []; }, get: function () { return ''; } });
+  return n;
+}
+function has(n, c) { return (' ' + n.className + ' ').indexOf(' ' + c + ' ') !== -1; }
+global.document = { createElement: node, activeElement: null };
+function all(n, test, out) { out = out || []; if (test(n)) { out.push(n); } n.children.forEach(function (c) { all(c, test, out); }); return out; }
+function walk(n, test) { return all(n, test)[0] || null; }
+function text(n) { return all(n, function () { return true; }).map(function (x) { return x.textContent; }).join(' '); }
+function byCls(n, c) { return walk(n, function (x) { return has(x, c); }); }
+function allCls(n, c) { return all(n, function (x) { return has(x, c); }); }
+function byKey(n, k) { return walk(n, function (x) { return x.attrs['data-k'] === k; }); }
+function byText(n, t) { return walk(n, function (x) { return (x.tag === 'button' || x.tag === 'a') && text(x).trim() === t; }); }
+function input(n, name) { return walk(n, function (x) { return x.tag === 'input' && x.name === name; }); }
+function fire(n, type) { assert.ok(n, 'element to ' + type); (n.listeners[type] || []).forEach(function (fn) { fn({ preventDefault: function () {} }); }); }
+function tick() { return new Promise(function (r) { setImmediate(r); }); }
+async function settle() { for (var i = 0; i < 6; i++) { await tick(); await new Promise(function (r) { setTimeout(r, 0); }); } }
+
+var model = require('../../data/render-model.json');
+var fx = require('./fixtures/customer-view.js');
+global.window = {
+  location: { origin: 'https://example.test', pathname: '/d/', search: '' },
+  HD_DD_CONFIG: { restUrl: 'https://example.test/wp-json/hd/', pluginUrl: 'https://example.test/plugin', d3Defaults: require('../../data/designer3-defaults.json') },
+  HD_DD_StepConfig: require('../../assets/js/wizard/step-config.js'),
+  HD_DD_Wizard: require('../../assets/js/wizard/wizard-controller.js'),
+  HD_DD_Shared: require('../../assets/js/design-shared.js'),
+  HD_DD_RenderModel: require('../../assets/js/render-model.js'),
+  HD_DD_Enquiry: require('../../assets/js/enquiry.js'),
+  HD_DD_ReviewSave: require('../../assets/js/swipe/review-save.js'),
+  HD_DD_D3Defaults: require('../../assets/js/designer3/d3-defaults.js'),
+  HD_DD_D3Hotspots: require('../../assets/js/designer3/d3-hotspots.js'),
+  HD_DD_D3Nudge: require('../../assets/js/designer3/d3-nudge.js'),
+  HD_DD_D3Toolbox: require('../../assets/js/designer3/d3-toolbox.js'),
+  HD_DD_D3Frame: require('../../assets/js/designer3/d3-frame.js'),
+  HD_DD_D4Door: { door: function () { return {}; } },
+  HD_DD_D4MyDesigns: {}
+};
+window.HD_DD_D4Handle = require('../../assets/js/designer4/d4-handle.js');
+window.HD_DD_D4Doorway = require('../../assets/js/designer4/d4-doorway.js');
+window.HD_DD_D4Ask = require('../../assets/js/designer4/d4-ask.js');
+require('../../assets/js/designer3/d3-screens.js');
+require('../../assets/js/designer3/d3-frame-step.js');
+require('../../assets/js/designer3/d3-app.js');
+require('../../assets/js/designer4/d4-sideglass.js');
+require('../../assets/js/designer4/d4-doorway-screen.js');
+require('../../assets/js/designer4/d4-steps.js');
+require('../../assets/js/designer4/d4-app.js');
+var Doorway = window.HD_DD_D4Doorway;
+
+function fakeStore(h) {
+  return {
+    email: function () { return 'nicola@example.com'; },
+    addToken: function () {}, auth: function () { return { tokens: ['tok1'] }; },
+    update: function (t, b) { h.updates.push([t, b]); return Promise.resolve(h.updateReply || { ok: true, status: 200, body: { ok: true } }); },
+    details: function (b) { h.details.push(b); return Promise.resolve(h.detailsReply || { ok: true, status: 200, body: { ok: true } }); },
+    list: function () { return Promise.resolve({ ok: true, body: { doors: [] } }); }
+  };
+}
+function harness(type, style) {
+  var h = { steps: [], updates: [], details: [] };
+  h.app = new window.HD_DD_Designer4App(node('div'), fx.customerView(), model, null, {
+    api: function () { return Promise.resolve({ ok: false }); },
+    funnel: { step: function (k, c) { h.steps.push([k, c]); }, lead: function () {} },
+    storage: null, store: fakeStore(h)
+  });
+  h.app.select('Door Type', type || 'Single Door');
+  h.app.select('Door Design', style || 'Abbott');
+  var hs = h.app.stepFor('Handle');
+  var real = hs.choices.filter(function (c) { return !/no handle/i.test(c.label); })[0];
+  h.app.mine.Handle = real.label;
+  h.app.select('Handle', real.label);
+  h.app._token = 'tok1';     // as if the lead had just been sent
+  h.app.saver();
+  h.app._askKnown = false;
+  h.of = function (k) { return h.steps.filter(function (s) { return s[0] === k; }); };
+  h.shell = function () { return h.app.shell; };
+  h.families = function () { var row = byCls(h.shell(), 'hd-d4-tiles--family'); return row ? allCls(row, 'hd-d4-tile') : []; };
+  h.exacts = function () { var row = byCls(h.shell(), 'hd-d4-tiles--exact'); return row ? allCls(row, 'hd-d4-tile') : []; };
+  h.tile = function (label) { return h.families().concat(h.exacts()).filter(function (t) { return text(t).trim() === label; })[0]; };
+  h.next = function () { return byText(h.shell(), 'Next: your details'); };
+  return h;
+}
+
+(async function () {
+  // ---- the doorway: strip, green line, heading, six family pictures -------------------------
+  var h = harness();
+  h.app.go('doorway');
+  var sh = h.shell();
+  var strip = allCls(sh, 'hd-d4-strip__step');
+  assert.deepStrictEqual(strip.map(function (s) { return s.textContent; }), ['✓ 1. Your door', '2. Your doorway', '3. Your details']);
+  assert.ok(has(strip[0], 'is-done') && has(strip[1], 'is-now') && !has(strip[2], 'is-done'), 'step 1 ticked, step 2 now');
+  assert.strictEqual(byCls(sh, 'hd-d4-okline').textContent, '✓ We\'ve got your door, and emailed a link to it to nicola@example.com.');
+  assert.ok(walk(sh, function (x) { return x.tag === 'h2' && x.textContent === 'Now, what\'s around the door?'; }), 'heading');
+  assert.ok(text(sh).indexOf('Glass beside or above the door changes the price. Grey is glass; the white gap is your door.') !== -1, 'help line');
+  assert.ok(text(sh).indexOf('Which is closest? You\'ll pick the side and style next.') !== -1, 'row one question');
+  var fams = h.families();
+  assert.strictEqual(fams.length, 6, 'six family tiles for Single Door');
+  Doorway.FAMILIES.forEach(function (f, i) {
+    var t = fams[i], im = walk(t, function (x) { return x.tag === 'img'; });
+    assert.strictEqual(t.tag, 'button'); assert.strictEqual(t.type, 'button');
+    assert.strictEqual(text(t).trim(), f.label);
+    assert.strictEqual(im.alt, '');
+    assert.strictEqual(im.src, 'https://example.test/plugin/' + Doorway.drawing(f.pic), 'drawing for ' + f.label);
+  });
+  assert.strictEqual(h.exacts().length, 0, 'no second row yet');
+  assert.strictEqual(h.next().disabled, true, 'Next waits for an exact doorway');
+  assert.strictEqual(h.app.canvas && h.app.canvas.tag, 'canvas', 'the door is drawn on a canvas, used for the picture');
+  assert.strictEqual(h.of('doorway').length, 1, 'doorway step fired');
+
+  // ---- Just the door: one id, selected at once -----------------------------------------------
+  fire(h.tile('Just the door'), 'click');
+  await settle();
+  assert.strictEqual(h.app.design()['Frame Design'].id, 1);
+  assert.strictEqual(h.app.design()['Frame Design'].label, 'No Sidelights');
+  assert.strictEqual(h.next().disabled, false, 'Next enabled');
+  assert.ok(has(h.tile('Just the door'), 'is-on') && h.tile('Just the door').attrs['aria-pressed'] === 'true');
+  assert.deepStrictEqual(h.of('doorway_group'), [['doorway_group', 'Just the door']]);
+  assert.deepStrictEqual(h.of('doorway_exact'), [['doorway_exact', 'Just the door']]);
+  assert.strictEqual(h.of('doorway_change').length, 0);
+  assert.strictEqual(h.updates.length, 1);
+  assert.strictEqual(h.updates[0][0], 'tok1');
+  assert.strictEqual(h.updates[0][1].doorway, 'picked');
+  assert.strictEqual(h.updates[0][1].design['Frame Design'].id, 1);
+
+  // ---- a family with several layouts: the second row, no exact yet, a change -----------------
+  fire(h.tile('Glass on one side (left or right)'), 'click');
+  await settle();
+  assert.strictEqual(h.exacts().length, 6, 'six exact tiles');
+  assert.ok(text(h.shell()).indexOf('Which one exactly?') !== -1);
+  assert.deepStrictEqual(h.exacts().map(function (t) { return text(t).trim(); }), [2, 3, 4, 5, 6, 7].map(function (id) { return Doorway.CAPTIONS[id]; }));
+  assert.strictEqual(h.of('doorway_exact').length, 1, 'no doorway_exact yet');
+  assert.deepStrictEqual(h.of('doorway_change'), [['doorway_change', 'Glass on one side (left or right)']]);
+  assert.strictEqual(h.next().disabled, true, 'Next waits for the exact layout in this family');
+  assert.strictEqual(h.updates.length, 1, 'nothing saved for a family alone');
+
+  // ---- exact id 14: frame by id and label, glazed sides, the side glass rows ------------------
+  fire(h.tile('One side and above'), 'click');
+  fire(h.tile(Doorway.CAPTIONS[14]), 'click');
+  await settle();
+  var fd = h.app.design()['Frame Design'];
+  assert.strictEqual(fd.id, 14); assert.strictEqual(fd.label, 'Toplight with Half Flag Left');
+  assert.deepStrictEqual(h.of('doorway_exact')[1], ['doorway_exact', Doorway.CAPTIONS[14]]);
+  assert.strictEqual(h.app.design()['Sidelight Type'].label, 'Glazed', 'side glass glazed');
+  assert.ok(byKey(h.shell(), 'opt:Sidelight Type:Glazed'), 'Sidelight Type row');
+  assert.ok(allCls(h.shell(), 'hd-d3-chip').some(function (c) { return /^opt:Sidelight Glass:/.test(c.attrs['data-k']); }), 'Sidelight Glass row');
+  assert.ok(!byKey(h.shell(), 'opt:Sidelight Glass:Matches the door'), 'never Matches the door with a top light');
+  var u = h.updates[h.updates.length - 1];
+  assert.strictEqual(u[1].doorway, 'picked'); assert.strictEqual(u[1].design['Frame Design'].id, 14);
+  assert.strictEqual(h.next().disabled, false);
+  // side glass pick: kept as theirs
+  fire(byKey(h.shell(), 'opt:Sidelight Type:Unglazed'), 'click');
+  await settle();
+  assert.strictEqual(h.app.design()['Sidelight Type'].label, 'Unglazed');
+  assert.strictEqual(h.app.mine['Sidelight Type'], 'Unglazed');
+
+  // ---- leave and come back: same family and tile, no second doorway step ---------------------
+  h.app.go('door');
+  h.app.go('doorway');
+  assert.strictEqual(h.of('doorway').length, 1, 'doorway fires once per door');
+  assert.ok(has(h.tile('One side and above'), 'is-on'), 'family shown');
+  assert.ok(has(h.tile(Doorway.CAPTIONS[14]), 'is-on'), 'exact tile shown');
+  assert.strictEqual(h.next().disabled, false);
+
+  // ---- Next: details while anything is missing, else done ------------------------------------
+  fire(h.next(), 'click');
+  assert.strictEqual(h.app.screen, 'details');
+  h.app.missing = { name: false, postcode: false, phone: false };
+  h.app.go('doorway');
+  fire(h.next(), 'click');
+  assert.strictEqual(h.app.screen, 'done', 'nothing missing: done');
+
+  // ---- a new door resets the doorway state ---------------------------------------------------
+  h.app.startDoor();
+  assert.strictEqual(h.app.d4steps, null, 'newDoor clears the per-door step state');
+
+  // ---- Skip ----------------------------------------------------------------------------------
+  var s = harness();
+  s.app.go('doorway');
+  fire(byCls(s.shell(), 'hd-d4-skip'), 'click');
+  await settle();
+  assert.strictEqual(s.of('doorway_skip').length, 1);
+  assert.deepStrictEqual(s.updates, [['tok1', { doorway: 'skipped' }]]);
+  assert.strictEqual(s.app.screen, 'details');
+
+  // ---- details: labels, autocomplete, hints, empty Finish ------------------------------------
+  var dsh = s.shell();
+  var dstrip = allCls(dsh, 'hd-d4-strip__step');
+  assert.deepStrictEqual(dstrip.map(function (x) { return x.textContent; }), ['✓ 1. Your door', '✓ 2. Your doorway', '3. Your details']);
+  assert.ok(has(dstrip[2], 'is-now'));
+  assert.ok(walk(dsh, function (x) { return x.tag === 'h2' && x.textContent === 'Last step: where\'s it going?'; }));
+  assert.strictEqual(input(dsh, 'name').attrs.autocomplete, 'name');
+  assert.strictEqual(input(dsh, 'postcode').attrs.autocomplete, 'postal-code');
+  assert.strictEqual(input(dsh, 'telephone').attrs.autocomplete, 'tel');
+  assert.strictEqual(input(dsh, 'telephone').type, 'tel');
+  ['Your name', 'Postcode', 'Phone number', 'So we can check we cover you and price the fitting.', 'Helps if we need to check a detail.'].forEach(function (t) {
+    assert.ok(text(dsh).indexOf(t) !== -1, t);
+  });
+  assert.strictEqual(all(dsh, function (x) { return x.tag === 'label'; }).length, 3, 'three visible labels');
+  assert.strictEqual(s.of('details').length, 1, 'details step fired');
+  fire(byCls(dsh, 'hd-d4-details'), 'submit');
+  await settle();
+  assert.strictEqual(s.details.length, 0, 'nothing sent');
+  assert.strictEqual(s.of('finished').length, 0, 'nothing fired');
+  assert.strictEqual(s.app.screen, 'done');
+
+  // ---- details: a postcode 422 keeps the screen ----------------------------------------------
+  var d = harness();
+  d.detailsReply = { ok: false, status: 422, body: { code: 'hd_dd_validation', data: { status: 422, fields: { postcode: 'Please enter a valid UK postcode.' } } } };
+  d.app.go('details');
+  input(d.shell(), 'postcode').value = ' xx1 ';
+  fire(byCls(d.shell(), 'hd-d4-details'), 'submit');
+  await settle();
+  assert.deepStrictEqual(d.details, [{ postcode: 'xx1' }], 'only the fields with a value');
+  assert.strictEqual(d.app.screen, 'details');
+  assert.ok(text(d.shell()).indexOf('Please enter a valid UK postcode.') !== -1, 'postcode message');
+  assert.strictEqual(d.of('finished').length, 0);
+  // then a good send: finished, missing updated, done
+  d.detailsReply = null;
+  input(d.shell(), 'postcode').value = '';
+  input(d.shell(), 'name').value = 'Ann';
+  input(d.shell(), 'telephone').value = '01234 567890';
+  fire(byCls(d.shell(), 'hd-d4-details'), 'submit');
+  await settle();
+  assert.deepStrictEqual(d.details[1], { name: 'Ann', telephone: '01234 567890' });
+  assert.strictEqual(d.of('finished').length, 1);
+  assert.deepStrictEqual(d.app.missing, { name: false, postcode: true, phone: false });
+  assert.strictEqual(d.app.screen, 'done');
+
+  // ---- done: the line and the three links ----------------------------------------------------
+  var dn = d.shell();
+  assert.ok(byCls(dn, 'hd-d4-done'));
+  assert.ok(text(dn).indexOf('✓ Your estimate is on its way') !== -1);
+  assert.ok(text(dn).indexOf('We\'ll email it to nicola@example.com within 1 working day. Your design is saved, and you can change it any time.') !== -1);
+  assert.ok(allCls(dn, 'hd-d4-strip__step').every(function (x) { return has(x, 'is-done'); }), 'every step ticked');
+  ['See my designs', 'Design another door', 'Keep customising this door'].forEach(function (t) {
+    var b = byText(dn, t);
+    assert.ok(b && (b.tag === 'a' || b.type === 'button'), t);
+  });
+  fire(byText(dn, 'Keep customising this door'), 'click');
+  assert.strictEqual(d.app.screen, 'door');
+  d.app.go('done');
+  fire(byText(d.shell(), 'See my designs'), 'click');
+  assert.strictEqual(d.app.screen, 'designs');
+  d.app.go('done');
+  fire(byText(d.shell(), 'Design another door'), 'click');
+  assert.strictEqual(d.app.screen, 'type');
+  assert.strictEqual(d.app.known, true, 'startDoor: a fresh door for the known person');
+
+  // ---- a door added from My designs, and a type without the doorway --------------------------
+  var k = harness();
+  k.app._askKnown = true;
+  k.app.go('doorway');
+  assert.strictEqual(byCls(k.shell(), 'hd-d4-okline').textContent, '✓ We\'ve added this door to your estimate.');
+  var dd = harness('Double Door', fx.customerView().byType['Double Door'].fields['Door Design'][0].label);
+  dd.app.go('details');
+  assert.deepStrictEqual(allCls(dd.shell(), 'hd-d4-strip__step').map(function (x) { return x.textContent; }), ['✓ 1. Your door', '2. Your details']);
+
+  console.log('d4-steps.test.js: all assertions passed');
+})().catch(function (e) { console.error(e); process.exit(1); });

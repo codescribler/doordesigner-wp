@@ -28,15 +28,16 @@ $styles  = $GLOBALS['hd_test_styles'];
 $H       = HD_DD_Assets::HANDLE;
 
 $files = array(
-	'd4handle'    => 'd4-handle.js',
-	'd4doorway'   => 'd4-doorway.js',
-	'd4store'     => 'd4-store.js',
-	'd4ask'       => 'd4-ask.js',
-	'd4door'      => 'd4-door.js',
-	'd4sideglass' => 'd4-sideglass.js',
-	'd4steps'     => 'd4-steps.js',
-	'd4mydesigns' => 'd4-mydesigns.js',
-	'd4app'       => 'd4-app.js',
+	'd4handle'        => 'd4-handle.js',
+	'd4doorway'       => 'd4-doorway.js',
+	'd4store'         => 'd4-store.js',
+	'd4ask'           => 'd4-ask.js',
+	'd4door'          => 'd4-door.js',
+	'd4sideglass'     => 'd4-sideglass.js',
+	'd4doorwayscreen' => 'd4-doorway-screen.js',
+	'd4steps'         => 'd4-steps.js',
+	'd4mydesigns'     => 'd4-mydesigns.js',
+	'd4app'           => 'd4-app.js',
 );
 foreach ( $files as $key => $file ) {
 	check( isset( $scripts[ $H . '-' . $key ] ) && HD_DD_URL . 'assets/js/designer4/' . $file === $scripts[ $H . '-' . $key ]['src'], "$key is assets/js/designer4/$file" );
