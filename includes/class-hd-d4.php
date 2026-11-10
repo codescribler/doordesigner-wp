@@ -75,6 +75,17 @@ class HD_DD_D4 {
 		return new WP_Error( 'hd_dd_validation', __( 'Please check the highlighted fields.', 'hd-door-designer' ), array( 'status' => 422, 'fields' => $fields ) );
 	}
 
+	/**
+	 * Null when a Designer 4 route may run. 503 while the database upgrade has not added the
+	 * Designer 4 columns (saves and enquiries keep working meanwhile: they need only kind/flow).
+	 */
+	public function unavailable() {
+		if ( HD_DD_Repository::schema_current() ) {
+			return null;
+		}
+		return new WP_Error( 'hd_dd_unavailable', __( 'Sorry, this is not available just now. Please try again later.', 'hd-door-designer' ), array( 'status' => 503 ) );
+	}
+
 	public function write_failed() {
 		return new WP_Error( 'hd_dd_save_failed', __( 'Sorry, we could not save that. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
 	}
@@ -118,6 +129,10 @@ class HD_DD_D4 {
 	// POST d4/lead
 	// -------------------------------------------------------------------
 	public function rest_lead( WP_REST_Request $request ) {
+		$down = $this->unavailable();
+		if ( $down ) {
+			return $down;
+		}
 		$p     = $this->params( $request );
 		$email = sanitize_email( trim( wp_unslash( $this->text( $p, 'email' ) ) ) );
 		if ( ! is_email( $email ) ) {
@@ -129,10 +144,6 @@ class HD_DD_D4 {
 		}
 		if ( ! HD_DD_D4_Access::has_handle( $design ) ) {
 			return $this->invalid( array( 'handle' => __( 'Oops, your door needs a handle to be saved.', 'hd-door-designer' ) ) );
-		}
-		// Without the kind and flow columns the row could not be told apart: refuse, so the customer retries.
-		if ( ! HD_DD_Repository::schema_current() ) {
-			return new WP_Error( 'hd_dd_save_unavailable', __( 'Sorry, we could not save your design. Please try again.', 'hd-door-designer' ), array( 'status' => 500 ) );
 		}
 		if ( ! $this->within_limit() ) {
 			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many saves from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );

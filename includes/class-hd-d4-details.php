@@ -31,6 +31,10 @@ class HD_DD_D4_Details {
 	}
 
 	public function rest_details( WP_REST_Request $request ) {
+		$down = $this->d4->unavailable();
+		if ( $down ) {
+			return $down;
+		}
 		$p   = $this->d4->params( $request );
 		$who = $this->doors->resolve( ( isset( $p['auth'] ) && is_array( $p['auth'] ) ) ? $p['auth'] : array() );
 		if ( is_wp_error( $who ) ) {

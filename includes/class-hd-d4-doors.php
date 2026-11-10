@@ -85,6 +85,10 @@ class HD_DD_D4_Doors {
 	}
 
 	private function auth_of( WP_REST_Request $request ) {
+		$down = $this->d4->unavailable();
+		if ( $down ) {
+			return $down;
+		}
 		$p = $this->d4->params( $request );
 		return $this->resolve( ( isset( $p['auth'] ) && is_array( $p['auth'] ) ) ? $p['auth'] : array() );
 	}
@@ -129,9 +133,6 @@ class HD_DD_D4_Doors {
 		$design = $this->clean_design( $p );
 		if ( is_wp_error( $design ) ) {
 			return $design;
-		}
-		if ( ! HD_DD_Repository::schema_current() ) {
-			return $this->d4->write_failed();
 		}
 		if ( ! $this->d4->within_limit() ) {
 			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many saves from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );

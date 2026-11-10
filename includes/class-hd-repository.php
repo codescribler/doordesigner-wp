@@ -29,20 +29,32 @@ class HD_DD_Repository {
 	 *
 	 * The version is stored only once the columns this version adds are really there. If
 	 * dbDelta could not add them, the version stays behind: the next load tries again, and
-	 * insert() keeps to the old columns meanwhile so enquiries are still saved.
+	 * insert() keeps to the old columns meanwhile so enquiries are still saved. When only the
+	 * v4 columns (kind, flow) made it, 4 is recorded: saves and enquiries need nothing more,
+	 * and only Designer 4 waits for the v5 columns.
 	 */
 	public static function maybe_upgrade() {
 		if ( ! self::schema_current() ) {
 			self::create_table();
 			if ( self::has_columns( array( 'kind', 'flow', 'removed_at', 'doorway_at', 'details_at' ) ) ) {
 				update_option( 'hd_dd_db_version', self::DB_VERSION, false );
+			} elseif ( ! self::kind_columns_ready() && self::has_columns( array( 'kind', 'flow' ) ) ) {
+				update_option( 'hd_dd_db_version', '4', false );
 			}
 		}
 	}
 
-	/** True when the stored schema version is this code's version (the new columns exist). */
+	/**
+	 * True when the stored schema version is this code's version: every column exists, the
+	 * Designer 4 ones (removed_at, doorway_at, details_at) included. Gates only Designer 4.
+	 */
 	public static function schema_current() {
 		return get_option( 'hd_dd_db_version' ) === self::DB_VERSION;
+	}
+
+	/** True when the v4 columns (kind, flow) exist: all that saves and enquiries need. */
+	public static function kind_columns_ready() {
+		return version_compare( (string) get_option( 'hd_dd_db_version', '0' ), '4', '>=' );
 	}
 
 	/** True when every named column exists on the enquiries table. */
@@ -136,7 +148,7 @@ class HD_DD_Repository {
 			'source_ip'         => $data['source_ip'],
 		);
 		// The schema upgrade has not completed (see maybe_upgrade): keep to the columns that exist.
-		if ( ! self::schema_current() ) {
+		if ( ! self::kind_columns_ready() ) {
 			unset( $row['kind'], $row['flow'] );
 		}
 

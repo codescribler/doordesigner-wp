@@ -232,14 +232,29 @@ class HD_DD_Experiments {
 	public static function arms( array $exp ) {
 		global $wpdb;
 		$table = self::table();
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT arm, device, exposed_at, started_at, shown_at, doorway_at, frame_at, details_at, form_at, saved_at, converted_at, callback_at FROM {$table} WHERE experiment_id = %s", $exp['id'] ) );
+		// The Designer 4 journey columns are read only once the upgrade has added them.
+		$d4 = self::has_journey_columns() ? 'doorway_at, frame_at, details_at, ' : '';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name and columns are internal.
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT arm, device, exposed_at, started_at, shown_at, {$d4}form_at, saved_at, converted_at, callback_at FROM {$table} WHERE experiment_id = %s", $exp['id'] ) );
 		$sums = HD_DD_Experiment_Journey::summarise( $rows, HD_DD_Experiment_Tracking::since( $exp ), self::ARMS );
 		$out  = array();
 		foreach ( self::ARMS as $arm ) {
 			$out[ $arm ] = array_merge( array( 'flow' => $exp[ $arm ], 'label' => self::flow_label( $exp[ $arm ] ) ), $sums[ $arm ] );
 		}
 		return $out;
+	}
+
+	/** True when the visitor table has doorway_at, frame_at and details_at (table v5). */
+	private static function has_journey_columns() {
+		global $wpdb;
+		$table = self::table();
+		foreach ( array( 'doorway_at', 'frame_at', 'details_at' ) as $column ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+			if ( ! $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM {$table} LIKE %s", $column ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** The manager-app contract: current + history runs as JSON-ready arrays. See HD_DD_Experiment_Export. */
