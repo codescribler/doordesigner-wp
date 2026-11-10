@@ -34,6 +34,7 @@ var renders = [];
 var retries = [];
 global.window = {
   HD_DD_D4Handle: require('../../assets/js/designer4/d4-handle.js'),
+  HD_DD_D4Ask: { COPY: { noHandle: 'Oops, your door needs a handle to be saved.' } },
   // Like preview.js: each render takes a token; a slow layer redraws later only if still current.
   HD_DD_Preview: { create: function () { return { _token: 0, render: function (type, design) {
     var me = this, tok = ++me._token, label = design.Handle.label;
@@ -250,9 +251,15 @@ var C = Door.COPY;
   assert.deepStrictEqual(app9.log, ['nohandle'], 'still once after the screen is drawn again');
   v9.refresh();
   assert.ok(shell9.querySelector('.hd-d4-bubble'), 'stays while the handle is missing');
+  // the ask's "needs a handle" line (in the save slot) goes with the bubble; any other line stays
+  var err = shell9.querySelector('.hd-d3-saveslot').appendChild(el('div', 'hd-d4-ask__error', 'Oops, your door needs a handle to be saved.'));
   app9.needHandle = false;
   v9.refresh();
   assert.strictEqual(shell9.querySelector('.hd-d4-bubble'), null, 'gone once a handle is chosen');
+  assert.strictEqual(err.textContent, '', 'the needs-a-handle line goes once a handle is chosen');
+  err.textContent = 'Please enter a valid email address.';
+  v9.refresh();
+  assert.strictEqual(err.textContent, 'Please enter a valid email address.', 'other lines are left alone');
 
   console.log('d4-door.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });

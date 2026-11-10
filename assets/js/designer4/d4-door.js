@@ -76,6 +76,11 @@
 
 		function playing() { return !!(runner && runner.playing()); }
 		function hideBubble() { drop(bubbleEl); bubbleEl = null; setClass(shell, 'hd-d4-bubbling', false); }
+		// Once the door has a handle, the ask's "needs a handle" line is no longer true.
+		function clearNoHandleLine() {
+			var err = q(shell, 'hd-d4-ask__error'), line = W.HD_DD_D4Ask && W.HD_DD_D4Ask.COPY.noHandle;
+			if (err && line && err.textContent === line) { err.textContent = ''; }
+		}
 
 		// Everything Designer 3's redraw doesn't know about.
 		function sync() {
@@ -85,7 +90,7 @@
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);
 			setClass(shell, 'hd-d4-previewing', playing());   // the dots hide so the handle shows
-			if (!app.needHandle) { hideBubble(); }
+			if (!app.needHandle) { hideBubble(); clearNoHandleLine(); }
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
