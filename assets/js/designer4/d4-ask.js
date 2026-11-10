@@ -135,6 +135,7 @@
       f.appendChild(row); f.appendChild(hp);
       if (!o.known) { f.appendChild(el('div', 'hd-d4-ask__note', COPY.note)); }
       var error = el('div', 'hd-d4-ask__error');
+      error.setAttribute('aria-live', 'polite');   // announced when a message is set (no handle, bad email)
       var status = el('div', 'hd-d4-ask__status');
       status.setAttribute('role', 'status');
       status.setAttribute('aria-live', 'polite');

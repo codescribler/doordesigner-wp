@@ -72,11 +72,12 @@
 		}
 
 		function button(p, urgent, small) {
-			var b = el('button', 'hd-d4-callout hd-d4-callout--' + p.key + (urgent ? ' hd-d4-callout--need' : ''),
-				urgent && !small ? NEED : (C.NAMES[p.key] || p.key));
+			var text = urgent && !small ? NEED : (C.NAMES[p.key] || p.key);
+			var b = el('button', 'hd-d4-callout hd-d4-callout--' + p.key + (urgent ? ' hd-d4-callout--need' : ''), text);
 			b.type = 'button';
 			b.setAttribute('data-k', 'dot:' + p.key);
-			b.setAttribute('aria-label', 'Change ' + (names[p.key] || 'this part'));
+			// The accessible name starts with the visible text (WCAG 2.5.3): "Glass. Change the glass".
+			b.setAttribute('aria-label', text + '. Change ' + (names[p.key] || 'this part'));
 			b.addEventListener('click', function () { if (app.toolbox) { app.toolbox.open(p.key, 'dot:' + p.key); } });
 			return b;
 		}

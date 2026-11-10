@@ -287,10 +287,21 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   var app9 = fakeApp({ previewDue: false });
   var shell9 = node('div');
   var v9 = Door.door(app9, shell9);
+  // The announcement comes from a visually hidden live region that is there before any text.
+  var live9 = shell9.querySelector('.hd-d4-announce');
+  assert.ok(live9, 'a live region is built with the screen');
+  assert.strictEqual(live9.attrs['aria-live'], 'polite');
+  assert.ok(has(live9, 'hd-d3-sr'), 'visually hidden');
+  assert.strictEqual(live9.textContent, '', 'empty until there is something to say');
   v9.bubble();
   var b = shell9.querySelector('.hd-d4-bubble');
   assert.ok(b, 'bubble shown');
   assert.strictEqual(b.textContent, C.bubble);
+  assert.strictEqual(b.tag, 'button');
+  assert.strictEqual(b.type, 'button', 'the bubble is a real button');
+  assert.ok(!('role' in b.attrs), 'with no role="status" on it');
+  assert.strictEqual(shell9.querySelector('.hd-d4-announce'), live9, 'the same live region');
+  assert.strictEqual(live9.textContent, C.bubble, 'the live region announces the bubble');
   assert.strictEqual(b.parentNode, shell9.querySelector('.hd-d3-frame'), 'beside the door');
   // It sits above the Handle label (CSS lifts it by its height), its pointer at the label's middle.
   function pointsAt(bub, lab, msg) {
@@ -342,7 +353,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
     var lab = label(shell10, p.key);
     assert.strictEqual(lab.type, 'button');
     assert.strictEqual(lab.textContent, want[p.key], p.key + ' label text');
-    assert.strictEqual(lab.attrs['aria-label'], 'Change the ' + p.key, p.key + ' accessible name');
+    assert.strictEqual(lab.attrs['aria-label'], want[p.key] + '. Change the ' + p.key, p.key + ' accessible name contains its visible text');
     assert.ok(/px$/.test(lab.style.left) && /px$/.test(lab.style.top), p.key + ' placed');
   });
   // lines and rings: decorative, one each per label
@@ -360,6 +371,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   app10.phone = true;
   v10.refresh();
   assert.strictEqual(label(shell10, 'handle').textContent, 'Handle', 'one word on a phone');
+  assert.strictEqual(label(shell10, 'handle').attrs['aria-label'], 'Handle. Change the handle', 'and its name follows');
   assert.ok(has(label(shell10, 'handle'), 'hd-d4-callout--need'), 'still needs attention on a phone');
   labels(shell10).forEach(function (lab) {
     var x = parseFloat(lab.style.left);

@@ -71,6 +71,10 @@
 		var banner = q(shell, 'hd-d3-banner');
 		var runner = null, bubbleEl = null;
 		var view = {};
+		// Announcements (the bubble) come from this visually hidden live region, built with the
+		// screen so it is in the page before any text is set.
+		var announce = shell.appendChild(el('div', 'hd-d3-sr hd-d4-announce'));
+		announce.setAttribute('aria-live', 'polite');
 
 		// A lead (the ask is "saved"): no guide price and no nudge; they have asked for the price.
 		function isLead() { var s = app.saver ? app.saver() : null; return !!(s && s.saved && s.saved()); }
@@ -79,7 +83,7 @@
 		if (guide && save && save.parentNode && !isLead()) { guideEl = save.parentNode.insertBefore(el('p', 'hd-d4-guide', guide), save); }
 
 		function playing() { return !!(runner && runner.playing()); }
-		function hideBubble() { drop(bubbleEl); bubbleEl = null; setClass(shell, 'hd-d4-bubbling', false); }
+		function hideBubble() { drop(bubbleEl); bubbleEl = null; announce.textContent = ''; setClass(shell, 'hd-d4-bubbling', false); }
 		// The bubble sits above the Handle label (CSS lifts it by its own height), kept inside the
 		// stage and the screen, its pointer at the label's middle. The label moves when the hinge
 		// side changes or the screen resizes, and the bubble follows.
@@ -149,10 +153,10 @@
 			var host = q(shell, 'hd-d3-frame') || shell;
 			var b = el('button', 'hd-d4-bubble', COPY.bubble);
 			b.type = 'button';
-			b.setAttribute('role', 'status');
 			b.addEventListener('click', function () { if (app.toolbox) { app.toolbox.open('handle', 'dot:handle'); } });
 			host.appendChild(b);
 			bubbleEl = b;
+			announce.textContent = COPY.bubble;
 			placeBubble();
 			setClass(shell, 'hd-d4-bubbling', true);
 		};

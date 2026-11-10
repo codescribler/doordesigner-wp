@@ -78,6 +78,10 @@ function harness(over) {
   assert.ok(text(h.box).indexOf("We'll send a link to your design now. Your price follows by email within 1 working day.") !== -1, 'note verbatim');
   assert.ok(input(h.box, 'hd_hp'), 'honeypot present');
   assert.ok(input(h.box, 'email'), 'email input present');
+  // The error line (no handle, bad email) is a polite live region, there before any text is set.
+  var errLine = find(h.box, 'hd-d4-ask__error');
+  assert.strictEqual(errLine.textContent, '', 'empty at first');
+  assert.ok(errLine.attrs['aria-live'] === 'polite' || errLine.attrs.role === 'alert', 'the error line is announced (aria-live="polite")');
 
   // No handle: nothing sent, email kept, onNoHandle once.
   h.handle = false;
