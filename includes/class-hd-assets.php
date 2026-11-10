@@ -228,6 +228,7 @@ class HD_DD_Assets {
 			'd4sideglass'     => 'd4-sideglass.js',
 			'd4doorwayscreen' => 'd4-doorway-screen.js',
 			'd4steps'         => 'd4-steps.js',
+			'd4card'          => 'd4-card.js',
 			'd4mydesigns'     => 'd4-mydesigns.js',
 		);
 		foreach ( $mod as $key => $file ) {

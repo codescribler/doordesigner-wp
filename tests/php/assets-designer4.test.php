@@ -36,6 +36,7 @@ $files = array(
 	'd4sideglass'     => 'd4-sideglass.js',
 	'd4doorwayscreen' => 'd4-doorway-screen.js',
 	'd4steps'         => 'd4-steps.js',
+	'd4card'          => 'd4-card.js',
 	'd4mydesigns'     => 'd4-mydesigns.js',
 	'd4app'           => 'd4-app.js',
 );
@@ -51,6 +52,8 @@ foreach ( $files as $key => $file ) {
 		check( in_array( $H . '-' . $key, $app_deps, true ), "d4app depends on $key" );
 	}
 }
+$card_at = array_search( $H . '-d4card', $app_deps, true );
+check( false !== $card_at && $card_at < array_search( $H . '-d4mydesigns', $app_deps, true ), 'd4card loads before d4mydesigns' );
 check( isset( $styles[ $H . '-d4' ] ) && HD_DD_URL . 'assets/css/hd-designer4.css' === $styles[ $H . '-d4' ]['src'], 'd4 stylesheet is assets/css/hd-designer4.css' );
 check( isset( $styles[ $H . '-d4' ] ) && in_array( $H . '-d3', $styles[ $H . '-d4' ]['deps'], true ), 'd4 stylesheet loads after d3' );
 check( in_array( $H . '-d4', $GLOBALS['hd_test_enq_css'], true ), 'd4 stylesheet is enqueued' );
