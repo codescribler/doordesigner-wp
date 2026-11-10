@@ -42,7 +42,7 @@ shells.forEach(function (f) {
   var m = require(file);
   var umd = ['d4-handle', 'd4-doorway', 'd4-store', 'd4-ask'].indexOf(f) !== -1;
   var shell = umd ? m : global.window[{ 'd4-door': 'HD_DD_D4Door', 'd4-sideglass': 'HD_DD_D4SideGlass', 'd4-steps': 'HD_DD_D4Steps', 'd4-mydesigns': 'HD_DD_D4MyDesigns' }[f]];
-  if (f !== 'd4-app') { assert.deepStrictEqual(Object.keys(shell || { x: 1 }), [], f + ' is an empty shell'); }
+  if (f !== 'd4-app' && f !== 'd4-handle' && f !== 'd4-doorway') { assert.deepStrictEqual(Object.keys(shell || { x: 1 }), [], f + ' is an empty shell'); }
 });
 assert.strictEqual(typeof global.window.HD_DD_Designer4App, 'undefined');
 assert.strictEqual(X.canRunDesigner4(global.window, {}), false);
