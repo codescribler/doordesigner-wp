@@ -193,5 +193,35 @@ var byText = T.byText, input = T.input, fire = T.fire, settle = T.settle, fx = T
   dd.app.go('details');
   assert.deepStrictEqual(allCls(dd.shell(), 'hd-d4-strip__step').map(function (x) { return x.textContent; }), ['✓ 1. Your door', '2. Your details']);
 
+  // ---- the saved line's link: the doorway while it is offered and unanswered, else My designs --
+  var Steps = window.HD_DD_D4Steps;
+  var w = harness();
+  assert.strictEqual(Steps.doorwayDue(w.app), true, 'offered, not answered');
+  assert.strictEqual(w.app.savedNext(), 'doorway');
+  function savedLinkOf(app) { var box = T.node('div'); app.saver().render(box); return byCls(box, 'hd-d4-saved__next'); }
+  var savedLink = savedLinkOf(w.app);   // the door screen's save slot (D4Door is stubbed here)
+  assert.strictEqual(savedLink.textContent, 'Next: your doorway');
+  fire(savedLink, 'click');
+  assert.strictEqual(w.app.screen, 'doorway', 'the link goes to the doorway');
+  fire(byCls(w.shell(), 'hd-d4-skip'), 'click');   // skipped counts as answered
+  assert.strictEqual(Steps.doorwayDue(w.app), false, 'skipped');
+  savedLink = savedLinkOf(w.app);
+  assert.strictEqual(savedLink.textContent, 'See my designs');
+  fire(savedLink, 'click');
+  assert.strictEqual(w.app.screen, 'designs', 'the link goes to My designs');
+  var wp = harness();
+  wp.app.go('doorway');
+  fire(wp.tile('Just the door'), 'click');   // picked this visit
+  assert.strictEqual(Steps.doorwayDue(wp.app), false, 'picked (even just the door)');
+  var wr = harness();
+  wr.app.select('Frame Design', { label: 'Toplight with Half Flag Left', id: 14 });
+  assert.strictEqual(Steps.doorwayDue(wr.app), false, 'a reopened door that carries a doorway');
+  var wl = harness();
+  Steps.state(wl.app).answered = true;       // a listed door with its doorway on record (openListed)
+  assert.strictEqual(Steps.doorwayDue(wl.app), false, 'on record');
+  assert.strictEqual(wl.app.savedNext(), 'designs');
+  assert.strictEqual(Steps.doorwayDue(dd.app), false, 'a type with no doorway');
+  assert.strictEqual(dd.app.savedNext(), 'designs');
+
   console.log('d4-steps.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });

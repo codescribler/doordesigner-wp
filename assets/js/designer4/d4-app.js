@@ -104,8 +104,8 @@
 		return !!(this.known || (a && a.token) || (this.store && this.store.email && this.store.email()));
 	};
 
-	// Mirrors Designer 3's saver. While the door has no handle, autosave waits (the server refuses
-	// a design with no handle); the next handle pick sends it.
+	// Mirrors Designer 3's saver. While the door has no handle, autosave waits (the ask's update()
+	// checks hasHandle: the server refuses a design with no handle); the next handle pick sends it.
 	P.saver = function () {
 		var self = this, Ask = W.HD_DD_D4Ask;
 		if (!this._saver) {
@@ -118,11 +118,10 @@
 				experiment: function () { return self.experiment; },
 				hasHandle: function () { return !self.needHandle; },
 				onNoHandle: function () { if (self.doorView && self.doorView.bubble) { self.doorView.bubble(); } },
-				onLead: function (body) { self.onLead(body); }
+				onLead: function (body) { self.onLead(body); },
+				nextStep: function () { return self.savedNext(); }
 			}) : { render: noop, saved: function () { return false; }, token: function () { return null; }, update: function () { return Promise.resolve(false); } };
 			if (this._token && this._saver.setToken) { this._saver.setToken(this._token); }
-			var update = this._saver.update;
-			this._saver.update = function () { return self.needHandle ? Promise.resolve(false) : update(); };
 		}
 		return this._saver;
 	};
@@ -135,7 +134,14 @@
 		return (this.knownPerson() && this.missing && !anyMissing(this.missing)) ? 'done' : 'details';
 	};
 
-	// body.again: the sent state's "Next" (no new lead); body.preview: no REST URL (local preview).
+	// The saved line's link (a door that is already a lead): its doorway while that is offered and
+	// still to answer, else My designs.
+	P.savedNext = function () {
+		var S = W.HD_DD_D4Steps;
+		return (S && S.doorwayDue && S.doorwayDue(this)) ? 'doorway' : 'designs';
+	};
+
+	// body.again: the saved line's link (no new lead); body.preview: no REST URL (local preview).
 	// A door added by a known person (the "Add this door" ask) is not a second lead. Whether the
 	// ask was the known one is read from when it was made: a first lead sets the store's email
 	// before this runs.
@@ -153,7 +159,7 @@
 		if (body && !body.again) { this.reopened = false; }   // a lead or an added door, this visit
 		if (body && body.token && this.store) { this.store.addToken(body.token); }
 		this.nudgeOn = false;
-		this.go(this.nextAfterLead());
+		this.go(body && body.again ? this.savedNext() : this.nextAfterLead());
 	};
 
 	// ---- Navigation and drawing -------------------------------------------------------------
@@ -236,7 +242,8 @@
 			var doors = body && Array.isArray(body.doors) ? body.doors : null;
 			var door = doors ? doors.filter(function (d) { return d && d.token === token; })[0] : null;
 			if (doors && (!door || door.status === 'closed')) { self.go('designs'); return; }
-			self.savedToken = token;   // the ask shows "sent" and changes save through update()
+			self.savedToken = token;   // the ask shows "saved" and changes save through update()
+			if (door && door.frame && W.HD_DD_D4Steps) { W.HD_DD_D4Steps.state(self).answered = true; }   // its doorway is on record
 			self.go(screen === 'doorway' ? 'doorway' : 'door');
 		}
 		if (!this.store || !this.store.list) { open(null); return Promise.resolve(); }

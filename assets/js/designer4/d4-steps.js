@@ -7,7 +7,7 @@
 // live here too.
 //
 //   HD_DD_D4Steps.strip(app, now); .doorway(app, shell); .details(app, shell); .done(app, shell);
-//   .state(app); .once(app, key); .afterDoorway(app); .email(app)
+//   .state(app); .once(app, key); .afterDoorway(app); .doorwayDue(app); .email(app)
 (function (W) {
 	'use strict';
 
@@ -61,6 +61,15 @@
 	function offersDoorway(app) {
 		var F = W.HD_DD_D3Frame, step = app.stepFor('Frame Design');
 		return !!(F && F.offered(step ? step.choices : null));
+	}
+	// The doorway is offered and not yet answered: not picked or skipped this visit (state.exact,
+	// state.answered), not on record (the app's openListed sets answered) and not on the design.
+	function doorwayDue(app) {
+		if (!offersDoorway(app)) { return false; }
+		var st = state(app), D = W.HD_DD_D4Doorway;
+		var id = Number((app.design()['Frame Design'] || {}).id) || null;
+		if (st.answered || st.exact != null) { return false; }
+		return !(id && id !== 1 && D && D.familyOf(id));
 	}
 	// After the doorway: details while any of name/postcode/phone is missing or unknown.
 	function afterDoorway(app) {
@@ -181,6 +190,6 @@
 
 	W.HD_DD_D4Steps = {
 		strip: strip, doorway: doorway, details: details, done: done,
-		state: state, once: once, afterDoorway: afterDoorway, email: email, COPY: COPY
+		state: state, once: once, afterDoorway: afterDoorway, doorwayDue: doorwayDue, email: email, COPY: COPY
 	};
 })(typeof window !== 'undefined' ? window : this);

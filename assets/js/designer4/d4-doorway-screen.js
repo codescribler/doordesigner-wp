@@ -166,6 +166,8 @@
 				app.funnel.step('doorway_skip');
 				send(app, { doorway: 'skipped' });
 			}
+			st.answered = true;   // the door screen's saved line now leads to My designs
+
 			app.go(S.afterDoorway(app));
 		}
 		function row(cls, q, list) {

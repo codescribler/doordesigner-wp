@@ -4,8 +4,11 @@
 // honeypot, email checks, busy lock, paint wait and one-update-at-a-time logic as d3-save.js.
 //
 //   HD_DD_D4Ask.create({ store, cfg, known, getDesign(), getCanvas(), whenPainted?(), experiment(),
-//                        hasHandle(), onNoHandle(), onLead(body) })
+//                        hasHandle(), onNoHandle(), onLead(body), nextStep?() })
 //   known: reached from My designs, so the person is already known: no email input, store.addDoor.
+//   After the lead the form gives way to one slim line (hd-d4-saved): what autosave is doing
+//   (saved / saving / failed / held for no handle) and a link on, "Next: your doorway" when
+//   nextStep() is 'doorway', else "See my designs" (it calls onLead({again: true})).
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory(require('../swipe/review-save.js'), require('../enquiry.js'));
@@ -22,8 +25,11 @@
     label: 'Your email',
     placeholder: 'you@example.com',
     noHandle: 'Oops, your door needs a handle to be saved.',
-    sentLine: '✓ Sent. Any changes you make here are saved too.',
+    saved: '✓ Saved. Changes save automatically.',
+    saving: 'Saving…',
+    saveFailed: 'Couldn\'t save just now. We\'ll try again when you change something.',
     next: 'Next: your doorway',
+    designs: 'See my designs',
     badEmail: RS.COPY.badEmail,
     failed: RS.COPY.failed,
     expired: RS.COPY.expired,
@@ -45,7 +51,14 @@
     var busy = false;
     var pending = null;
     var email = '';
+    var saveState = 'saved';   // after the lead: saved | saving | failed | held (no handle)
+    var line = null;           // the slim line's status text, once drawn
+    var STATE_TEXT = { saved: COPY.saved, saving: COPY.saving, failed: COPY.saveFailed, held: COPY.noHandle };
 
+    function onPage(n) {
+      var b = document.body;
+      return !b || !b.contains || b.contains(n);
+    }
     function pageUrl() { return o.pageUrl || (window.location.origin + window.location.pathname); }
     function snapshot() {
       try { return Enquiry.snapshot(o.getCanvas ? o.getCanvas() : null); } catch (e) { return null; }
@@ -57,16 +70,26 @@
       return (f && (f.handle || f.email)) || (res && res.body && res.body.message) || COPY.failed;
     }
 
-    function doneState(container) {
-      var wrap = el('div', 'hd-d4-ask hd-d4-ask--done');
-      wrap.appendChild(el('div', 'hd-d4-ask__done', COPY.sentLine));
-      var btn = el('button', 'hd-d4-ask__btn', COPY.next);
-      var error = el('div', 'hd-d4-ask__error');
+    // The slim line's status: only its text and class change, so focus stays where it is.
+    function show(s) {
+      saveState = s;
+      if (!line) { return; }
+      line.textContent = STATE_TEXT[s];
+      line.className = 'hd-d4-saved__text' + (s === 'held' || s === 'failed' ? ' hd-d4-saved__text--error' : '');
+    }
+
+    function savedLine(container) {
+      var wrap = el('div', 'hd-d4-saved');
+      line = el('span', 'hd-d4-saved__text');
+      line.setAttribute('role', 'status');
+      line.setAttribute('aria-live', 'polite');
+      wrap.appendChild(line);
+      var to = o.nextStep ? o.nextStep() : 'doorway';
+      var btn = el('button', 'hd-d3-textlink hd-d4-saved__next', to === 'doorway' ? COPY.next : COPY.designs);
       btn.type = 'button';
       btn.addEventListener('click', function () {
-        error.textContent = '';
         if (!o.hasHandle()) {   // the same check as the email button: no handle, nothing sent
-          error.textContent = COPY.noHandle;
+          show('held');
           if (o.onNoHandle) { o.onNoHandle(); }
           return;
         }
@@ -74,8 +97,9 @@
         if (o.onLead) { o.onLead({ ok: true, token: token, again: true }); }
       });
       wrap.appendChild(btn);
-      wrap.appendChild(error);
+      show(!o.hasHandle() ? 'held' : (saveState === 'held' ? 'saved' : saveState));
       container.appendChild(wrap);
+      return btn;
     }
 
     function emailField(row, hp) {
@@ -94,7 +118,8 @@
 
     function render(container) {
       container.innerHTML = '';
-      if (token) { doneState(container); return; }
+      line = null;
+      if (token) { return savedLine(container); }
       var f = document.createElement('form');
       f.className = 'hd-d4-ask';
       f.setAttribute('novalidate', 'novalidate');
@@ -148,8 +173,15 @@
           if (!ok) { btn.disabled = false; error.textContent = message(res); return; }
           token = res.body.token;
           savedKey = key;
+          saveState = 'saved';
           if (input) { store.setEmail(email); }
+          var a = document.activeElement, hadFocus = !!(a && f.contains && f.contains(a));
           try { if (o.onLead) { o.onLead(res.body); } } catch (err) { /* the lead itself worked */ }
+          // Still on this screen (the app did not move on): the form turns into the slim line here.
+          if (f.parentNode === container && onPage(container)) {
+            var next = render(container);
+            if (hadFocus && next && next.focus) { next.focus(); }
+          }
         }
         var call;
         try { call = o.known ? store.addDoor(body) : store.lead(body); } catch (err) { call = Promise.reject(err); }
@@ -169,24 +201,29 @@
     }
 
     // Bring the stored door in line with the design on screen. Resolves true when it matches.
-    // One update at a time. A 409 (closed or removed) resolves false and clears nothing.
+    // One update at a time. A 409 (closed or removed) resolves false and clears nothing. With no
+    // handle the save is held (the server refuses such a door); the next change after a handle
+    // pick sends it.
     function update() {
       if (!token || !cfg.restUrl) { return Promise.resolve(false); }
+      if (!o.hasHandle()) { show('held'); return Promise.resolve(false); }
       return painted().then(send);
     }
     function send() {
       if (!token) { return false; }
       if (pending) { return pending.then(function (ok) { return ok ? update() : false; }); }
       var key = RS.designKey(o.getDesign());
-      if (key === savedKey) { return Promise.resolve(true); }
+      if (key === savedKey) { show('saved'); return Promise.resolve(true); }
       var body = { design: Enquiry.cleanDesign(o.getDesign()) };
       var shot = snapshot();
       if (shot) { body.image = shot; }
+      show('saving');
       var p = Promise.resolve(store.update(token, body)).then(function (res) {
         pending = null;
-        if (res && res.ok) { savedKey = key; return true; }
+        if (res && res.ok) { savedKey = key; show('saved'); return true; }
+        show('failed');
         return false;
-      }, function () { pending = null; return false; });
+      }, function () { pending = null; show('failed'); return false; });
       pending = p;
       return p;
     }
@@ -195,7 +232,7 @@
       render: render,
       saved: function () { return !!token; },
       token: function () { return token; },
-      setToken: function (t) { token = t || null; savedKey = token ? RS.designKey(o.getDesign()) : null; },
+      setToken: function (t) { token = t || null; savedKey = token ? RS.designKey(o.getDesign()) : null; saveState = 'saved'; },
       update: update
     };
   }

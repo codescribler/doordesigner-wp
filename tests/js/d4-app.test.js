@@ -158,12 +158,20 @@ dbl2.select('Door Design', dbl2.styles()[0].label);
 dbl2.pick('handle', 'Handle', dbl2.previewLabels()[0] || 'Lever/Lever');
 dbl2.onLead({ ok: true, token: 'tokD' });
 assert.strictEqual(dbl2.screen, 'details', 'Double Door offers no doorway');
-// again (the sent state's Next) and preview: no second lead
+// again (the saved line's link): no second lead; the doorway while it is due, else My designs
 var n0 = single.log.length;
+var due = true;
+window.HD_DD_D4Steps = { doorwayDue: function (app) { return app === single && due; } };
 single.go('door');
 single.onLead({ ok: true, token: 'tokS', again: true });
 assert.strictEqual(single.log.slice(n0).filter(function (s) { return s[0] === 'lead' || s[0] === 'LEAD()'; }).length, 0);
 assert.strictEqual(single.screen, 'doorway');
+assert.strictEqual(single.savedNext(), 'doorway');
+due = false;
+single.go('door');
+single.onLead({ ok: true, token: 'tokS', again: true });
+assert.strictEqual(single.screen, 'designs', 'doorway answered: My designs');
+window.HD_DD_D4Steps = {};
 
 // a known person (from My designs) with nothing missing, on a type with no doorway: done
 var known = make();

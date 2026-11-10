@@ -115,8 +115,16 @@
 .hd-d4-ask__error { margin-top: 6px; color: var(--d4-danger); font-size: .88rem; font-weight: 600; }
 .hd-d4-ask__status { margin-top: 4px; font-size: .85rem; color: #4a4f57; }
 .hd-d4-ask__error:empty, .hd-d4-ask__status:empty { display: none; }
-.hd-d4-ask--done { display: flex; flex-direction: column; gap: 8px; }
-.hd-d4-ask__done { font-size: .9rem; font-weight: 600; color: var(--d3-accent); }
+/* After the lead: one slim line in place of the box, status left, link right (one row on phones). */
+.hd-d4-saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; }
+.hd-d4-saved__text { flex: 1 1 12em; min-width: 0; font-size: .88rem; font-weight: 600; line-height: 1.3; color: var(--d3-accent); }
+.hd-d4-saved__text--error { color: var(--d4-danger); }
+.hd-d4 .hd-d4-saved__next { display: inline-flex; align-items: center; min-height: 40px; margin: 0; padding: 0 2px; white-space: nowrap; }
+@media (max-width: 719px) {
+  .hd-d4-saved { flex-wrap: nowrap; }
+  .hd-d4-saved__text { font-size: .82rem; }
+  .hd-d4 .hd-d4-saved__next { min-height: 44px; }
+}
 
 /* 3. Progress strip and the green line -------------------------------------------------- */
 .hd-d4-strip { display: flex; gap: 6px; margin: 12px 0 10px; padding: 0; list-style: none; }
