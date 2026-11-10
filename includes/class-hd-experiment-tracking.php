@@ -3,6 +3,7 @@
  * How far each A/B visitor got, on their row in the visitors table (HD_DD_Experiments::table()):
  *   started_at  first choice          shown_at  saw their finished door
  *   form_at     opened the quote form saved_at  saved the design by email
+ *   doorway_at / frame_at / details_at  Designer 4's doorway question, frame choice, details step
  * The browser reports the first three through POST experiment/step; saves are marked here from
  * hd_dd_design_saved. Each time is written once (COALESCE) and a later milestone fills in the
  * earlier ones, so a lost beacon cannot make the funnel go backwards. Quote requests
@@ -26,6 +27,10 @@ class HD_DD_Experiment_Tracking {
 		'started' => array( 'started_at' ),
 		'shown'   => array( 'started_at', 'shown_at' ),
 		'form'    => array( 'started_at', 'shown_at', 'form_at' ),
+		// Designer 4: the doorway question, the frame picked from it, and the details step.
+		'doorway'       => array( 'started_at', 'shown_at', 'doorway_at' ),
+		'doorwaypicked' => array( 'started_at', 'shown_at', 'doorway_at', 'frame_at' ),
+		'details'       => array( 'started_at', 'shown_at', 'doorway_at', 'frame_at', 'details_at' ),
 	);
 
 	public function register() {

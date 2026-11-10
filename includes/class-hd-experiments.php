@@ -19,7 +19,7 @@ class HD_DD_Experiments {
 	const OPTION      = 'hd_dd_experiment';
 	const HISTORY     = 'hd_dd_experiment_history';
 	const DB_OPTION   = 'hd_dd_experiments_db_version';
-	const DB_VERSION  = '4';
+	const DB_VERSION  = '5';
 	const CRON        = 'hd_dd_experiment_evaluate';
 	const RATE_LIMIT  = 30;   // exposes per IP …
 	const RATE_WINDOW = 3600; // … per hour.
@@ -41,7 +41,7 @@ class HD_DD_Experiments {
 
 	/** @return array flow key => label. */
 	public static function flows() {
-		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe2' => 'Swipe 2', 'designer3' => 'Designer 3' ) );
+		return (array) apply_filters( 'hd_dd_flows', array( 'classic' => 'Classic', 'swipe2' => 'Swipe 2', 'designer3' => 'Designer 3', 'designer4' => 'Designer 4' ) );
 	}
 
 	public static function is_flow( $flow ) {
@@ -233,7 +233,7 @@ class HD_DD_Experiments {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT arm, device, exposed_at, started_at, shown_at, form_at, saved_at, converted_at, callback_at FROM {$table} WHERE experiment_id = %s", $exp['id'] ) );
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT arm, device, exposed_at, started_at, shown_at, doorway_at, frame_at, details_at, form_at, saved_at, converted_at, callback_at FROM {$table} WHERE experiment_id = %s", $exp['id'] ) );
 		$sums = HD_DD_Experiment_Journey::summarise( $rows, HD_DD_Experiment_Tracking::since( $exp ), self::ARMS );
 		$out  = array();
 		foreach ( self::ARMS as $arm ) {
@@ -448,6 +448,9 @@ class HD_DD_Experiments {
 			callback_at DATETIME NULL DEFAULT NULL,
 			started_at DATETIME NULL DEFAULT NULL,
 			shown_at DATETIME NULL DEFAULT NULL,
+			doorway_at DATETIME NULL DEFAULT NULL,
+			frame_at DATETIME NULL DEFAULT NULL,
+			details_at DATETIME NULL DEFAULT NULL,
 			form_at DATETIME NULL DEFAULT NULL,
 			saved_at DATETIME NULL DEFAULT NULL,
 			device VARCHAR(10) NOT NULL DEFAULT '',

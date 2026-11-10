@@ -6,7 +6,8 @@
  * Per arm:
  *   visitors, leads (quote requests: the deciding figure), callbacks,
  *   saves, anyLeads (quote, save or call back), savedThenQuoted,
- *   journey  { since, opened, started, shown, saved, form, quoted, callbacks, anyLeads }
+ *   journey  { since, opened, started, shown, saved, form, quoted, callbacks, anyLeads,
+ *              doorway, doorwayPicked, details (Designer 4) }
  *            visitors who arrived on or after `since` only (milestones were not recorded before),
  *   devices  { phone|desktop|unknown: { visitors, leads, anyLeads } }
  *
@@ -21,7 +22,7 @@ class HD_DD_Experiment_Journey {
 
 	/**
 	 * @param array  $rows  Visitor rows (objects or arrays): arm, device, exposed_at, started_at,
-	 *                      shown_at, form_at, saved_at, converted_at, callback_at.
+	 *                      shown_at, doorway_at, frame_at, details_at, form_at, saved_at, converted_at, callback_at.
 	 * @param string $since 'Y-m-d H:i:s' UTC: the journey counts visitors exposed from then on.
 	 * @param array  $arms  Arm keys to report (always present, even with no rows).
 	 * @return array arm => numbers.
@@ -64,6 +65,9 @@ class HD_DD_Experiment_Journey {
 				'quoted'    => 0,
 				'callbacks' => 0,
 				'anyLeads'  => 0,
+				'doorway'       => 0,
+				'doorwayPicked' => 0,
+				'details'       => 0,
 			),
 			'devices'         => $dev,
 		);
@@ -96,6 +100,9 @@ class HD_DD_Experiment_Journey {
 		$j['started']   += self::set( $r, 'started_at' ) ? 1 : 0;
 		$j['shown']     += self::set( $r, 'shown_at' ) ? 1 : 0;
 		$j['form']      += self::set( $r, 'form_at' ) ? 1 : 0;
+		$j['doorway']       += self::set( $r, 'doorway_at' ) ? 1 : 0;
+		$j['doorwayPicked'] += self::set( $r, 'frame_at' ) ? 1 : 0;
+		$j['details']       += self::set( $r, 'details_at' ) ? 1 : 0;
 		$j['saved']     += $saved ? 1 : 0;
 		$j['quoted']    += $quoted ? 1 : 0;
 		$j['callbacks'] += $callback ? 1 : 0;

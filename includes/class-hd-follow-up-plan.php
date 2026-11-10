@@ -95,6 +95,11 @@ class HD_DD_Follow_Up_Plan {
 		return (bool) preg_match( '/\btest\b/', $text );
 	}
 
+	/** Designer 4 doors get the link email only, never the follow-up sequence. */
+	public static function is_designer4( $row ) {
+		return isset( $row->flow ) && 'designer4' === $row->flow;
+	}
+
 	/**
 	 * Earlier saves to start following up: the newest save per email address, not flagged,
 	 * not ours, from no address that has asked for a quote or call back, not already started.
@@ -121,7 +126,7 @@ class HD_DD_Follow_Up_Plan {
 				continue; // an older save from the same person.
 			}
 			$seen[ $email ] = true;
-			if ( isset( $leads[ $email ] ) || isset( $done[ (int) $s->id ] ) || self::is_test( $s ) || '' !== self::stop_reason( $s, false ) ) {
+			if ( isset( $leads[ $email ] ) || isset( $done[ (int) $s->id ] ) || self::is_test( $s ) || self::is_designer4( $s ) || '' !== self::stop_reason( $s, false ) ) {
 				continue;
 			}
 			$out[] = $s;

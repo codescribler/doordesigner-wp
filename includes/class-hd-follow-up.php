@@ -64,7 +64,7 @@ class HD_DD_Follow_Up {
 			return;
 		}
 		$row = ( new HD_DD_Repository() )->get( $id );
-		if ( ! $row || HD_DD_Follow_Up_Plan::is_test( $row ) ) {
+		if ( ! $row || HD_DD_Follow_Up_Plan::is_test( $row ) || HD_DD_Follow_Up_Plan::is_designer4( $row ) ) {
 			return;
 		}
 		$url = isset( $payload['reloadUrl'] ) ? (string) $payload['reloadUrl'] : '';
@@ -319,7 +319,7 @@ class HD_DD_Follow_Up {
 	public static function backfill_candidates() {
 		global $wpdb;
 		$et      = HD_DD_Repository::table();
-		$saves   = (array) $wpdb->get_results( "SELECT id, token, created_at, customer_email, customer_name, design_name, status, kind FROM {$et} WHERE kind = 'save'" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$saves   = (array) $wpdb->get_results( "SELECT id, token, created_at, customer_email, customer_name, design_name, status, kind, flow FROM {$et} WHERE kind = 'save'" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$leads   = (array) $wpdb->get_col( "SELECT DISTINCT customer_email FROM {$et} WHERE kind IN ('enquiry','callback')" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$started = (array) $wpdb->get_col( 'SELECT enquiry_id FROM ' . self::table() ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return HD_DD_Follow_Up_Plan::backfill_candidates( $saves, $leads, $started );

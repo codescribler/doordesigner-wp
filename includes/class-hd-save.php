@@ -116,12 +116,12 @@ class HD_DD_Save {
 	}
 
 	/**
-	 * Designer 3 rows say so on the payload (from the row's flow column), so the business email
+	 * Designer 3 and 4 rows say so on the payload (from the row's flow column), so the business email
 	 * can tell its repeated Frame Design labels apart. Other flows' payloads are left as they are.
 	 */
 	private function with_flow( array $payload, $row ) {
-		if ( isset( $row->flow ) && 'designer3' === $row->flow ) {
-			$payload['flow'] = 'designer3';
+		if ( isset( $row->flow ) && in_array( $row->flow, array( 'designer3', 'designer4' ), true ) ) {
+			$payload['flow'] = $row->flow;
 		}
 		return $payload;
 	}

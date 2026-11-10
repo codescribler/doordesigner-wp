@@ -104,7 +104,7 @@ class HD_DD_Experiment_Export {
 		if ( isset( $s['journey'] ) && is_array( $s['journey'] ) ) {
 			$j              = $s['journey'];
 			$out['journey'] = array( 'since' => isset( $j['since'] ) ? (string) $j['since'] : '' );
-			foreach ( array( 'opened', 'started', 'shown', 'saved', 'form', 'quoted', 'callbacks', 'anyLeads' ) as $k ) {
+			foreach ( array( 'opened', 'started', 'shown', 'saved', 'form', 'quoted', 'callbacks', 'anyLeads', 'doorway', 'doorwayPicked', 'details' ) as $k ) {
 				$out['journey'][ $k ] = isset( $j[ $k ] ) ? (int) $j[ $k ] : 0;
 			}
 		}
