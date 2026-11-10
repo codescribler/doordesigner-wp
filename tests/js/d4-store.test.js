@@ -4,7 +4,7 @@ var Store = require('../../assets/js/designer4/d4-store.js');
 
 function mem() {
   var d = {};
-  return { d: d, getItem: function (k) { return k in d ? d[k] : null; }, setItem: function (k, v) { d[k] = String(v); } };
+  return { d: d, getItem: function (k) { return k in d ? d[k] : null; }, setItem: function (k, v) { d[k] = String(v); }, removeItem: function (k) { delete d[k]; } };
 }
 function harness(storage, reply) {
   var h = { calls: [] };
@@ -29,12 +29,24 @@ function harness(storage, reply) {
   assert.deepStrictEqual(again.s.auth(), { tokens: ['bbb', 'aaa'] });
   assert.strictEqual(again.s.email(), 'jo@example.com');
 
-  // The owner pair wins, is memory only, and is never stored.
+  // The owner pair wins. It is kept in the tab's sessionStorage (so a reload in the same tab
+  // still works once boot has taken k out of the address bar), never in the session list itself.
   h.s.setOwner('own', 'key');
   assert.deepStrictEqual(h.s.auth(), { token: 'own', k: 'key' });
   h.s.addToken('ccc'); // forces another write after the owner was set
-  assert.ok(st.d.hd_dd_d4_session.indexOf('own') === -1 && st.d.hd_dd_d4_session.indexOf('key') === -1, 'owner pair not written');
-  assert.deepStrictEqual(harness(st).s.auth(), { tokens: ['bbb', 'aaa', 'ccc'] }, 'a new store has no owner');
+  assert.ok(st.d.hd_dd_d4_session.indexOf('own') === -1 && st.d.hd_dd_d4_session.indexOf('key') === -1, 'owner pair not in the session list');
+  assert.deepStrictEqual(harness(st).s.auth(), { token: 'own', k: 'key' }, 'a new store on the same sessionStorage answers with the owner pair');
+  h.s.setOwner(null);
+  assert.deepStrictEqual(harness(st).s.auth(), { tokens: ['bbb', 'aaa', 'ccc'] }, 'clearing the owner clears it from storage too');
+  assert.deepStrictEqual(harness(mem()).s.auth(), { tokens: [] }, 'another tab (other storage) has no owner');
+  // By default the store uses sessionStorage, never localStorage.
+  var sess = mem(), local = mem(), was = global.window;
+  global.window = { sessionStorage: sess, localStorage: local };
+  var def = Store.create({ api: function () { return Promise.resolve({ ok: true }); } });
+  def.setOwner('own2', 'key2'); def.addToken('t1'); def.setEmail('a@b.co');
+  assert.ok(JSON.stringify(sess.d).indexOf('key2') !== -1, 'the owner pair is in sessionStorage');
+  assert.deepStrictEqual(local.d, {}, 'nothing is written to localStorage');
+  global.window = was;
 
   // At most the 50 most recent tokens.
   var big = harness(mem());

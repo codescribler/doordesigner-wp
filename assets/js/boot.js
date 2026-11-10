@@ -70,6 +70,15 @@
 				designs = qs.get('designs');
 				designsKey = qs.get('k') || '';
 			} catch (e) { saved = null; designs = null; }
+			// Designer 4: the owner key has been read, so take it out of the address bar (analytics
+			// and screenshots never record it). The store keeps the pair for a reload in this tab.
+			if (designs && designsKey) {
+				try {
+					var clean = new URL(window.location.href);
+					clean.searchParams['delete']('k');
+					window.history.replaceState(window.history.state, '', clean.pathname + clean.search + clean.hash);
+				} catch (e) { /* older browsers keep the address as it is */ }
+			}
 			var doorType = root.getAttribute('data-door-type') || '';
 
 			// Start one flow. `assignment` is null for forced flows, muted visits and return links.

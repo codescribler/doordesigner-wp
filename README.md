@@ -387,9 +387,15 @@ price status, its doorway (or a prompt to add it), Open and adjust, and Remove (
 A door on a closed deal shows its picture, name and date only. "Design another door" adds a door
 to the same estimate.
 
+The My designs link carries an owner key (`?designs=TOKEN&k=KEY`). Once the page has read it, the
+key is taken out of the address bar and kept only in that tab's session storage. **The key does
+not expire.** Changing the site's auth salt (`AUTH_KEY` or `AUTH_SALT` in `wp-config.php`) invalidates every
+emailed My designs link at once. A bare `?design=TOKEN` link (wp-admin's "Open in designer", the
+manager's design link) opens the door as a copy to look at: nothing is saved under its token.
+
 Files: `assets/js/designer4/` (`d4-app.js` the controller; `d4-door.js`, `d4-ask.js`,
 `d4-steps.js`, `d4-doorway-screen.js`, `d4-sideglass.js`, `d4-mydesigns.js`, `d4-card.js` the
-screens; `d4-labels.js` the part labels with lines that replace the dots, placed by `d4-callouts.js`; `d4-handle.js`, `d4-doorway.js`, `d4-store.js` the rules and the REST calls),
+screens; `d4-saved.js` opening a stored door; `d4-labels.js` the part labels with lines that replace the dots, placed by `d4-callouts.js`; `d4-handle.js`, `d4-doorway.js`, `d4-store.js` the rules and the REST calls),
 `assets/css/hd-designer4.css` (loaded after Designer 3's, everything scoped under `.hd-d4`),
 `includes/class-hd-d4*.php` (the `d4/*` routes, the email, the manager events).
 Design: `docs/superpowers/specs/2026-11-10-designer-4-design.md`.
@@ -397,10 +403,10 @@ Design: `docs/superpowers/specs/2026-11-10-designer-4-design.md`.
 **Look at it without WordPress:** from the plugin root run `python -m http.server 8000` (or
 `npx http-server -p 8000`) and open `http://localhost:8000/tools/d4-test.html`. There is no
 REST URL, so the email box runs in preview mode and nothing is sent; a fake API in the page
-(`tools/d4-fake-api.js`) answers the `d4/*` calls from memory, starting with three doors (price
-on its way with no doorway, estimate sent, closed deal), a missing postcode and older designs.
+(`tools/d4-fake-api.js`) answers the `d4/*` calls from memory, starting with four doors (price
+on its way with no doorway, estimate sent, closed deal, a Double Door with no doorway to ask), a missing postcode and older designs.
 Switches, listed at the top of the file: `?screen=designs` (My designs, as the emailed link
-opens it), `?design=tA` (reopen a door), `?lead=fake` (the email really goes to the fake
+opens it), `?design=tA` (a door as a copy, as a bare `?design=` link opens it), `?lead=fake` (the email really goes to the fake
 `d4/lead`), `?fail=designs,remove,open,details` (the error lines), `?slow=1` (the loading lines),
 `?motion=reduce`.
 

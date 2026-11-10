@@ -1,7 +1,9 @@
 // assets/js/designer4/d4-store.js
 // Designer 4's session store: which doors this browser made, the email typed, and the calls to the
-// plugin's d4/* REST routes. Tokens and the email live in sessionStorage (hd_dd_d4_session); the owner
-// pair {token, k} from the emailed link is memory only and is never written anywhere.
+// plugin's d4/* REST routes. Tokens and the email live in sessionStorage (hd_dd_d4_session). The owner
+// pair {token, k} from the emailed link is kept in the same tab's sessionStorage (hd_dd_d4_owner), so a
+// reload still works once boot.js has taken k out of the address bar. It is never written to
+// localStorage and never sent anywhere but the plugin's own d4/* routes.
 //
 //   var s = HD_DD_D4Store.create({ api, storage?, pageUrl? });   api(path, opts) -> Promise<{ok,status,body}>
 //   s.auth()  { token, k } when an owner is set, else { tokens }
@@ -13,6 +15,7 @@
   'use strict';
 
   var KEY = 'hd_dd_d4_session';
+  var OWNER_KEY = 'hd_dd_d4_owner';
   var MAX_TOKENS = 50;
 
   function defaultStorage() {
@@ -37,6 +40,10 @@
         tokens = saved.tokens.filter(function (t) { return typeof t === 'string' && t; }).slice(-MAX_TOKENS);
       }
       if (saved && typeof saved.email === 'string') { email = saved.email; }
+    } catch (e) { /* no storage, or nothing usable in it */ }
+    try {
+      var o2 = JSON.parse(storage.getItem(OWNER_KEY));
+      if (o2 && typeof o2.token === 'string' && o2.token && typeof o2.k === 'string' && o2.k) { owner = { token: o2.token, k: o2.k }; }
     } catch (e) { /* no storage, or nothing usable in it */ }
 
     function persist() {
@@ -69,7 +76,10 @@
 
     return {
       auth: auth,
-      setOwner: function (token, k) { owner = (token && k) ? { token: String(token), k: String(k) } : null; },
+      setOwner: function (token, k) {
+        owner = (token && k) ? { token: String(token), k: String(k) } : null;
+        try { if (owner) { storage.setItem(OWNER_KEY, JSON.stringify(owner)); } else { storage.removeItem(OWNER_KEY); } } catch (e) { /* ignore */ }
+      },
       addToken: addToken,
       email: function () { return email; },
       setEmail: function (e) { email = String(e == null ? '' : e); persist(); },
@@ -82,5 +92,5 @@
     };
   }
 
-  return { create: create, KEY: KEY };
+  return { create: create, KEY: KEY, OWNER_KEY: OWNER_KEY };
 }));
