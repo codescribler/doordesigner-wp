@@ -33,17 +33,24 @@ D3.concat(D4).forEach(function (k) {
 });
 assert.strictEqual(X.canRunDesigner3(win, {}), true);
 
-// With the shells loaded and no app defined yet, Designer 4 cannot run: assigned visitors get classic.
-var shells = ['d4-handle', 'd4-doorway', 'd4-store', 'd4-ask', 'd4-door', 'd4-sideglass', 'd4-steps', 'd4-mydesigns', 'd4-app'];
+// With every module loaded (the steps and My designs still shells), the app is defined and
+// Designer 4 can run. Each module defines the global experiment.js checks for.
+var files = ['d4-handle', 'd4-doorway', 'd4-store', 'd4-ask', 'd4-door', 'd4-sideglass', 'd4-steps', 'd4-mydesigns', 'd4-app'];
+var UMD = { 'd4-handle': 'HD_DD_D4Handle', 'd4-doorway': 'HD_DD_D4Doorway', 'd4-store': 'HD_DD_D4Store', 'd4-ask': 'HD_DD_D4Ask' };
 global.window = { HD_DD_Preview: {}, HD_DD_Designer3App: function () {}, HD_DD_D3AfterSave: {}, HD_DD_D3Save: {}, HD_DD_D3Toolbox: {}, HD_DD_D3FrameStep: {} };
-shells.forEach(function (f) {
+files.forEach(function (f) {
   var file = path.join(__dirname, '..', '..', 'assets/js/designer4', f + '.js');
   assert.ok(fs.existsSync(file), f + '.js exists');
   var m = require(file);
-  var umd = ['d4-handle', 'd4-doorway', 'd4-store', 'd4-ask'].indexOf(f) !== -1;
-  var shell = umd ? m : global.window[{ 'd4-door': 'HD_DD_D4Door', 'd4-sideglass': 'HD_DD_D4SideGlass', 'd4-steps': 'HD_DD_D4Steps', 'd4-mydesigns': 'HD_DD_D4MyDesigns' }[f]];
-  if (f !== 'd4-app' && f !== 'd4-handle' && f !== 'd4-doorway' && f !== 'd4-store' && f !== 'd4-ask') { assert.deepStrictEqual(Object.keys(shell || { x: 1 }), [], f + ' is an empty shell'); }
+  if (UMD[f]) { global.window[UMD[f]] = m; }   // in Node a UMD module exports instead of setting window
+  var shell = global.window[{ 'd4-sideglass': 'HD_DD_D4SideGlass', 'd4-steps': 'HD_DD_D4Steps', 'd4-mydesigns': 'HD_DD_D4MyDesigns' }[f]];
+  if (['d4-sideglass', 'd4-steps', 'd4-mydesigns'].indexOf(f) !== -1) { assert.deepStrictEqual(Object.keys(shell || { x: 1 }), [], f + ' is an empty shell'); }
 });
-assert.strictEqual(typeof global.window.HD_DD_Designer4App, 'undefined');
-assert.strictEqual(X.canRunDesigner4(global.window, {}), false);
+assert.strictEqual(typeof global.window.HD_DD_D4Door.door, 'function', 'd4-door defines the door screen');
+assert.strictEqual(typeof global.window.HD_DD_Designer4App, 'function', 'd4-app defines the app');
+assert.strictEqual(X.canRunDesigner4(global.window, {}), true, 'every Designer 4 global defined: it can run');
+D4.forEach(function (k) {
+  var w = Object.assign({}, global.window); delete w[k];
+  assert.strictEqual(X.canRunDesigner4(w, {}), false, 'loaded, but missing ' + k);
+});
 console.log('designer4-wiring ok');
