@@ -249,6 +249,32 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.strictEqual(g.textContent, 'Doors like this from £1,450 fitted');
   assert.strictEqual(dock.children.indexOf(g) + 1, dock.children.indexOf(shell7.querySelector('.hd-d3-saveslot')), 'directly above the ask');
 
+  // once the door is a lead the guide price has done its job: absent, before the lead present
+  function leadSaver(on) { return function () { return { saved: function () { return on.v; } }; }; }
+  var lead7 = { v: true };
+  var app7b = fakeApp({ previewDue: false, guide: 'Doors like this from £1,450 fitted', saver: leadSaver(lead7) });
+  var shell7b = node('div');
+  Door.door(app7b, shell7b);
+  assert.strictEqual(shell7b.querySelector('.hd-d4-guide'), null, 'no guide price after the lead');
+  var lead7c = { v: false };
+  var app7c = fakeApp({ previewDue: false, guide: 'Doors like this from £1,450 fitted', saver: leadSaver(lead7c) });
+  var shell7c = node('div');
+  var v7c = Door.door(app7c, shell7c);
+  assert.ok(shell7c.querySelector('.hd-d4-guide'), 'guide price before the lead');
+  lead7c.v = true;   // the lead sent while still on this screen
+  v7c.refresh();
+  assert.strictEqual(shell7c.querySelector('.hd-d4-guide'), null, 'gone once the door is a lead');
+
+  // ---- the nudge never shows once the door is a lead ---------------------------------------------
+  var appL = fakeApp({ previewDue: false, nudgeOn: true, saver: leadSaver({ v: true }) });
+  var shellL = node('div');
+  var vL = Door.door(appL, shellL);
+  assert.strictEqual(shellL.querySelector('.hd-d3-nudgeslot').children.length, 0, 'nudge slot empty for a lead');
+  assert.strictEqual(appL.nudgeOn, false, 'and kept off');
+  appL.nudgeOn = true;   // Designer 3's pick turns it on and redraws
+  vL.refresh();
+  assert.strictEqual(shellL.querySelector('.hd-d3-nudgeslot').children.length, 0, 'still empty after a pick');
+
   // ---- the nudge points at the price -----------------------------------------------------------
   var app8 = fakeApp({ previewDue: false, nudgeOn: true });
   var shell8 = node('div');

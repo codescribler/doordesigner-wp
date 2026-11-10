@@ -4,7 +4,7 @@
 //   - the banner and the glowing Handle control (class hd-d4-needhandle on the shell) while the
 //     door has no handle; once it has one, the banner points at the labels;
 //   - the part labels with lines in place of the "+" dots (d4-labels.js);
-//   - the guide price above the ask, and the nudge pointing at the price;
+//   - the guide price above the ask, and the nudge pointing at the price (neither once a lead);
 //   - the "no handle" speech bubble above the Handle label (the ask's onNoHandle).
 //
 //   HD_DD_D4Door.door(app, shell) -> { refresh, destroy, bubble, stopPreview }
@@ -72,9 +72,11 @@
 		var runner = null, bubbleEl = null;
 		var view = {};
 
+		// A lead (the ask is "saved"): no guide price and no nudge; they have asked for the price.
+		function isLead() { var s = app.saver ? app.saver() : null; return !!(s && s.saved && s.saved()); }
 		var guide = app.cfg().trust && app.cfg().trust.guidePrice;
-		var save = q(shell, 'hd-d3-saveslot');
-		if (guide && save && save.parentNode) { save.parentNode.insertBefore(el('p', 'hd-d4-guide', guide), save); }
+		var save = q(shell, 'hd-d3-saveslot'), guideEl = null;
+		if (guide && save && save.parentNode && !isLead()) { guideEl = save.parentNode.insertBefore(el('p', 'hd-d4-guide', guide), save); }
 
 		function playing() { return !!(runner && runner.playing()); }
 		function hideBubble() { drop(bubbleEl); bubbleEl = null; setClass(shell, 'hd-d4-bubbling', false); }
@@ -108,6 +110,12 @@
 			setClass(shell, 'hd-d4-previewing', playing());   // the handle's ring hides so each handle shows
 			if (parts) { parts.draw(); }
 			if (!app.needHandle) { hideBubble(); clearNoHandleLine(); } else { placeBubble(); }
+			if (isLead()) {
+				drop(guideEl); guideEl = null;
+				app.nudgeOn = false;
+				var slot = q(shell, 'hd-d3-nudgeslot');
+				if (slot) { slot.innerHTML = ''; }
+			}
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
