@@ -389,7 +389,7 @@ to the same estimate.
 
 Files: `assets/js/designer4/` (`d4-app.js` the controller; `d4-door.js`, `d4-ask.js`,
 `d4-steps.js`, `d4-doorway-screen.js`, `d4-sideglass.js`, `d4-mydesigns.js`, `d4-card.js` the
-screens; `d4-handle.js`, `d4-doorway.js`, `d4-store.js` the rules and the REST calls),
+screens; `d4-labels.js` the part labels with lines that replace the dots, placed by `d4-callouts.js`; `d4-handle.js`, `d4-doorway.js`, `d4-store.js` the rules and the REST calls),
 `assets/css/hd-designer4.css` (loaded after Designer 3's, everything scoped under `.hd-d4`),
 `includes/class-hd-d4*.php` (the `d4/*` routes, the email, the manager events).
 Design: `docs/superpowers/specs/2026-11-10-designer-4-design.md`.
@@ -446,7 +446,8 @@ node tests/js/d4-handle.test.js       # handle preview rules: "No Handle", which
 node tests/js/d4-doorway.test.js      # the six doorway families and their layouts
 node tests/js/d4-store.test.js        # session tokens, the d4/* REST calls
 node tests/js/d4-ask.test.js          # the email box: the lead, no handle, updates
-node tests/js/d4-door.test.js         # door screen: preview, glow, guide price, speech bubble
+node tests/js/d4-door.test.js         # door screen: preview, glow, guide price, part labels, speech bubble
+node tests/js/d4-callouts.test.js     # where the part labels sit (desktop beside the door, phone over its edges)
 node tests/js/d4-app.test.js          # Designer 4 controller: routing, saved doors, the lead
 node tests/js/d4-steps.test.js        # progress strip, doorway, details, finished
 node tests/js/d4-doorway-screen.test.js # doorway picks, focus, saves
