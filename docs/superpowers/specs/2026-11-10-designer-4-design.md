@@ -57,7 +57,7 @@ Daniel's definition of a good lead is someone willing to put time into designing
 
 ## The visitor journey
 
-Mockups from the design conversation are in `.superpowers/brainstorm/23829-1794304171/content/` (git-ignored; open the `.html` files directly, the frame drawings are beside them): `d4-door-handle.html`, `d4-door-handle-v2.html`, `d4-doorway-pictures.html`, `d4-estimate-steps.html`, `d4-my-designs-v2.html`. They are sketches of layout and wording, not of styling.
+Mockups from the design conversation are in `.superpowers/brainstorm/23829-1794304171/content/` (git-ignored; open the `.html` files directly, the frame drawings are beside them): `d4-door-handle.html`, `d4-door-handle-v2.html`, `d4-doorway-pictures.html`, `d4-estimate-steps.html`, `d4-my-designs-v2.html`, `d4-callouts.html` (part labels, desktop) and `d4-callouts-phone-v2.html` (part labels, phone; option B is the approved one). They are sketches of layout and wording, not of styling.
 
 ### 1. Door type, 2. Style
 
@@ -65,11 +65,19 @@ As Designer 3.
 
 ### 3. The door screen
 
-As Designer 3 (complete door, "+" dots, toolbox, bottom sheet on phones), with these differences.
+As Designer 3 (complete door, toolbox, bottom sheet on phones), with these differences.
+
+**Part labels in place of the "+" dots.** Decided by Daniel on 2026-11-10 after seeing the built screen ("the dots are a little too imposing on the design"; mockup B approved). Designer 3's orange dots are not shown. Instead:
+- Each changeable part the dots covered has a small named label, "Glass", "Handle", "Letterplate", "Knocker" (only where the style offers one) and "Colour", with a thin line to a small ring on that part. The label is a button that opens that part's choices exactly as its dot did (same funnel steps); its accessible name is "Change the handle" and so on. Lines and rings are decorative and do not catch taps.
+- Desktop (720px and up): labels sit beside the door, outside the picture, on the side of the door the part is nearer; a part on the centre line goes to the side with fewer labels. Labels never overlap, and keep their parts' top-to-bottom order so lines do not cross. A door too wide for that (a double door) shrinks a little; failing that, its labels sit over its edges as on a phone.
+- Phones (719px and below): the door keeps its size and the labels sit over its left or right edge, overlapping the picture a little, moved up or down to keep off the handle and other parts near that edge. Tap areas are 44px high. While the options sheet is open (small door) the labels and the bubble step aside.
+- Labels are white with dark text and a soft shadow; lines are light with a thin dark edge, so both read on a white or a black door.
+- While the door has no handle the Handle label reads "Handle: choose one" (desktop) or "Handle" (phone), is orange and glows (a solid ring with reduced motion); its line and ring are orange.
+- During the handle preview the labels stay; only the handle's ring hides while a handle is drawn there.
 
 **Handle preview.** When a style is picked and the door first appears:
 - The door shows three handles in turn: a lever, a finger pull and a bar handle, about a second each, played once. The banner reads "Here's your door. Which handle suits it?"
-- The door then settles with **no handle**. The banner changes to "Choose your handle next." and the Handle control (toolbox row and the handle dot) glows gently until a handle is chosen.
+- The door then settles with **no handle**. The banner changes to "Choose your handle next." and the Handle control (toolbox row or tab, and the Handle label) glows gently until a handle is chosen.
 - Colour, letterplate and knocker stay pre-picked as in Designer 3. *My call* (Daniel only mentioned the handle).
 - *My call:* which three actual handles are shown is the builder's choice per door type and hardware finish, from handles that are valid for that style. If a type has no finger pull or bar handle, show the ones it has. With reduced-motion set, skip the animation and go straight to the settled state.
 - *My call:* the preview plays once per new door. It never plays on a door reopened from a link or from My designs, which always has a handle.
@@ -82,9 +90,9 @@ As Designer 3 (complete door, "+" dots, toolbox, bottom sheet on phones), with t
 - *My call:* Designer 3's separate "Request a call back" form is not in Designer 4. The phone number is asked for at step 3.
 
 **A handle is required.** It is treated as a required field for the request to go through.
-- Pressing the button with no handle sends nothing. A speech bubble pops up beside the door pointing at the empty handle spot, which pulses: "How will you get in without a handle?"
+- Pressing the button with no handle sends nothing. A speech bubble pops up above the Handle label, pointing at it, kept inside the screen and clear of the email box: "How will you get in without a handle?"
 - The plain message under the button reads: "Oops, your door needs a handle to be saved."
-- The Handle control keeps glowing and the typed email is kept. *My call:* tapping the bubble or the spot opens the handle choices.
+- The Handle control keeps glowing and the typed email is kept. *My call:* tapping the bubble or the Handle label opens the handle choices.
 - The server also refuses a Designer 4 request whose design has no handle (missing, or the catalogue's "No Handle").
 
 ### Step 1 of 3: the email (this is the lead)
