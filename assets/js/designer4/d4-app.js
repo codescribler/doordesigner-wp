@@ -150,6 +150,7 @@
 				this.track('door_lead_submitted');
 			}
 		}
+		if (body && !body.again) { this.reopened = false; }   // a lead or an added door, this visit
 		if (body && body.token && this.store) { this.store.addToken(body.token); }
 		this.nudgeOn = false;
 		this.go(this.nextAfterLead());
@@ -201,25 +202,30 @@
 	// screen: where a live door lands, 'door' (default) or 'doorway' (My designs). Nothing of a door
 	// open before carries over (My designs opens one door after another in the same visit).
 	P.loadSaved = function (token, screen) {
-		var self = this;
+		var self = this, fromDesigns = this.screen === 'designs';
+		// A late update from the previous door's saver must never send this door under its token.
+		if (this._saver && this._saver.setToken) { this._saver.setToken(null); }
 		this._saver = null; this._token = null; this.savedKind = null;
 		this.mine = {}; this.auto = {};
 		this.newDoor();
 		this.freshDoor = false;
 		this.previewDue = false;
+		this.reopened = true;     // no "we've got your door" line for it (d4-doorway-screen.js)
+		// A door that can't be opened from My designs goes back there with a line saying so.
+		function failed() { if (fromDesigns) { self.openFailed = true; self.go('designs'); } else { self.render(); } }
 		if (W.HD_DD_D3Screens && W.HD_DD_D3Screens.loading) { W.HD_DD_D3Screens.loading(this); }
 		Promise.resolve(this.api('design/' + encodeURIComponent(token), { method: 'GET' })).then(function (res) {
 			var saved = res && res.ok && res.body && res.body.design;
 			var t = saved && saved['Door Type'] && saved['Door Type'].label;
 			var s = saved && saved['Door Design'] && saved['Door Design'].label;
-			if (!t || !self.cv.byType[t]) { self.render(); return; }
+			if (!t || !self.cv.byType[t]) { failed(); return; }
 			self.wiz.selectType(t);
 			if (!s || !self.build(s, prefsFrom(saved))) { self.go('style'); return; }
 			var defs = self.defaultsFor(s);
 			Object.keys(saved).forEach(function (h) { if (h !== 'Door Type' && h !== 'Door Design' && !(defs[h] != null && trim(defs[h]) === trim(saved[h].label))) { self.mine[h] = saved[h].label; } });
 			if (self.store) { self.store.addToken(token); }
 			return self.openListed(token, screen);
-		}).catch(function () { self.render(); });
+		}).catch(failed);
 	};
 
 	P.openListed = function (token, screen) {
@@ -249,6 +255,7 @@
 		this.mine = {}; this.auto = {};
 		this.wiz = W.HD_DD_Wizard.create(this.cv, W.HD_DD_StepConfig);
 		this.known = true;
+		this.reopened = false;
 		this.newDoor();
 		this.previewDue = false;
 		this.nudgeOn = false;

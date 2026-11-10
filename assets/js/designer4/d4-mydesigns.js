@@ -14,6 +14,7 @@
 		lead: 'We\'ll email your price for each door here. Remove any you\'ve gone off, and tell us about glass beside or above the door for a closer price.',
 		loading: 'Loading your designs…',
 		failed: 'Sorry, we couldn\'t load your designs.',
+		openFailed: 'Sorry, we couldn\'t open that door. Please try again.',
 		retry: 'Try again',
 		missing: 'Tell us where it\'s going for a closer price ›',
 		another: 'Design another door',
@@ -38,7 +39,9 @@
 	function render(app, shell) {
 		var TB = W.HD_DD_D3Toolbox, Card = W.HD_DD_D4Card;
 		var st = { body: null, failed: false, loading: true, confirm: null, busy: null, errors: {} };
-		app.funnel.step('mydesigns');
+		var openFailed = !!app.openFailed;   // back from a door that wouldn't open: already counted
+		app.openFailed = false;
+		if (!openFailed) { app.funnel.step('mydesigns'); }
 
 		var page = el('div', 'hd-d4-designs');
 		var head = el('div', 'hd-d4-designs__head');
@@ -49,6 +52,11 @@
 		var who = el('p', 'hd-d4-designs__who');
 		head.appendChild(who);
 		page.appendChild(head);
+		if (openFailed) {
+			var sorry = el('p', 'hd-d4-designs__notice', COPY.openFailed);
+			sorry.setAttribute('role', 'alert');
+			page.appendChild(sorry);
+		}
 		page.appendChild(el('p', 'hd-d3-help', COPY.lead));
 		var body = el('div', 'hd-d4-designs__body');
 		page.appendChild(body);

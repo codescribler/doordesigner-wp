@@ -292,6 +292,44 @@ function opened(design, doors, screen, before) {
   assert.strictEqual(atDoorway.design().Handle.label, 'Lever/Lever');
   var atDoor = await opened(src.design(), [{ token: 'tok1', status: 'pending' }], 'door');
   assert.strictEqual(atDoor.screen, 'door');
+  assert.strictEqual(atDoor.reopened, true, 'a reopened door is marked (no "we\'ve got your door" line)');
+  atDoor.onLead({ ok: true, token: 'tok1', again: true });
+  assert.strictEqual(atDoor.reopened, true, 'the sent state\'s Next is not a new lead');
+  atDoor.onLead({ ok: true, token: 'tok2' });
+  assert.strictEqual(atDoor.reopened, false, 'a door added this visit is not a reopened one');
+
+  // The previous door's saver is disabled before it is dropped: a late update sends nothing.
+  window.HD_DD_CONFIG = { d3Defaults: table, restUrl: 'https://example.test/wp-json/hd/v1/' };
+  var lateSent = [], oldSaver = null;
+  var swapped = await opened(src.design(), [{ token: 'tok1', status: 'pending' }], 'door', function (o) {
+    o.store.update = function (t, b) { lateSent.push(t); return Promise.resolve({ ok: true }); };
+    door(o, 'Single Door', 'Alto'); o.pick('handle', 'Handle', 'Lever/Lever');
+    o.savedToken = 'tokOld';
+    oldSaver = o.saver();
+    oldSaver.setToken('tokOld');
+  });
+  assert.strictEqual(oldSaver.token(), null, 'the old saver has no token');
+  await oldSaver.update();
+  assert.deepStrictEqual(lateSent.filter(function (t) { return t === 'tokOld'; }), [], 'nothing sent under the old token');
+  assert.strictEqual(swapped.savedToken, 'tok1');
+  window.HD_DD_CONFIG = { d3Defaults: table };
+
+  // A design that fails to load: from My designs, back there with a flag; from a link, as before.
+  function failing(fromScreen, api) {
+    var o = make({ api: api });
+    o.screen = fromScreen;
+    o.loadSaved('tokX', 'door');
+    return tick().then(tick).then(function () { return o; });
+  }
+  var bad = await failing('designs', function () { return Promise.resolve({ ok: false, status: 404, body: {} }); });
+  assert.strictEqual(bad.screen, 'designs', 'a door that would not open: My designs');
+  assert.strictEqual(bad.openFailed, true, 'with the could-not-open line');
+  var thrown = await failing('designs', function () { return Promise.reject(new Error('offline')); });
+  assert.strictEqual(thrown.screen, 'designs');
+  assert.strictEqual(thrown.openFailed, true);
+  var linkBad = await failing('type', function () { return Promise.resolve({ ok: false }); });
+  assert.strictEqual(linkBad.screen, 'type', 'an emailed design link that fails: unchanged');
+  assert.ok(!linkBad.openFailed);
 
   // ---- after a lead, no autosave while the door has no handle; the next handle sends it --------
   window.HD_DD_CONFIG = { d3Defaults: table, restUrl: 'https://example.test/wp-json/hd/v1/' };

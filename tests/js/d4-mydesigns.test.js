@@ -156,6 +156,23 @@ function btn(n, t) { return byText(n, t); }
   fire(btn(b.cards()[1], 'Open and adjust'), 'click');
   assert.deepStrictEqual(b.opened, [['tB', 'door']], 'actions work again once settled');
 
+  // ---- a door that won't open: back on My designs with a line, mydesigns not counted again ---
+  var o = page(reply([door()]));
+  await settle();
+  o.app.loadSaved = window.HD_DD_Designer4App.prototype.loadSaved;   // the real one; the api fails
+  assert.ok(!byCls(o.sh(), 'hd-d4-designs__notice'), 'no line before');
+  fire(btn(o.cards()[0], 'Open and adjust'), 'click');
+  await settle();
+  assert.strictEqual(o.app.screen, 'designs');
+  var notice = byCls(o.sh(), 'hd-d4-designs__notice');
+  assert.ok(notice, 'the could-not-open line');
+  assert.strictEqual(notice.textContent, 'Sorry, we couldn\'t open that door. Please try again.');
+  assert.strictEqual(notice.attrs.role, 'alert');
+  assert.strictEqual(o.of('mydesigns').length, 1, 'mydesigns fired once');
+  assert.strictEqual(o.cards().length, 1, 'the list is shown again');
+  o.app.go('designs');
+  assert.ok(!byCls(o.sh(), 'hd-d4-designs__notice'), 'the line is for that one return only');
+
   // ---- design another door -----------------------------------------------------------------
   var nw = byCls(h.sh(), 'hd-d4-card--new');
   assert.ok(nw && text(nw).indexOf('Design another door') !== -1);
