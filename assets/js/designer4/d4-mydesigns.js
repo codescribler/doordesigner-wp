@@ -76,12 +76,13 @@
 			if (then) { then(); }
 		}
 
-		// The card's actions (d4-card.js calls these).
+		// The card's actions (d4-card.js calls these). While a remove is in flight every other
+		// action waits: the busy card keeps its question until the request settles.
 		var actions = {
-			open: function (d) { app.loadSaved(d.token, 'door'); },
-			doorway: function (d) { app.loadSaved(d.token, 'doorway'); },
-			ask: function (d) { st.confirm = d.token; delete st.errors[d.token]; redraw('keep:' + d.token); },
-			keep: function (d) { st.confirm = null; redraw('remove:' + d.token); },
+			open: function (d) { if (!st.busy) { app.loadSaved(d.token, 'door'); } },
+			doorway: function (d) { if (!st.busy) { app.loadSaved(d.token, 'doorway'); } },
+			ask: function (d) { if (st.busy) { return; } st.confirm = d.token; delete st.errors[d.token]; redraw('keep:' + d.token); },
+			keep: function (d) { if (st.busy) { return; } st.confirm = null; redraw('remove:' + d.token); },
 			remove: function (d) {   // the card has already disabled its two buttons
 				if (st.busy) { return; }
 				st.busy = d.token;

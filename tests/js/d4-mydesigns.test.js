@@ -135,6 +135,27 @@ function btn(n, t) { return byText(n, t); }
   assert.ok(document.activeElement && document.activeElement.tag === 'h2' && document.activeElement.textContent === 'Your designs', 'focus on the heading');
   assert.strictEqual(document.activeElement.attrs.tabindex, '-1');
 
+  // ---- while a remove is in flight, the other cards' actions are ignored --------------------
+  var b = page(reply([door(), door({ token: 'tB', name: 'Etna in Anthracite Grey' })]));
+  await settle();
+  var settleRemove;
+  b.removeReply = new Promise(function (r) { settleRemove = r; });
+  fire(btn(b.cards()[0], 'Remove'), 'click');
+  fire(btn(b.cards()[0], 'Remove'), 'click');       // the confirm button: the request starts
+  var other = b.cards()[1];
+  fire(btn(other, 'Remove'), 'click');
+  fire(btn(other, 'Open and adjust'), 'click');
+  fire(walk(byCls(other, 'hd-d4-card__doorway'), function (x) { return x.tag === 'button'; }) || byCls(other, 'hd-d4-card__doorway'), 'click');
+  assert.deepStrictEqual(b.opened, [], 'open and doorway ignored while busy');
+  assert.ok(has(b.cards()[0], 'is-removing'), 'the busy card keeps its question');
+  assert.ok(!has(b.cards()[1], 'is-removing'), 'the other card did not swap');
+  assert.ok(btn(b.cards()[0], 'Remove').disabled && btn(b.cards()[0], 'Keep it').disabled, 'still disabled');
+  settleRemove({ ok: false, status: 500, body: {} });
+  await settle();
+  assert.ok(!has(b.cards()[0], 'is-removing') && btn(b.cards()[0], 'Open and adjust'), 'settled: restored');
+  fire(btn(b.cards()[1], 'Open and adjust'), 'click');
+  assert.deepStrictEqual(b.opened, [['tB', 'door']], 'actions work again once settled');
+
   // ---- design another door -----------------------------------------------------------------
   var nw = byCls(h.sh(), 'hd-d4-card--new');
   assert.ok(nw && text(nw).indexOf('Design another door') !== -1);
