@@ -23,6 +23,11 @@ class HD_DD_Enquiry {
 		$this->catalogue  = $catalogue;
 	}
 
+	/** The server-side catalogue (shared, so it is decoded once per request). */
+	public function catalogue() {
+		return $this->catalogue;
+	}
+
 	public function register() {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 	}

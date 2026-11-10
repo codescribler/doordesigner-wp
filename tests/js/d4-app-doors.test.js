@@ -1,6 +1,6 @@
 // Designer 4's app, one door after another: a type change after the lead is a new door, a bare
 // ?design= link opens a copy, startDoor disables the old saver, Back from steps reached through
-// My designs, and a restyle after the lead saves.
+// My designs, a restyle after the lead saves, and the doorway is never asked of a type with none.
 // `node tests/js/d4-app-doors.test.js`
 var assert = require('assert');
 
@@ -191,6 +191,27 @@ async function submitAsk(app) {
   md.pick('colour', 'Door Colour (External)', otherColour(md));
   await settle();
   assert.deepStrictEqual(md.store.updates, [['tokM', 'Single Door']], 'a door opened from My designs autosaves');
+
+  // ---- F4: opening a door for its doorway on a type with none lands on the door -------------
+  var dbl = make();
+  dbl.select('Door Type', 'Double Door');
+  dbl.select('Door Design', dbl.styles()[0].label);
+  dbl.pick('handle', 'Handle', dbl.previewLabels()[0] || 'Lever/Lever');
+  var dblDesign = JSON.stringify(dbl.design());
+  var dd = make({ api: function () { return Promise.resolve({ ok: true, body: { design: JSON.parse(dblDesign), kind: 'enquiry' } }); } });
+  dd.store.listReply = { ok: true, body: { doors: [{ token: 'tokD', status: 'pending', frame: null, doorway: false }], missing: {} } };
+  dd.screen = 'designs';
+  dd.loadSaved('tokD', 'doorway');
+  await settle();
+  assert.strictEqual(dd.screen, 'door', 'a Double Door opened for its doorway lands on the door');
+
+  // Even when the list does not say (an older reply), the type decides.
+  dd = make({ api: function () { return Promise.resolve({ ok: true, body: { design: JSON.parse(dblDesign), kind: 'enquiry' } }); } });
+  dd.store.listReply = { ok: true, body: { doors: [{ token: 'tokD', status: 'pending', frame: null }], missing: {} } };
+  dd.screen = 'designs';
+  dd.loadSaved('tokD', 'doorway');
+  await settle();
+  assert.strictEqual(dd.screen, 'door', 'a type with no doorway lands on the door whatever the list says');
 
   // ---- F12: Back from the doorway or details reached through My designs goes to My designs ---
   var bk = make({ api: api });

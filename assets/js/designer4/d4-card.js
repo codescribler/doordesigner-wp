@@ -1,7 +1,8 @@
 // assets/js/designer4/d4-card.js
 // One door's card on My designs (d4-mydesigns.js): picture, name, date saved, the price tag, the
-// doorway (a prompt, or its caption and Change), Open and adjust, and Remove, which first swaps the
-// card to its question. A door on a closed deal shows its picture, name and date only.
+// doorway (a prompt, or its caption and Change; nothing when its type has no side or top lights:
+// door.doorway false), Open and adjust, and Remove, which first swaps the card to its question. A
+// door on a closed deal shows its picture, name and date only.
 //
 //   HD_DD_D4Card.render(door, { confirming, busy, error }, actions) -> <li>
 //     actions: open(door), doorway(door), ask(door), keep(door), remove(door)
@@ -55,7 +56,9 @@
 		return c || String(frame.label || '');
 	}
 
+	// null when the door's type has no side or top lights (doorway: false): nothing to ask or change.
 	function doorway(d, actions) {
+		if (d.doorway === false) { return null; }
 		if (!d.frame) {
 			var ask = button('hd-d4-card__doorway hd-d4-card__ask', null, 'doorway:' + d.token, function () { actions.doorway(d); });
 			ask.appendChild(el('span', null, COPY.askQ + ' '));
@@ -94,7 +97,8 @@
 		if (date) { li.appendChild(el('p', 'hd-d4-card__date', COPY.saved.replace('{date}', date))); }
 		if (closed) { return li; }
 		if (d.status === 'pending' || d.status === 'estimate_sent') { li.appendChild(el('p', 'hd-d4-card__tag', COPY[d.status])); }
-		li.appendChild(doorway(d, actions));
+		var dw = doorway(d, actions);
+		if (dw) { li.appendChild(dw); }
 		li.appendChild(button('hd-d4-card__open', COPY.open, 'open:' + d.token, function () { actions.open(d); }));
 		var rm = button('hd-d4-card__remove', COPY.remove, 'remove:' + d.token, function () { actions.ask(d); });
 		rm.setAttribute('aria-label', COPY.removeQ.replace('{name}', d.name || '').replace(/\?$/, ''));

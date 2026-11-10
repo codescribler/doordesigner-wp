@@ -30,10 +30,15 @@ class HD_DD_D4_View {
 		return ( '' !== $type && '' !== $glass ) ? $type . ' · ' . $glass : '';
 	}
 
-	/** One door in the My designs list. */
-	public static function item( $row, $status ) {
+	/**
+	 * One door in the My designs list. doorway is false when the door's type offers no side or
+	 * top lights (nothing to ask), true otherwise (also when the catalogue cannot say).
+	 */
+	public static function item( $row, $status, $catalogue = null ) {
 		$design  = self::decode( $row->design );
 		$payload = self::decode( $row->payload );
+		$type    = isset( $design['Door Type']['label'] ) ? (string) $design['Door Type']['label'] : '';
+		$offered = $catalogue ? $catalogue->doorway_offered( $type ) : null;
 		return array(
 			'token'     => (string) $row->token,
 			'reference' => (string) $row->reference,
@@ -42,6 +47,7 @@ class HD_DD_D4_View {
 			'savedAt'   => (string) $row->created_at,
 			'frame'     => self::frame_of( $design, ! empty( $row->doorway_at ) ),
 			'sideGlass' => self::side_glass_of( $design ),
+			'doorway'   => false !== $offered,
 			'status'    => (string) $status,
 		);
 	}

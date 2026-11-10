@@ -84,7 +84,9 @@
 			if (doors && (!door || door.status === 'closed')) { app.go('designs'); return; }
 			app.savedToken = token;   // the ask shows "saved" and changes save through update()
 			if (door && door.frame && W.HD_DD_D4Steps) { W.HD_DD_D4Steps.state(app).answered = true; }   // its doorway is on record
-			app.go(screen === 'doorway' ? 'doorway' : 'door');
+			// A type with no side or top lights has no doorway to answer: the door instead.
+			var doorway = screen === 'doorway' && !(door && door.doorway === false) && app.doorwayOffered();
+			app.go(doorway ? 'doorway' : 'door');
 		}
 		if (!app.store || !app.store.list) { open(null); return Promise.resolve(); }
 		return Promise.resolve(app.store.list()).then(open, function () { open(null); });

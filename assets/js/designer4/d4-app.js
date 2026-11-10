@@ -141,11 +141,16 @@
 		return this._saver;
 	};
 
+	// True when the door's type offers side or top lights (a doorway to ask about).
+	P.doorwayOffered = function () {
+		var F = W.HD_DD_D3Frame, step = this.stepFor('Frame Design');
+		return !!(F && F.offered(step ? step.choices : null));
+	};
+
 	// The doorway when the type offers side or top lights; else details, or done for a known
 	// person with nothing missing.
 	P.nextAfterLead = function () {
-		var F = W.HD_DD_D3Frame, step = this.stepFor('Frame Design');
-		if (F && F.offered(step ? step.choices : null)) { return 'doorway'; }
+		if (this.doorwayOffered()) { return 'doorway'; }
 		return (this.knownPerson() && this.missing && !anyMissing(this.missing)) ? 'done' : 'details';
 	};
 

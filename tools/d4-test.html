@@ -14,8 +14,9 @@
   the app is started directly). HD_DD_CONFIG has no restUrl, so the email box runs in its preview
   mode and nothing is sent anywhere. The d4/* calls the app makes (My designs, details, doorway,
   remove, reopening a door) are answered from memory by the fake API in this page; it starts with
-  three doors: one waiting for a price with no doorway answered, one "Estimate sent" with a
-  doorway, one on a closed deal; the reply says the postcode is missing and there are older designs.
+  four doors: one waiting for a price with no doorway answered, one "Estimate sent" with a
+  doorway, one on a closed deal, and a Double Door (no doorway to ask about); the reply says the
+  postcode is missing and there are older designs.
   Funnel steps are logged to the console ([hdAnalytics]) and kept in window.__analytics; every
   fake API call is kept in window.__api. The memory resets on reload.
 

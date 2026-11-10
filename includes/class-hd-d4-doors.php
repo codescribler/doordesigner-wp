@@ -106,7 +106,7 @@ class HD_DD_D4_Doors {
 		$doors    = array();
 		$missing  = array( 'name' => true, 'postcode' => true, 'phone' => true );
 		foreach ( $rows as $row ) {
-			$doors[] = HD_DD_D4_View::item( $row, isset( $statuses[ $row->reference ] ) ? $statuses[ $row->reference ] : 'pending' );
+			$doors[] = HD_DD_D4_View::item( $row, isset( $statuses[ $row->reference ] ) ? $statuses[ $row->reference ] : 'pending', $this->enquiry->catalogue() );
 			foreach ( array( 'name' => 'customer_name', 'postcode' => 'customer_postcode', 'phone' => 'customer_phone' ) as $key => $col ) {
 				if ( '' !== trim( (string) $row->$col ) ) {
 					$missing[ $key ] = false;

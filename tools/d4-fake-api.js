@@ -2,8 +2,9 @@
 // Answers the Designer 4 REST calls from memory, shaped like includes/ d4 routes reply, so every
 // screen and state can be reached without WordPress:
 //   d4/lead, d4/door, d4/door/{token}, d4/door/{token}/remove, d4/details, d4/designs, design/{token}
-// Starts with three doors: tA waiting for a price with no doorway answered, tB "Estimate sent" with
-// a doorway, tC on a closed deal. The designs reply says the postcode is missing and older: true.
+// Starts with four doors: tA waiting for a price with no doorway answered, tB "Estimate sent" with
+// a doorway, tC on a closed deal, tD a Double Door (no side or top lights: doorway false, so its
+// card asks nothing about the doorway). The designs reply says the postcode is missing and older: true.
 //
 //   HD_DD_D4FakeApi.create(URLSearchParams) -> api(path, opts) -> Promise<{ ok, status, body }>
 //   ?fail=designs,remove,open,details,update makes those calls fail; ?slow=1 answers after 1.5s.
@@ -19,8 +20,8 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':00';
   }
   function L(label, id) { var o = { label: label }; if (id != null) { o.id = id; } return o; }
-  function design(style, colour, frameId, frameLabel) {
-    return { 'Door Type': L('Single Door'), 'Door Design': L(style), 'Door Colour (External)': L(colour),
+  function design(style, colour, frameId, frameLabel, type) {
+    return { 'Door Type': L(type || 'Single Door'), 'Door Design': L(style), 'Door Colour (External)': L(colour),
       'Handle': L('Lever/Lever'), 'Frame Design': L(frameLabel || 'No Sidelights', frameId || 1) };
   }
   // A stand-in picture (the frame drawing) as a path on this server: the card only takes https
@@ -44,7 +45,8 @@
       doors: [
         { token: 'tA', status: 'pending', frame: null, savedAt: now(0), design: design('Abbott', 'Anthracite Grey') },
         { token: 'tB', status: 'estimate_sent', frame: { id: 5, label: 'Sidelight Right' }, savedAt: now(3), design: design('Alto', 'Chartwell Green', 5, 'Sidelight Right') },
-        { token: 'tC', status: 'closed', frame: { id: 1, label: 'No Sidelights' }, savedAt: now(40), design: design('Aneto', 'Claystone') }
+        { token: 'tC', status: 'closed', frame: { id: 1, label: 'No Sidelights' }, savedAt: now(40), design: design('Aneto', 'Claystone') },
+        { token: 'tD', status: 'pending', frame: null, savedAt: now(5), design: design('Abbott', 'Quartz Grey', 1, 'No Sidelights', 'Double Door') }
       ]
     };
     st.doors.forEach(function (d, i) { d.reference = 'HD-2026-0000' + (80 + i); });
@@ -56,7 +58,7 @@
     function listed(d) {
       var f = d.frame ? d.frame.id : 1;
       return { token: d.token, reference: d.reference, name: nameOf(d.design), image: picture(f), savedAt: d.savedAt,
-        frame: d.frame, sideGlass: '', status: d.status };
+        frame: d.frame, sideGlass: '', status: d.status, doorway: d.design['Door Type'].label !== 'Double Door' };
     }
     function addDoor(body) {
       var t = 't' + (++seq), d = body.design || {};

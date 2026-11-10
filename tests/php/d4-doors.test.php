@@ -45,7 +45,7 @@ $data = $res->get_data();
 check( ! is_wp_error( $res ) && 'nicola@example.com' === strtolower( $data['email'] ) && true === $data['owner'], 'the owner link resolves as owner' );
 check( 2 === count( $data['doors'] ) && $b['token'] === $data['doors'][0]['token'] && $a['token'] === $data['doors'][1]['token'], 'every live door for the email, newest first, and no one else\'s' );
 $door = $data['doors'][1];
-check( array( 'token', 'reference', 'name', 'image', 'savedAt', 'frame', 'sideGlass', 'status' ) === array_keys( $door ), 'each door has the contract keys' );
+check( array( 'token', 'reference', 'name', 'image', 'savedAt', 'frame', 'sideGlass', 'doorway', 'status' ) === array_keys( $door ), 'each door has the contract keys' );
 check( 'pending' === $door['status'] && null === $door['frame'] && '' === $door['sideGlass'] && false === $data['older'], 'status defaults to pending, frame null before the doorway, older false' );
 check( array( 'name' => true, 'postcode' => true, 'phone' => true ) === $data['missing'], 'name, postcode and phone are all missing' );
 $json = json_encode( $data );

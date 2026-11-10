@@ -73,6 +73,25 @@ class HD_DD_Catalogue {
 		return $this->data;
 	}
 
+	/**
+	 * Whether a door type offers side or top lights: a Frame Design choice other than
+	 * "No Sidelights" (id 1). The browser's HD_DD_D3Frame.offered() rule, on the same data.
+	 * Null when the catalogue or the type is unknown.
+	 */
+	public function doorway_offered( $door_type ) {
+		$all = $this->get();
+		if ( ! $all || ! isset( $all[ $door_type ]['fields'] ) ) {
+			return null;
+		}
+		$choices = isset( $all[ $door_type ]['fields']['Frame Design']['choices'] ) ? (array) $all[ $door_type ]['fields']['Frame Design']['choices'] : array();
+		foreach ( $choices as $c ) {
+			if ( is_array( $c ) && isset( $c['id'] ) && 1 !== (int) $c['id'] ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public function version() {
 		return $this->is_available() ? (string) filemtime( $this->file_path() ) : HD_DD_VERSION;
 	}

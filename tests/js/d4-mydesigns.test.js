@@ -273,5 +273,12 @@ function btn(n, t) { return byText(n, t); }
   await settle();
   assert.ok(!byCls(nd.cards()[0], 'hd-d4-card__date'));
 
+  // ---- a door type with no side or top lights (Double Door): no doorway prompt, no Change ----
+  var dbl = page(reply([door({ token: 'tD', name: 'Double', doorway: false }), door({ token: 'tF', doorway: false, frame: { id: 1, label: 'No Sidelights' } })]));
+  await settle();
+  assert.ok(!byCls(dbl.cards()[0], 'hd-d4-card__ask') && !byKey(dbl.cards()[0], 'doorway:tD'), 'a Double Door card has no doorway prompt');
+  assert.ok(!byCls(dbl.cards()[1], 'hd-d4-card__doorway') && !byKey(dbl.cards()[1], 'change:tF'), 'and no doorway line or Change');
+  assert.ok(byKey(dbl.cards()[0], 'open:tD'), 'it can still be opened');
+
   console.log('d4-mydesigns.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });
