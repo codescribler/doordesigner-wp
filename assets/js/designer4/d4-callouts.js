@@ -10,7 +10,7 @@
 //     o.bounds  {left, top, right, bottom} where labels may go (the stage, inside the screen)
 //     o.sizes   {key: {w, h}} measured label boxes (else a rough guess from the word)
 //     o.gap     least space between two labels on one side (6); o.reach: desk space between the
-//               door and a label (14); o.overlap: how far an edge label reaches over the door (22)
+//               door and a label (14); o.overlap: how far an edge label reaches over the door (14)
 //   (x, y, w, h) is the label; (ax, ay) where its line starts; (ex, ey) the part (the ring).
 //   need(parts, o) -> {left, right}: the room each side needs beside the door in 'desk' mode.
 (function (root, factory) {
@@ -22,6 +22,9 @@
   var NAMES = { glass: 'Glass', handle: 'Handle', letterplate: 'Letterplate', knocker: 'Knocker', colour: 'Colour' };
   var CENTRE = 0.08;   // a part this near the middle (fraction of the frame) is on the centre line
   var PAD = 8;         // an edge label keeps this far (px) from any part under its strip
+  // How tall a part is drawn, as a share of the frame's height either side of its centre (a lever
+  // and its backplate are tall); any other part is treated as a point.
+  var REACH_Y = { handle: 0.07 };
 
   function num(v, d) { return v == null ? d : v; }
   function sizeOf(o, key) {
@@ -48,11 +51,12 @@
 
   // An edge label's best height: level with its part unless a part lies under its strip of the
   // door (its own included), then just above or below that part, whichever is nearer.
+  // points: [{x, y, half}], half being how far the part reaches up and down from y.
   function avoid(want, h, x0, x1, points, top, bottom) {
     var under = points.filter(function (p) { return p.x >= x0 - PAD && p.x <= x1 + PAD; });
-    function clear(c) { return under.every(function (p) { return p.y < c - h / 2 - PAD + 2 || p.y > c + h / 2 + PAD - 2; }); }
+    function clear(c) { return under.every(function (p) { return p.y + p.half < c - h / 2 - PAD + 2 || p.y - p.half > c + h / 2 + PAD - 2; }); }
     var cands = [want];
-    under.forEach(function (p) { cands.push(p.y - PAD - h / 2, p.y + PAD + h / 2); });
+    under.forEach(function (p) { cands.push(p.y - p.half - PAD - h / 2, p.y + p.half + PAD + h / 2); });
     cands = cands.filter(function (c) { return c - h / 2 >= top && c + h / 2 <= bottom; })
       .sort(function (a, b) { return Math.abs(a - want) - Math.abs(b - want); });
     for (var i = 0; i < cands.length; i++) { if (clear(cands[i])) { return cands[i]; } }
@@ -79,9 +83,9 @@
   function layout(parts, o) {
     parts = parts || [];
     var fw = o.frame.w, fh = o.frame.h, b = o.bounds, edge = o.mode === 'edge';
-    var gap = num(o.gap, 6), reach = num(o.reach, 14), overlap = num(o.overlap, 22);
+    var gap = num(o.gap, 6), reach = num(o.reach, 14), overlap = num(o.overlap, 14);
     var side = sides(parts);
-    var points = parts.map(function (p) { return { x: p.x * fw, y: p.y * fh }; });
+    var points = parts.map(function (p) { return { x: p.x * fw, y: p.y * fh, half: (REACH_Y[p.key] || 0) * fh }; });
     var groups = { left: [], right: [] };
     var out = parts.map(function (p) {
       var s = side[p.key], sz = sizeOf(o, p.key), w = sz.w, h = sz.h, x;

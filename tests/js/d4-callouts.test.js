@@ -74,6 +74,9 @@ assert.strictEqual(by(tight, 'glass').x, -30, 'pulled in to the stage edge');
 var nearEdge = C.layout([{ key: 'handle', x: 0.95, y: 0.5 }], opts(EDGE, { sizes: { handle: { w: 70, h: 44 } } }));
 var hl = nearEdge[0];
 assert.ok(hl.y + hl.h < 0.5 * FRAME.h || hl.y > 0.5 * FRAME.h, 'the handle label does not cover the handle');
+// a handle is drawn tall (a lever on its backplate): the label clears all of it, not just its middle
+var plate = 0.07 * FRAME.h;
+assert.ok(hl.y + hl.h <= 0.5 * FRAME.h - plate || hl.y >= 0.5 * FRAME.h + plate, 'clear of the whole handle (' + hl.y + ')');
 // ... and does not sit on another part near that edge
 var two = C.layout([{ key: 'handle', x: 0.9, y: 0.5 }, { key: 'letterplate', x: 0.95, y: 0.6 }], opts(EDGE, { sizes: { handle: { w: 70, h: 44 }, letterplate: { w: 90, h: 44 } } }));
 two.forEach(function (l) {
