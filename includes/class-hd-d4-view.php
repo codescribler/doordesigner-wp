@@ -23,8 +23,16 @@ class HD_DD_D4_View {
 		return array( 'id' => isset( $design['Frame Design']['id'] ) ? $design['Frame Design']['id'] : null, 'label' => (string) $design['Frame Design']['label'] );
 	}
 
-	/** "Left · Obscure" when a side-lit frame has both a sidelight type and glass, else "". */
-	public static function side_glass_of( array $design ) {
+	/**
+	 * "Left · Obscure" when the doorway is answered, its frame has side lights (the browser's
+	 * `sidelit` rule: the label says Sidelight or Half Flag, and is not "No Sidelights") and both a
+	 * sidelight type and glass are set; else "".
+	 */
+	public static function side_glass_of( array $design, $doorway_set ) {
+		$frame = isset( $design['Frame Design']['label'] ) ? trim( (string) $design['Frame Design']['label'] ) : '';
+		if ( ! $doorway_set || 'No Sidelights' === $frame || ! preg_match( '/sidelight|half flag/i', $frame ) ) {
+			return '';
+		}
 		$type  = isset( $design['Sidelight Type']['label'] ) ? trim( (string) $design['Sidelight Type']['label'] ) : '';
 		$glass = isset( $design['Sidelight Glass']['label'] ) ? trim( (string) $design['Sidelight Glass']['label'] ) : '';
 		return ( '' !== $type && '' !== $glass ) ? $type . ' · ' . $glass : '';
@@ -46,7 +54,7 @@ class HD_DD_D4_View {
 			'image'     => isset( $payload['image'] ) ? (string) $payload['image'] : '',
 			'savedAt'   => (string) $row->created_at,
 			'frame'     => self::frame_of( $design, ! empty( $row->doorway_at ) ),
-			'sideGlass' => self::side_glass_of( $design ),
+			'sideGlass' => self::side_glass_of( $design, ! empty( $row->doorway_at ) ),
 			'doorway'   => false !== $offered,
 			'status'    => (string) $status,
 		);

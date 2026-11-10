@@ -236,7 +236,7 @@ class HD_DD_D4_Doors {
 		}
 		$payload['design']    = $design;
 		$payload['frame']     = HD_DD_D4_View::frame_of( $design, $first || ! empty( $row->doorway_at ) );
-		$payload['sideGlass'] = HD_DD_D4_View::side_glass_of( $design );
+		$payload['sideGlass'] = HD_DD_D4_View::side_glass_of( $design, $first || ! empty( $row->doorway_at ) );
 		$name                 = $changed ? $this->d4->design_name( $design ) : (string) $row->design_name;
 		$payload['designName'] = $name;
 		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'enquiry' ) ) {
