@@ -12,7 +12,7 @@ function d4d() {
 }
 function d4_call( $method, array $body, $token = null ) {
 	$r = hd_test_request( 'POST', '/hd-door-designer/v1/d4/x', $body );
-	if ( null !== $token ) { $r->set_param( 'token', $token ); }
+	if ( null !== $token ) { $r->set_url_params( array( 'token' => $token ) ); }
 	$d4 = d4d();
 	return 'rest_details' === $method ? $d4->details->rest_details( $r ) : $d4->doors->$method( $r );
 }
@@ -221,5 +221,15 @@ d4_manager_says( array() );
 $GLOBALS['hd_test_http_replies'] = array( array( 'response' => array( 'code' => 500 ), 'body' => '' ) );
 $res = d4_call( 'rest_remove', array( 'auth' => d4_owner( $a ) ), $a['token'] );
 check( ! is_wp_error( $res ) && ! empty( d4_row( 0 )['removed_at'] ), 'a manager that is down does not block a removal' );
+
+// --- the door acted on is the one in the URL, never one named in the body ----------------------
+hd_d4_reset();
+$a = d4_make();
+$b = d4_make( 'nicola@example.com', 'Sage' );
+$auth = array( 'tokens' => array( $a['token'], $b['token'] ) );
+$res  = d4_call( 'rest_remove', array( 'auth' => $auth, 'token' => $b['token'] ), $a['token'] );
+$gone = array();
+foreach ( $GLOBALS['wpdb']->rows as $r ) { if ( ! empty( $r['removed_at'] ) ) { $gone[] = $r['token']; } }
+check( ! is_wp_error( $res ) && array( $a['token'] ) === $gone, 'a body token cannot redirect a remove to another door (removed: ' . implode( ',', $gone ) . ')' );
 
 hd_test_done( 'd4-doors' );

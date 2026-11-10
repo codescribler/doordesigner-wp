@@ -121,7 +121,7 @@ class WP_REST_Response {
 }
 
 class WP_REST_Request implements ArrayAccess {
-	private $method; private $route; private $headers = array(); private $body = ''; private $params = array();
+	private $method; private $route; private $headers = array(); private $body = ''; private $params = array(); private $url_params = array();
 	public function __construct( $method = 'GET', $route = '' ) { $this->method = strtoupper( $method ); $this->route = $route; }
 	private static function canon( $k ) { return strtolower( str_replace( '-', '_', $k ) ); }
 	public function set_header( $k, $v ) { $this->headers[ self::canon( $k ) ] = $v; }
@@ -130,7 +130,9 @@ class WP_REST_Request implements ArrayAccess {
 	public function get_body() { return $this->body; }
 	public function get_json_params() { $d = json_decode( $this->body, true ); return is_array( $d ) ? $d : null; }
 	public function set_param( $k, $v ) { $this->params[ $k ] = $v; }
-	public function get_params() { $j = $this->get_json_params(); return array_merge( $this->params, is_array( $j ) ? $j : array() ); }
+	public function set_url_params( array $p ) { $this->url_params = $p; }
+	public function get_url_params() { return $this->url_params; }
+	public function get_params() { $j = $this->get_json_params(); return array_merge( $this->url_params, $this->params, is_array( $j ) ? $j : array() ); }
 	public function get_route() { return $this->route; }
 	public function get_method() { return $this->method; }
 	#[\ReturnTypeWillChange] public function offsetExists( $k ) { $p = $this->get_params(); return isset( $p[ $k ] ); }

@@ -188,7 +188,8 @@ class HD_DD_D4_Doors {
 		if ( is_wp_error( $who ) ) {
 			return $who;
 		}
-		$token = (string) $request['token'];
+		$url   = $request->get_url_params();
+		$token = isset( $url['token'] ) ? (string) $url['token'] : '';
 		foreach ( $who['all'] as $row ) {
 			if ( hash_equals( (string) $row->token, $token ) ) {
 				if ( ! empty( $row->removed_at ) ) {
