@@ -3,7 +3,7 @@ var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
 var boot = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/js/boot.js'), 'utf8');
-['\'door-designer-v5\'', 'F.ORDER_V5', 'canRunDesigner4(window, rm)', 'HD_DD_Designer4App', 'loadDesigns(', 'loadSaved(', 'Designer 4 unavailable, showing Classic'].forEach(function (s) {
+['\'door-designer-v5\'', 'F.ORDER_V5', 'canRunDesigner4(window, rm)', 'HD_DD_Designer4App', 'loadDesigns(', 'loadSaved(', 'd4.loadCopy(saved)', 'Designer 4 unavailable, showing Classic'].forEach(function (s) {
   assert.ok(boot.indexOf(s) !== -1, 'boot.js contains ' + s);
 });
 

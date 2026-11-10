@@ -21,7 +21,9 @@
 
   URL switches (combine with &):
     ?screen=designs   open My designs directly, as the emailed link does (loadDesigns)
-    ?design=tA        reopen a saved door, as a ?design= link does (tA, tB; tC is closed -> My designs)
+    ?design=tA        open a saved door as a COPY, as a bare ?design= link does (boot.js loadCopy):
+                      the design is shown, nothing is saved under its token, the ask is the email
+                      box (tA, tB, tC; a closed or removed door opens as a copy too)
     ?door_type=Single%20Door   start with the type chosen, as the site's door_type links do
     ?lead=fake        give the app a restUrl so the email box really "sends" to the fake d4/lead
                       (the token, doorway saves and "Add this door" then go through d4/lead and d4/door)
@@ -71,7 +73,7 @@
   <strong>Designer 4 harness</strong>
   <a href="d4-test.html">Start</a>
   <a href="d4-test.html?screen=designs">My designs</a>
-  <a href="d4-test.html?design=tA">Reopen door tA</a>
+  <a href="d4-test.html?design=tA">Door tA as a copy</a>
   <a href="d4-test.html?lead=fake">With fake lead</a>
   <a href="d4-test.html?screen=designs&amp;fail=designs">Designs fail</a>
 </div>
@@ -141,7 +143,7 @@
     });
     window.d4App = app;
     if (q.get('screen') === 'designs') { app.loadDesigns('tA', 'harness-key'); }
-    else if (q.get('design')) { app.loadSaved(q.get('design')); }
+    else if (q.get('design')) { app.loadCopy(q.get('design')); }
     else { app.render(); app.funnel.step('opened'); }
   }).catch(function (e) { mount.textContent = 'Failed to load data — serve the plugin folder over http. ' + e; });
 })();

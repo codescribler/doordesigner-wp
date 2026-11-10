@@ -3,6 +3,8 @@
 //
 //   HD_DD_D4Saved.loadSaved(app, token, screen)  one of this visitor's doors (My designs): the door
 //       as saved, the ask "sent", autosave live. screen: 'door' (default) or 'doorway'.
+//   HD_DD_D4Saved.loadCopy(app, token)           a bare ?design=TOKEN link: the door as a copy to
+//       look at (app.copy): no session token, no saved token, no autosave, the ordinary email box.
 //   HD_DD_D4Saved.openListed(app, token, screen) the list check loadSaved ends with.
 (function (W) {
 	'use strict';
@@ -57,6 +59,22 @@
 		}).catch(failed);
 	}
 
+	// A bare ?design=TOKEN link (wp-admin's "Open in designer", the manager's designUrl, a shared
+	// link): the door as a COPY to look at. The token is not added to the session and nothing is
+	// saved under it; the ask is the ordinary email box, so an email sent from here is a new door.
+	// Removed or closed doors open the same way (there is nothing to protect in a copy). A design
+	// that cannot be loaded falls back to the type screen.
+	function loadCopy(app, token) {
+		reset(app);
+		app.copy = true;
+		loading(app);
+		function failed() { app.copy = false; app.render(); }
+		return build(app, token).then(function (r) {
+			if (r === 'failed') { failed(); return; }
+			app.go(r === 'style' ? 'style' : 'door');
+		}).catch(failed);
+	}
+
 	function openListed(app, token, screen) {
 		function open(res) {
 			var body = res && res.ok && res.body;
@@ -72,5 +90,5 @@
 		return Promise.resolve(app.store.list()).then(open, function () { open(null); });
 	}
 
-	W.HD_DD_D4Saved = { loadSaved: loadSaved, openListed: openListed };
+	W.HD_DD_D4Saved = { loadSaved: loadSaved, loadCopy: loadCopy, openListed: openListed };
 })(typeof window !== 'undefined' ? window : this);

@@ -61,20 +61,36 @@
 	};
 
 	// A new door: the preview may play again, "nohandle" may be reported again, and the steps
-	// after the lead (d4-steps.js: doorway picked, funnel steps fired) start over.
-	P.newDoor = function () { this.freshDoor = true; this.noHandleSent = false; this.d4steps = null; };
+	// after the lead (d4-steps.js: doorway picked, funnel steps fired) start over. It is not a copy
+	// (d4-saved.js loadCopy sets that after).
+	P.newDoor = function () { this.freshDoor = true; this.noHandleSent = false; this.d4steps = null; this.copy = false; };
+
+	// Let go of the door the ask was saving: its saver is disabled first, so a late update can never
+	// send another door under its token. The person who sent it is known from now on.
+	P.dropSavedDoor = function () {
+		if (this._saver && this._saver.setToken) { this._saver.setToken(null); }
+		this._saver = null; this._token = null; this.savedKind = null;
+		this.known = true;
+	};
 
 	// ---- Choosing -------------------------------------------------------------------------
-	// Mirrors Designer 3's chooseType: a different type is a new door.
+	// Mirrors Designer 3's chooseType: a different type is a new door. When the door on screen is
+	// already a lead, the new type is a NEW door ("Add this door to my estimate"), never an edit of it.
 	P.chooseType = function (label) {
-		if (this.cv.byType[label] && label !== this.type()) { this.newDoor(); }
+		if (this.cv.byType[label] && label !== this.type()) {
+			if (this.savedToken) { this.dropSavedDoor(); }
+			this.newDoor();
+		}
 		return D3P.chooseType.call(this, label);
 	};
 
 	// Mirrors Designer 3's chooseStyle, with the handle taken off before the door screen draws.
+	// A restyle of a door that is already a lead is saved at once, not at the next pick.
 	P.chooseStyle = function (label) {
 		if (!this.choiceFor('Door Design', label)) { return; }
-		if (this.style()) { this.restyle(label); } else { this.build(label, prefsFrom(this.defaultsFor(label))); }
+		var restyled = false;
+		if (this.style()) { restyled = this.restyle(label); } else { this.build(label, prefsFrom(this.defaultsFor(label))); }
+		if (restyled && this.savedToken && !this.needHandle) { this.saver().update(); }
 		if (this.leaveHandleOff() && this.freshDoor) { this.previewDue = true; }
 		this.freshDoor = false;
 		this.funnel.step('style', label);
@@ -108,7 +124,7 @@
 	P.saver = function () {
 		var self = this, Ask = W.HD_DD_D4Ask;
 		if (!this._saver) {
-			this._askKnown = this.knownPerson();
+			this._askKnown = !this.copy && this.knownPerson();   // a copy always asks for an email
 			this._saver = Ask ? Ask.create({
 				store: this.store, cfg: this.cfg(), known: this._askKnown,
 				getDesign: function () { return self.design(); },
@@ -155,15 +171,24 @@
 				this.track('door_lead_submitted');
 			}
 		}
-		if (body && !body.again) { this.reopened = false; }   // a lead or an added door, this visit
+		if (body && !body.again) { this.reopened = false; this.copy = false; }   // a lead or an added door, this visit
 		if (body && body.token && this.store) { this.store.addToken(body.token); }
 		this.nudgeOn = false;
 		this.go(body && body.again ? this.savedNext() : this.nextAfterLead());
 	};
 
 	// ---- Navigation and drawing -------------------------------------------------------------
-	// Mirrors Designer 3's back: the later screens go back to the door.
+	// Mirrors Designer 3's go. Remembers whether the doorway or details screen was opened from My
+	// designs (not from the door screen in this visit), for Back.
+	P.go = function (screen) {
+		if (STEPS[screen] && this.screen === 'designs') { this.viaDesigns = true; } else if (!LATER[screen]) { this.viaDesigns = false; }
+		return D3P.go.call(this, screen);
+	};
+
+	// Mirrors Designer 3's back: the later screens go back to the door, or to My designs when
+	// that is where the doorway or details screen was opened from.
 	P.back = function () {
+		if (this.viaDesigns && (this.screen === 'doorway' || this.screen === 'details')) { return this.go('designs'); }
 		if (LATER[this.screen]) { return this.go(this.style() ? 'door' : 'type'); }
 		return D3P.back.call(this);
 	};
@@ -205,6 +230,8 @@
 	// Opening a stored door lives in d4-saved.js. loadSaved: one of this visitor's doors (My
 	// designs), screen 'door' (default) or 'doorway'.
 	P.loadSaved = function (token, screen) { return W.HD_DD_D4Saved.loadSaved(this, token, screen); };
+	// loadCopy: a bare ?design=TOKEN link (boot.js), the door as a copy with nothing saved.
+	P.loadCopy = function (token) { return W.HD_DD_D4Saved.loadCopy(this, token); };
 	P.openListed = function (token, screen) { return W.HD_DD_D4Saved.openListed(this, token, screen); };
 
 	// The emailed link: {token, k} proves the email, then My designs.
@@ -215,10 +242,9 @@
 
 	// "Design another door" from My designs: a fresh door, tied to the known person.
 	P.startDoor = function () {
-		this._saver = null; this._token = null; this.savedKind = null;
+		this.dropSavedDoor();
 		this.mine = {}; this.auto = {};
 		this.wiz = W.HD_DD_Wizard.create(this.cv, W.HD_DD_StepConfig);
-		this.known = true;
 		this.reopened = false;
 		this.newDoor();
 		this.previewDue = false;
