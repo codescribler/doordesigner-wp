@@ -240,5 +240,16 @@ async function submitAsk(app) {
   atDoor.go('doorway'); atDoor.back();
   assert.strictEqual(atDoor.screen, 'door', 'a doorway reached from the door screen goes back to it');
 
+  // ---- F6: a reload after boot took k out of the address keeps the stored owner pair ---------
+  var rl = make();
+  rl.store.owner = { token: 'tokO', k: 'kO' };   // kept in this tab's sessionStorage by the store
+  window.HD_DD_D4MyDesigns = { render: function () {} };
+  rl.loadDesigns('tokO', '');
+  assert.deepStrictEqual(rl.store.owner, { token: 'tokO', k: 'kO' }, 'no k in the address: the stored owner pair is kept');
+  assert.strictEqual(rl.screen, 'designs');
+  rl.loadDesigns('tokN', 'kN');
+  assert.deepStrictEqual(rl.store.owner, { token: 'tokN', k: 'kN' }, 'a link with k sets the pair');
+  window.HD_DD_D4MyDesigns = {};
+
   console.log('d4-app-doors.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });

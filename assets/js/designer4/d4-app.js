@@ -240,8 +240,9 @@
 	P.openListed = function (token, screen) { return W.HD_DD_D4Saved.openListed(this, token, screen); };
 
 	// The emailed link: {token, k} proves the email, then My designs.
+	// A reload after boot.js took k out of the address has no k: the pair the store kept is used.
 	P.loadDesigns = function (token, k) {
-		if (this.store) { this.store.setOwner(token, k); }
+		if (this.store && k) { this.store.setOwner(token, k); }
 		this.go('designs');
 	};
 
