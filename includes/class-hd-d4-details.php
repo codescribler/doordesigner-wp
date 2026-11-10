@@ -32,6 +32,7 @@ class HD_DD_D4_Details {
 
 	public function rest_details( WP_REST_Request $request ) {
 		$down = $this->d4->unavailable();
+		$down = $down ? $down : $this->d4->over_read_limit();
 		if ( $down ) {
 			return $down;
 		}

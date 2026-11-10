@@ -13,6 +13,10 @@ class HD_DD_D4 {
 
 	const FLOW = 'designer4';
 
+	/** Calls per IP per hour to d4/designs, d4/door/{token}, its /remove and d4/details (autosave is chatty). */
+	const READ_LIMIT  = 240;
+	const READ_WINDOW = 3600;
+
 	/** @var HD_DD_Repository */
 	private $repository;
 
@@ -104,6 +108,25 @@ class HD_DD_D4 {
 		$hit['n']++;
 		set_transient( $key, $hit, max( 1, $hit['until'] - $now ) );
 		return true;
+	}
+
+	/**
+	 * Null while this IP is within READ_LIMIT calls this hour to the read and door routes, else a
+	 * 429. A transient keyed by IP, like the save limit; leads and added doors do not count.
+	 */
+	public function over_read_limit() {
+		$key = 'hd_dd_d4_read_' . md5( (string) $this->enquiry->client_ip() );
+		$hit = get_transient( $key );
+		$now = time();
+		if ( ! is_array( $hit ) || ! isset( $hit['n'], $hit['until'] ) || $hit['until'] <= $now ) {
+			$hit = array( 'n' => 0, 'until' => $now + self::READ_WINDOW );
+		}
+		if ( $hit['n'] >= self::READ_LIMIT ) {
+			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many requests from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );
+		}
+		$hit['n']++;
+		set_transient( $key, $hit, max( 1, $hit['until'] - $now ) );
+		return null;
 	}
 
 	/** The stored preview PNG for a reference, as a mail attachment list. */

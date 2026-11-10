@@ -93,6 +93,13 @@ class HD_DD_D4_Doors {
 		return $this->resolve( ( isset( $p['auth'] ) && is_array( $p['auth'] ) ) ? $p['auth'] : array() );
 	}
 
+	/** auth_of for the routes under the read limit (HD_DD_D4::over_read_limit). */
+	private function limited_auth_of( WP_REST_Request $request ) {
+		$down = $this->d4->unavailable();
+		$down = $down ? $down : $this->d4->over_read_limit();
+		return $down ? $down : $this->auth_of( $request );
+	}
+
 	private function status_of( array $rows ) {
 		return HD_DD_Manager_Client::status( array_map( function ( $r ) { return $r->reference; }, $rows ) );
 	}
@@ -101,7 +108,7 @@ class HD_DD_D4_Doors {
 	// POST d4/designs
 	// -------------------------------------------------------------------
 	public function rest_designs( WP_REST_Request $request ) {
-		$who = $this->auth_of( $request );
+		$who = $this->limited_auth_of( $request );
 		if ( is_wp_error( $who ) ) {
 			return $who;
 		}
@@ -185,7 +192,7 @@ class HD_DD_D4_Doors {
 	// -------------------------------------------------------------------
 	/** The caller's door for the path token, or the error (403 not theirs, 409 removed or closed). */
 	private function own_door( WP_REST_Request $request ) {
-		$who = $this->auth_of( $request );
+		$who = $this->limited_auth_of( $request );
 		if ( is_wp_error( $who ) ) {
 			return $who;
 		}

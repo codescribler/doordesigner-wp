@@ -242,22 +242,27 @@ function harness(over) {
   a.updateReply = { ok: false, status: 500, body: { ok: false } };
   assert.strictEqual(await a.s.update(), false);
   assert.strictEqual(lineText(a.box), FAILED);
+  // A 429 (the read and door routes' per-IP limit) is a failed save too.
+  change(a, 'Rate');
+  a.updateReply = { ok: false, status: 429, body: { code: 'hd_dd_rate_limited', message: 'Too many requests from this connection. Please try again later.' } };
+  assert.strictEqual(await a.s.update(), false, 'a 429 is not saved');
+  assert.strictEqual(lineText(a.box), FAILED, 'a 429 shows the could-not-save line');
   a.updateReply = null;
   change(a, 'Zed');
   assert.strictEqual(await a.s.update(), true);
-  assert.strictEqual(a.calls.length, 3, 'the next change retried');
+  assert.strictEqual(a.calls.length, 4, 'the next change retried');
   assert.strictEqual(lineText(a.box), SAVED);
   // No handle: autosave is held (nothing sent), the Oops line; a handle pick sends it and recovers.
   a.handle = false;
   change(a, 'Etna');
   assert.strictEqual(await a.s.update(), false, 'held');
-  assert.strictEqual(a.calls.length, 3, 'nothing sent with no handle');
+  assert.strictEqual(a.calls.length, 4, 'nothing sent with no handle');
   assert.strictEqual(lineText(a.box), OOPS);
   assert.ok(has(byClass(a.box, 'hd-d4-saved__text')[0], 'hd-d4-saved__text--error'));
   a.handle = true;
   change(a, 'Etna Lever');
   assert.strictEqual(await a.s.update(), true);
-  assert.strictEqual(a.calls.length, 4, 'the held change is sent once a handle is picked');
+  assert.strictEqual(a.calls.length, 5, 'the held change is sent once a handle is picked');
   assert.strictEqual(lineText(a.box), SAVED, 'recovers after a handle pick');
   assert.strictEqual(document.activeElement, keep, 'focus never moved');
   // Drawn again with no handle on the door: the held line straight away.
