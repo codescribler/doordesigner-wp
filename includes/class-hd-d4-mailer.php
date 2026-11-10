@@ -24,23 +24,28 @@ class HD_DD_D4_Mailer {
 		return wp_mail( $to, $subject, self::link_html( $payload, (string) $designs_url, $name ), self::customer_headers() );
 	}
 
-	/** Tell the business a new Designer 4 lead arrived. */
-	public static function send_owner_lead( array $payload, $recipient, array $attachments = array() ) {
+	/** Tell the business a new Designer 4 lead arrived. $queued false = its manager event could not be stored. */
+	public static function send_owner_lead( array $payload, $recipient, array $attachments = array(), $queued = true ) {
 		/* translators: 1: reference, 2: the visitor's email address */
 		$subject = sprintf( __( 'New Designer 4 lead %1$s — %2$s', 'hd-door-designer' ), self::ref_of( $payload ), self::email_of( $payload ) );
 		$intro   = array(
 			__( 'Someone finished a door in Designer 4 and sent their email address. That is their request for a price, so the lead is also on its way to the manager.', 'hd-door-designer' ),
 			__( 'They have been emailed a link to their designs and told the price follows within 1 working day.', 'hd-door-designer' ),
 		);
-		return self::send_owner( self::flag_prefix( $payload ) . $subject, $intro, $payload, $recipient, $attachments );
+		return self::send_owner( self::flag_prefix( $payload ) . $subject, array_merge( self::not_queued( $queued ), $intro ), $payload, $recipient, $attachments );
 	}
 
-	/** Tell the business a known visitor added another door. */
-	public static function send_owner_door_added( array $payload, $recipient, array $attachments = array() ) {
+	/** Tell the business a known visitor added another door. $queued as for send_owner_lead. */
+	public static function send_owner_door_added( array $payload, $recipient, array $attachments = array(), $queued = true ) {
 		/* translators: 1: reference, 2: the visitor's email address */
 		$subject = sprintf( __( 'Designer 4: another door %1$s — %2$s', 'hd-door-designer' ), self::ref_of( $payload ), self::email_of( $payload ) );
 		$intro   = array( __( 'Someone who already has Designer 4 doors added another one.', 'hd-door-designer' ) );
-		return self::send_owner( self::flag_prefix( $payload ) . $subject, $intro, $payload, $recipient, $attachments );
+		return self::send_owner( self::flag_prefix( $payload ) . $subject, array_merge( self::not_queued( $queued ), $intro ), $payload, $recipient, $attachments );
+	}
+
+	/** The lines that open the owner email when the manager event could not be queued. */
+	private static function not_queued( $queued ) {
+		return $queued ? array() : array( __( 'This lead could not be queued for the manager. Add it by hand.', 'hd-door-designer' ), '' );
 	}
 
 	/** Honeypot hits are usually autofill on a real customer: treated as real, but marked. */

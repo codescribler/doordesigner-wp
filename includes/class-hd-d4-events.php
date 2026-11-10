@@ -57,6 +57,8 @@ class HD_DD_D4_Events {
 	/**
 	 * Queue one event for the manager. $details may carry name, phone, postcode and overwrite.
 	 *
+	 * A failed queue insert is logged here; the caller adds a line to the owner's email when there is one.
+	 *
 	 * @return int Queue row id (0 when it could not be stored, or the type is unknown).
 	 */
 	public static function send( $type, $row, array $details = array() ) {
@@ -64,7 +66,7 @@ class HD_DD_D4_Events {
 			return 0;
 		}
 		$details = $details + array( 'name' => '', 'phone' => '', 'postcode' => '', 'overwrite' => false );
-		return HD_DD_Manager_Queue::enqueue(
+		$id      = HD_DD_Manager_Queue::enqueue(
 			array(
 				'type'    => $type,
 				'email'   => (string) $row->customer_email,
@@ -77,5 +79,10 @@ class HD_DD_D4_Events {
 				),
 			)
 		);
+		if ( ! $id ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- the owner must be able to find a lost event.
+			error_log( sprintf( 'HD Door Designer: the manager event %s for %s could not be queued. Add it to the manager by hand.', $type, (string) $row->reference ) );
+		}
+		return $id;
 	}
 }

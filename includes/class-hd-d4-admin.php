@@ -41,8 +41,29 @@ class HD_DD_D4_Admin {
 		return 'designer4' === $flow ? '<br><small>' . esc_html__( 'Leads (email sent)', 'hd-door-designer' ) . '</small>' : '';
 	}
 
-	/** How many events are still waiting to reach the manager. */
+	/**
+	 * The manager backlog: events waiting, events the manager keeps refusing (failed 8+ times,
+	 * with the last error) and events refused for good in the last 30 days (with the code).
+	 */
 	public static function waiting_note() {
-		return '<p class="description">' . esc_html( sprintf( /* translators: %d: events */ __( 'Manager events waiting to be delivered: %d', 'hd-door-designer' ), HD_DD_Manager_Queue::pending() ) ) . '</p>';
+		$r     = HD_DD_Manager_Queue::report();
+		$lines = array(
+			/* translators: %d: events */
+			sprintf( __( 'Manager events waiting to be delivered: %d', 'hd-door-designer' ), $r['waiting'] ),
+			/* translators: %d: events */
+			sprintf( __( 'The manager keeps refusing: %d', 'hd-door-designer' ), $r['stuck'] ) . self::codes( $r['stuck_codes'], __( 'last error', 'hd-door-designer' ) ),
+			/* translators: %d: events */
+			sprintf( __( 'Refused for good in the last 30 days: %d', 'hd-door-designer' ), $r['refused'] ) . self::codes( $r['refused_codes'], __( 'code', 'hd-door-designer' ) ),
+		);
+		return '<p class="description">' . implode( '<br>', array_map( 'esc_html', $lines ) ) . '</p>';
+	}
+
+	/** " (last error: http_401:unauthorized × 2)" or '' when there are none. */
+	private static function codes( array $codes, $label ) {
+		$parts = array();
+		foreach ( $codes as $code => $n ) {
+			$parts[] = $code . ( $n > 1 ? ' × ' . $n : '' );
+		}
+		return $parts ? ' (' . $label . ': ' . implode( ', ', $parts ) . ')' : '';
 	}
 }

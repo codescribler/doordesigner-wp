@@ -4,45 +4,7 @@
  * manager that is down or a blank key never loses a lead and each event lands exactly once.
  * Run: php tests/php/manager-queue.test.php
  */
-require __DIR__ . '/wp-stubs.php';
-require_once HD_DD_DIR . 'includes/class-hd-manager-client.php';
-require_once HD_DD_DIR . 'includes/class-hd-manager-queue.php';
-
-/** Holds the queue table's rows and answers the handful of queries the queue runs. */
-class HD_Test_Queue_WPDB extends HD_Test_WPDB {
-	public function get_results( $q ) {
-		if ( false === strpos( $q, 'FROM wp_hd_dd_manager_queue' ) ) { return parent::get_results( $q ); }
-		$rows = array_filter( $this->rows, function ( $r ) { return empty( $r['done_at'] ); } );
-		usort( $rows, function ( $a, $b ) { return $a['id'] - $b['id']; } );
-		return array_map( function ( $r ) { return (object) $r; }, array_slice( $rows, 0, 25 ) );
-	}
-	public function get_var( $q ) {
-		if ( false === strpos( $q, 'COUNT(*) FROM wp_hd_dd_manager_queue' ) ) { return parent::get_var( $q ); }
-		return count( array_filter( $this->rows, function ( $r ) { return empty( $r['done_at'] ); } ) );
-	}
-	/** The claim: UPDATE … SET next_at = '<later>' WHERE id = N AND done_at IS NULL AND next_at <= '<now>'. */
-	public function query( $q ) {
-		if ( preg_match( "/^UPDATE wp_hd_dd_manager_queue SET next_at = '([^']*)' WHERE id = (\d+) AND done_at IS NULL AND next_at <= '([^']*)'$/", $q, $m ) ) {
-			foreach ( $this->rows as &$r ) {
-				if ( (int) $r['id'] === (int) $m[2] && empty( $r['done_at'] ) && $r['next_at'] <= $m[3] ) { $r['next_at'] = $m[1]; return 1; }
-			}
-			return 0;
-		}
-		return parent::query( $q );
-	}
-}
-
-function hd_test_q_reset( $key = 'secret-key', $url = 'https://manager.test/api/' ) {
-	hd_test_reset();
-	$GLOBALS['wpdb'] = new HD_Test_Queue_WPDB();
-	update_option( 'hd_dd_settings', array( 'manager_url' => $url, 'manager_key' => $key ) );
-}
-function hd_test_reply( $code, $body = array() ) {
-	return array( 'response' => array( 'code' => $code ), 'body' => json_encode( $body ) );
-}
-function hd_test_event( $ref = 'HD-2026-000090' ) {
-	return array( 'type' => 'door_added', 'email' => 'nicola@example.com', 'door' => array( 'reference' => $ref ) );
-}
+require __DIR__ . '/queue-helpers.php';
 
 // 1) enqueue stores the event with eventId hd-{id} and schedules a push.
 hd_test_q_reset();
@@ -68,10 +30,10 @@ check( 0 === HD_DD_Manager_Queue::pending(), 'nothing is pending after delivery'
 HD_DD_Manager_Queue::run();
 check( 1 === count( $GLOBALS['hd_test_http'] ), 'a delivered row is never sent twice' );
 
-// 3) 409 deal_closed (and 422) are final: done, failed set, not retried.
+// 3) 409 deal_closed and 422 invalid_request are final: done, failed set, not retried.
 hd_test_q_reset();
 HD_DD_Manager_Queue::enqueue( hd_test_event() );
-$GLOBALS['hd_test_http_replies'][] = hd_test_reply( 409, array( 'code' => 'deal_closed' ) );
+$GLOBALS['hd_test_http_replies'][] = hd_test_error_reply( 409, 'deal_closed' );
 HD_DD_Manager_Queue::run();
 $r = $GLOBALS['wpdb']->rows[0];
 check( 'deal_closed' === $r['failed'] && ! empty( $r['done_at'] ), 'a 409 deal_closed reply is final: done, failed = deal_closed' );
@@ -79,12 +41,12 @@ HD_DD_Manager_Queue::run();
 check( 1 === count( $GLOBALS['hd_test_http'] ), 'a final refusal is not retried' );
 hd_test_q_reset();
 HD_DD_Manager_Queue::enqueue( hd_test_event() );
-$GLOBALS['hd_test_http_replies'][] = hd_test_reply( 422, array( 'code' => 'bad_email' ) );
+$GLOBALS['hd_test_http_replies'][] = hd_test_error_reply( 422, 'invalid_request' );
 HD_DD_Manager_Queue::run();
-check( 'bad_email' === $GLOBALS['wpdb']->rows[0]['failed'], 'a 422 reply is final with its code' );
+check( 'invalid_request' === $GLOBALS['wpdb']->rows[0]['failed'], 'a 422 invalid_request reply is final with its code' );
 hd_test_q_reset();
 HD_DD_Manager_Queue::enqueue( hd_test_event() );
-$GLOBALS['hd_test_http_replies'][] = hd_test_reply( 409, array( 'code' => 'something_else' ) );
+$GLOBALS['hd_test_http_replies'][] = hd_test_error_reply( 409, 'something_else' );
 HD_DD_Manager_Queue::run();
 check( empty( $GLOBALS['wpdb']->rows[0]['done_at'] ), 'a 409 with another code is retried, not final' );
 
@@ -167,8 +129,9 @@ $json = json_encode( $m->invoke( new HD_DD_Assets( new HD_DD_Catalogue() ) ) );
 check( strlen( $json ) > 50, 'the front config was built' );
 check( false === strpos( $json, 'secret-key-123' ) && false === strpos( $json, 'manager.test' ) && false === strpos( $json, 'manager_key' ), 'the key is never part of HD_DD_Assets front config' );
 hd_test_q_reset();
+delete_option( 'hd_dd_manager_db_version' );
 HD_DD_Manager_Queue::maybe_upgrade();
-check( '1' === get_option( 'hd_dd_manager_db_version' ), 'maybe_upgrade stores the version option' );
+check( HD_DD_Manager_Queue::DB_VERSION === get_option( 'hd_dd_manager_db_version' ), 'maybe_upgrade stores the version option' );
 check( 1 === count( $GLOBALS['hd_test_dbdelta'] ) && false !== strpos( $GLOBALS['hd_test_dbdelta'][0], 'wp_hd_dd_manager_queue' ), 'maybe_upgrade creates the table' );
 HD_DD_Manager_Queue::maybe_upgrade();
 check( 1 === count( $GLOBALS['hd_test_dbdelta'] ), 'maybe_upgrade is a no-op once current' );

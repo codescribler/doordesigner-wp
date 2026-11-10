@@ -162,8 +162,8 @@ class HD_DD_D4_Doors {
 			$payload['experiment'] = $experiment;
 		}
 		$this->repository->update_payload( $saved['id'], $payload );
-		HD_DD_D4_Events::send( 'door_added', $this->repository->get( $saved['id'] ) );
-		HD_DD_D4_Mailer::send_owner_door_added( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array() );
+		$queued = HD_DD_D4_Events::send( 'door_added', $this->repository->get( $saved['id'] ) ) > 0;
+		HD_DD_D4_Mailer::send_owner_door_added( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array(), $queued );
 		return new WP_REST_Response( array( 'ok' => true, 'token' => $saved['token'], 'reference' => $saved['reference'] ), 200 );
 	}
 

@@ -12,10 +12,12 @@ defined( 'ABSPATH' ) || exit;
 class HD_DD_Manager_Queue {
 
 	const DB_OPTION  = 'hd_dd_manager_db_version';
-	const DB_VERSION = '1';
-	const CRON       = 'hd_dd_manager_push';
-	const BATCH      = 25;  // rows per run at most.
-	const CLAIM      = 300; // seconds a row is held while it is being sent.
+	const DB_VERSION   = '2';
+	const CRON         = 'hd_dd_manager_push';
+	const BATCH        = 25;  // rows per run at most.
+	const CLAIM        = 300; // seconds a row is held while it is being sent.
+	const STUCK        = 8;   // failures after which a row no longer holds newer rows back.
+	const REFUSED_DAYS = 30;  // how far back wp-admin counts rows refused for good.
 
 	public function register() {
 		add_action( self::CRON, array( __CLASS__, 'run' ) );
@@ -33,11 +35,33 @@ class HD_DD_Manager_Queue {
 		return $wpdb->prefix . 'hd_dd_manager_queue';
 	}
 
+	/**
+	 * Create or migrate the table when the stored version differs. The version is stored only
+	 * once the table and this version's column are really there, so a failed dbDelta is tried
+	 * again on the next load (the same pattern as HD_DD_Repository::maybe_upgrade).
+	 */
 	public static function maybe_upgrade() {
-		if ( get_option( self::DB_OPTION ) !== self::DB_VERSION ) {
+		if ( ! self::schema_current() ) {
 			self::create_table();
-			update_option( self::DB_OPTION, self::DB_VERSION, false );
+			if ( self::table_ready() ) {
+				update_option( self::DB_OPTION, self::DB_VERSION, false );
+			}
 		}
+	}
+
+	/** True when the stored version is this code's (so the last_error column exists). */
+	public static function schema_current() {
+		return get_option( self::DB_OPTION ) === self::DB_VERSION;
+	}
+
+	private static function table_ready() {
+		global $wpdb;
+		$t = self::table();
+		if ( $t !== $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $t ) ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM {$t} LIKE %s", 'last_error' ) );
 	}
 
 	public static function create_table() {
@@ -52,6 +76,7 @@ class HD_DD_Manager_Queue {
 			next_at DATETIME NOT NULL,
 			done_at DATETIME NULL DEFAULT NULL,
 			failed VARCHAR(190) NULL DEFAULT NULL,
+			last_error VARCHAR(190) NULL DEFAULT NULL,
 			PRIMARY KEY  (id),
 			KEY pending (done_at, id)
 		) {$wpdb->get_charset_collate()};"
@@ -101,6 +126,39 @@ class HD_DD_Manager_Queue {
 		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE done_at IS NULL' );
 	}
 
+	/**
+	 * What wp-admin shows: rows waiting, rows the manager keeps refusing (STUCK+ failures, by last
+	 * error) and rows refused for good in the last REFUSED_DAYS days (by code).
+	 *
+	 * @return array{waiting:int,stuck:int,stuck_codes:array,refused:int,refused_codes:array}
+	 */
+	public static function report() {
+		global $wpdb;
+		$t   = self::table();
+		$col = self::schema_current() ? 'last_error' : 'failed'; // no last_error column yet: failed is NULL on waiting rows.
+		$cut = gmdate( 'Y-m-d H:i:s', time() - self::REFUSED_DAYS * 86400 );
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table and column names are internal.
+		$stuck = self::by_code( (array) $wpdb->get_results( $wpdb->prepare( "SELECT {$col} AS code, COUNT(*) AS n FROM {$t} WHERE done_at IS NULL AND attempts >= %d GROUP BY {$col}", self::STUCK ) ) );
+		$gone  = self::by_code( (array) $wpdb->get_results( $wpdb->prepare( "SELECT failed AS code, COUNT(*) AS n FROM {$t} WHERE failed IS NOT NULL AND done_at >= %s GROUP BY failed", $cut ) ) );
+		// phpcs:enable
+		return array(
+			'waiting'       => self::pending(),
+			'stuck'         => (int) array_sum( $stuck ),
+			'stuck_codes'   => $stuck,
+			'refused'       => (int) array_sum( $gone ),
+			'refused_codes' => $gone,
+		);
+	}
+
+	private static function by_code( array $rows ) {
+		$out = array();
+		foreach ( $rows as $r ) {
+			$code         = ( isset( $r->code ) && '' !== (string) $r->code ) ? (string) $r->code : 'unknown';
+			$out[ $code ] = ( isset( $out[ $code ] ) ? $out[ $code ] : 0 ) + (int) $r->n;
+		}
+		return $out;
+	}
+
 	/** Seconds to wait after the nth failed attempt. */
 	public static function delay( $attempt ) {
 		return (int) min( 3600, 60 * ( 2 ** max( 0, min( 20, (int) $attempt - 1 ) ) ) );
@@ -108,7 +166,9 @@ class HD_DD_Manager_Queue {
 
 	/**
 	 * Push what is due, oldest first. Stops at the first row that fails (or is not due yet) so
-	 * events reach the manager in the order they happened.
+	 * events reach the manager in the order they happened. The exception is a row that has
+	 * already failed STUCK times: it is skipped while it waits, and its next failure does not stop
+	 * the run, so one event the manager keeps refusing never holds the newer ones back for ever.
 	 *
 	 * @return int Events delivered.
 	 */
@@ -119,10 +179,15 @@ class HD_DD_Manager_Queue {
 		}
 		$now  = null === $now ? time() : (int) $now;
 		$t    = self::table();
-		$rows = (array) $wpdb->get_results( 'SELECT * FROM ' . $t . ' WHERE done_at IS NULL ORDER BY id ASC LIMIT ' . self::BATCH );
+		// Stuck rows that are not due are left out, so they cannot fill the batch.
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $t . ' WHERE done_at IS NULL AND ( attempts < %d OR next_at <= %s ) ORDER BY id ASC LIMIT %d', self::STUCK, gmdate( 'Y-m-d H:i:s', $now ), self::BATCH ) );
 		$sent = 0;
 		foreach ( $rows as $row ) {
+			$stuck = (int) $row->attempts >= self::STUCK;
 			if ( strtotime( $row->next_at . ' UTC' ) > $now || ! self::claim( $row, $now ) ) {
+				if ( $stuck ) {
+					continue;
+				}
 				break;
 			}
 			$event = json_decode( (string) $row->body, true );
@@ -144,9 +209,15 @@ class HD_DD_Manager_Queue {
 			} elseif ( $reply['final'] ) {
 				self::finish( $row, $now, $reply['code'] );
 			} else {
-				$n = (int) $row->attempts + 1;
-				$wpdb->update( $t, array( 'attempts' => $n, 'next_at' => gmdate( 'Y-m-d H:i:s', $now + self::delay( $n ) ) ), array( 'id' => (int) $row->id ), array( '%d', '%s' ), array( '%d' ) );
-				break;
+				$n    = (int) $row->attempts + 1;
+				$data = array( 'attempts' => $n, 'next_at' => gmdate( 'Y-m-d H:i:s', $now + self::delay( $n ) ) );
+				if ( self::schema_current() ) {
+					$data['last_error'] = $reply['code'];
+				}
+				$wpdb->update( $t, $data, array( 'id' => (int) $row->id ), array_merge( array( '%d' ), array_fill( 0, count( $data ) - 1, '%s' ) ), array( '%d' ) );
+				if ( ! $stuck ) {
+					break;
+				}
 			}
 		}
 		return $sent;
@@ -160,10 +231,10 @@ class HD_DD_Manager_Queue {
 
 	private static function finish( $row, $now, $failed ) {
 		global $wpdb;
-		$wpdb->update(
-			self::table(),
-			array( 'attempts' => (int) $row->attempts + 1, 'done_at' => gmdate( 'Y-m-d H:i:s', $now ), 'failed' => $failed ),
-			array( 'id' => (int) $row->id )
-		);
+		$data = array( 'attempts' => (int) $row->attempts + 1, 'done_at' => gmdate( 'Y-m-d H:i:s', $now ), 'failed' => $failed );
+		if ( null !== $failed && self::schema_current() ) {
+			$data['last_error'] = $failed;
+		}
+		$wpdb->update( self::table(), $data, array( 'id' => (int) $row->id ) );
 	}
 }
