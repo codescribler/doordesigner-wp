@@ -2,7 +2,7 @@
 // Designer 4's door screen: Designer 3's door screen (HD_DD_D3Screens.door) with
 //   - the handle preview: each of app.previewLabels() drawn for a second, once, then the real door;
 //   - the banner and the glowing Handle control (class hd-d4-needhandle on the shell) while the
-//     door has no handle;
+//     door has no handle; once it has one, the banner points at the labels;
 //   - the part labels with lines in place of the "+" dots (d4-labels.js);
 //   - the guide price above the ask, and the nudge pointing at the price;
 //   - the "no handle" speech bubble above the Handle label (the ask's onNoHandle).
@@ -17,6 +17,7 @@
 	var COPY = {
 		preview: 'Here\'s your door. Which handle suits it?',
 		choose: 'Choose your handle next.',
+		settled: 'Here\'s your door. Tap a label to change any part of it.',   // Designer 3's says "a dot"
 		nudge: 'Looking good. Want a price for it?',
 		bubble: 'How will you get in without a handle?'
 	};
@@ -68,7 +69,6 @@
 	function door(app, shell) {
 		var base = W.HD_DD_D3Screens.door(app, shell) || {};
 		var banner = q(shell, 'hd-d3-banner');
-		var plain = banner ? banner.textContent : '';
 		var runner = null, bubbleEl = null;
 		var view = {};
 
@@ -101,7 +101,7 @@
 		// Everything Designer 3's redraw doesn't know about.
 		function sync() {
 			if (banner) {
-				banner.textContent = playing() ? COPY.preview : (app.needHandle ? COPY.choose : plain);
+				banner.textContent = playing() ? COPY.preview : (app.needHandle ? COPY.choose : COPY.settled);
 				setClass(banner, 'hd-d4-banner--preview', playing());
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);

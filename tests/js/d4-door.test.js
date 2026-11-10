@@ -157,11 +157,12 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.ok(!has(shell, 'hd-d4-previewing'), 'the handle ring is back when the preview ends');
   assert.deepStrictEqual(app.log, ['handle_preview'], 'nothing per frame');
 
-  // a handle picked: glow off, Designer 3's banner back
+  // a handle picked: glow off, the settled banner names the labels (there are no dots in Designer 4)
+  assert.strictEqual(C.settled, "Here's your door. Tap a label to change any part of it.");
   app.needHandle = false;
   view.refresh();
   assert.ok(!has(shell, 'hd-d4-needhandle'));
-  assert.strictEqual(banner.textContent, 'Here’s your door. Tap a dot to change any part of it.');
+  assert.strictEqual(banner.textContent, C.settled);
   app.needHandle = true;
   view.refresh();
   assert.ok(has(shell, 'hd-d4-needhandle'));
@@ -223,12 +224,12 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.strictEqual(app4.previewDue, false);
   assert.strictEqual(shell4.querySelector('.hd-d3-banner').textContent, C.choose);
 
-  // no preview due (a reopened door with a handle): Designer 3's banner, no glow
+  // no preview due (a reopened door with a handle): the settled banner, no glow
   var app5 = fakeApp({ previewDue: false, needHandle: false });
   var shell5 = node('div');
   Door.door(app5, shell5);
   await tick();
-  assert.strictEqual(shell5.querySelector('.hd-d3-banner').textContent, 'Here’s your door. Tap a dot to change any part of it.');
+  assert.strictEqual(shell5.querySelector('.hd-d3-banner').textContent, C.settled);
   assert.ok(!has(shell5, 'hd-d4-needhandle'));
   assert.strictEqual(app5.timers.q.length, 0);
   // no labels: nothing to play
