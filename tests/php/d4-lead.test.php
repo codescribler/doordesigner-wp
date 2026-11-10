@@ -71,13 +71,22 @@ check( is_wp_error( $res ), 'an array email is refused, not a crash' );
 $res = hd_d4_lead( array( 'design' => array() ) );
 check( is_wp_error( $res ) && 'hd_dd_no_design' === $res->get_error_code(), 'no design is refused' );
 
-// --- 7) Honeypot: kept and flagged, no manager event, no owner email -------------------------
+// --- 7) Honeypot: stored flagged but treated as real ------------------------------------------
 hd_d4_reset();
 $res = hd_d4_lead( array( 'hd_hp' => 'autofill' ) );
 check( ! is_wp_error( $res ) && 'flagged' === hd_d4_rows()[0]['status'], 'a honeypot lead is stored flagged' );
-check( array() === $GLOBALS['wpdb']->events(), 'no manager event for a honeypot lead' );
-check( 1 === count( $GLOBALS['hd_test_mail'] ) && 'jo@example.com' === $GLOBALS['hd_test_mail'][0]['to'], 'only the customer link email goes; the owner is not emailed' );
 check( array( 'honeypot' ) === json_decode( hd_d4_rows()[0]['payload'], true )['flags'], 'the payload carries the honeypot flag' );
+$types = array_map( function ( $e ) { return $e['type']; }, $GLOBALS['wpdb']->events() );
+check( array( 'door_added' ) === $types, 'the door_added manager event is still queued' );
+$subjects = hd_d4_subjects();
+check( 2 === count( $subjects ) && 'jo@example.com' === $GLOBALS['hd_test_mail'][0]['to'], 'the customer link email and the owner email both go' );
+check( 0 === strpos( $subjects[1], '[Possible bot] New Designer 4 lead HD-' ), 'the owner subject has the Possible bot prefix (' . $subjects[1] . ')' );
+check( 0 === strpos( $subjects[0], 'Your door design' ), 'the customer subject has no prefix' );
+$conv = 0;
+hd_d4_reset();
+add_action( 'hd_dd_enquiry_submitted', function () use ( &$conv ) { $conv++; }, 10, 2 );
+hd_d4_lead( array( 'hd_hp' => 'x' ) );
+check( 1 === $conv, 'hd_dd_enquiry_submitted fires for a flagged lead' );
 
 // --- 8) Sending again with the row token updates that row ------------------------------------
 hd_d4_reset();

@@ -130,6 +130,13 @@ class HD_DD_Manager_Queue {
 				self::finish( $row, $now, 'bad_body' );
 				continue;
 			}
+			// A body that never got its eventId (a crash mid-enqueue) is completed, never sent without one.
+			if ( empty( $event['eventId'] ) ) {
+				$event['eventId'] = 'hd-' . (int) $row->id;
+			}
+			if ( empty( $event['at'] ) ) {
+				$event['at'] = (int) round( microtime( true ) * 1000 );
+			}
 			$reply = HD_DD_Manager_Client::post_event( $event );
 			if ( $reply['ok'] ) {
 				self::finish( $row, $now, null );

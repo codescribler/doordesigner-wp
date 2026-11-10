@@ -44,4 +44,7 @@ check( in_array( 'Reply-To: nicola@example.com', $m['headers'], true ) && false 
 HD_DD_D4_Mailer::send_owner_door_added( $payload, 'owner@example.com' );
 check( 'Designer 4: another door HD-2026-000090 — nicola@example.com' === $GLOBALS['hd_test_mail'][1]['subject'], 'the door-added subject' );
 
+HD_DD_D4_Mailer::send_owner_door_added( $payload + array( 'flags' => array( 'honeypot' ) ), 'owner@example.com' );
+check( '[Possible bot] Designer 4: another door HD-2026-000090 — nicola@example.com' === $GLOBALS['hd_test_mail'][2]['subject'], 'a flagged door-added subject has the Possible bot prefix' );
+
 hd_test_done( 'd4-mailer' );

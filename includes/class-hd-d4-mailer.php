@@ -32,7 +32,7 @@ class HD_DD_D4_Mailer {
 			__( 'Someone finished a door in Designer 4 and sent their email address. That is their request for a price, so the lead is also on its way to the manager.', 'hd-door-designer' ),
 			__( 'They have been emailed a link to their designs and told the price follows within 1 working day.', 'hd-door-designer' ),
 		);
-		return self::send_owner( $subject, $intro, $payload, $recipient, $attachments );
+		return self::send_owner( self::flag_prefix( $payload ) . $subject, $intro, $payload, $recipient, $attachments );
 	}
 
 	/** Tell the business a known visitor added another door. */
@@ -40,7 +40,12 @@ class HD_DD_D4_Mailer {
 		/* translators: 1: reference, 2: the visitor's email address */
 		$subject = sprintf( __( 'Designer 4: another door %1$s — %2$s', 'hd-door-designer' ), self::ref_of( $payload ), self::email_of( $payload ) );
 		$intro   = array( __( 'Someone who already has Designer 4 doors added another one.', 'hd-door-designer' ) );
-		return self::send_owner( $subject, $intro, $payload, $recipient, $attachments );
+		return self::send_owner( self::flag_prefix( $payload ) . $subject, $intro, $payload, $recipient, $attachments );
+	}
+
+	/** Honeypot hits are usually autofill on a real customer: treated as real, but marked. */
+	private static function flag_prefix( array $payload ) {
+		return empty( $payload['flags'] ) ? '' : __( '[Possible bot] ', 'hd-door-designer' );
 	}
 
 	private static function email_of( array $payload ) {

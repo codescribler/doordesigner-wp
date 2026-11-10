@@ -118,8 +118,8 @@ class HD_DD_D4 {
 		if ( ! $this->within_limit() ) {
 			return new WP_Error( 'hd_dd_rate_limited', __( 'Too many saves from this connection. Please try again later.', 'hd-door-designer' ), array( 'status' => 429 ) );
 		}
-		// A filled hidden field is usually autofill on a real customer: keep it, flag it. A flagged
-		// request never edits an existing door.
+		// A filled hidden field is usually autofill on a real customer: treat it as real, flag it. A
+		// flagged request never edits an existing door.
 		$flagged = ! empty( $p['hd_hp'] );
 		$name    = $this->design_name( $design );
 		$own     = $flagged ? null : $this->own_live_row( $this->text( $p, 'token' ), $email );
@@ -189,10 +189,8 @@ class HD_DD_D4 {
 
 		$row = $this->repository->get( $saved['id'] );
 		HD_DD_D4_Mailer::send_link( $payload, HD_DD_D4_Access::designs_url( $payload['pageUrl'], $row ) );
-		if ( ! $flagged ) {
-			HD_DD_D4_Events::send( 'door_added', $row );
-			HD_DD_D4_Mailer::send_owner_lead( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array() );
-		}
+		HD_DD_D4_Events::send( 'door_added', $row );
+		HD_DD_D4_Mailer::send_owner_lead( $payload, HD_DD_Plugin::settings()['recipient_email'], $image ? array( $image['path'] ) : array() );
 
 		/** The lead, and the A/B conversion (same hook an enquiry fires). Not hd_dd_design_saved: no follow-up sequence. */
 		do_action( 'hd_dd_enquiry_submitted', $payload, (int) $saved['id'] );

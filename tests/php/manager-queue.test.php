@@ -213,4 +213,12 @@ $GLOBALS['wpdb']->fail_update = true;
 check( 0 === HD_DD_Manager_Queue::enqueue( hd_test_event() ), 'a failed update is a failed enqueue (returns 0)' );
 check( 0 === HD_DD_Manager_Queue::pending() && 0 === count( $GLOBALS['hd_test_cron_single'] ), 'the half-written row is removed and no push is scheduled' );
 
+// 12) A body with no eventId or at (a crash mid-enqueue) is completed before it is sent.
+hd_test_q_reset();
+$GLOBALS['wpdb']->insert( 'wp_hd_dd_manager_queue', array( 'body' => json_encode( hd_test_event() ), 'attempts' => 0, 'next_at' => gmdate( 'Y-m-d H:i:s', time() - 5 ) ) );
+HD_DD_Manager_Queue::run();
+$sent = json_decode( $GLOBALS['hd_test_http'][0]['args']['body'], true );
+check( 'hd-1' === $sent['eventId'] && is_int( $sent['at'] ) && abs( $sent['at'] - microtime( true ) * 1000 ) < 5000, 'run backfills a missing eventId (hd-{id}) and at before sending' );
+check( 'HD-2026-000090' === $sent['door']['reference'], 'the rest of the event is untouched' );
+
 hd_test_done( 'manager-queue' );
