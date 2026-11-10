@@ -39,6 +39,7 @@ class HD_DD_Activator {
 
 	public static function deactivate() {
 		wp_clear_scheduled_hook( 'hd_dd_experiment_evaluate' ); // HD_DD_Experiments::CRON; re-scheduled on init.
+		wp_clear_scheduled_hook( 'hd_dd_manager_push' ); // HD_DD_Manager_Queue::CRON; re-scheduled on init.
 		flush_rewrite_rules();
 	}
 }

@@ -63,6 +63,8 @@ function hd_test_reset() {
 	$GLOBALS['hd_test_can']        = true;
 	$GLOBALS['hd_test_cron']       = array();
 	$GLOBALS['hd_test_http']       = array();
+	$GLOBALS['hd_test_http_replies'] = array();
+	$GLOBALS['hd_test_cron_single'] = array();
 	unset( $GLOBALS['hd_test_http_reply'] );
 	$_SERVER['REMOTE_ADDR']        = '203.0.113.5';
 	if ( is_file( HD_TEST_ERROR_LOG ) ) {
@@ -260,11 +262,17 @@ function admin_url( $path = '' ) { return 'https://example.test/wp-admin/' . ltr
 function current_user_can( $cap ) { return ! empty( $GLOBALS['hd_test_can'] ); }
 function wp_next_scheduled( $hook ) { return isset( $GLOBALS['hd_test_cron'][ $hook ] ) ? $GLOBALS['hd_test_cron'][ $hook ] : false; }
 function wp_schedule_event( $ts, $recurrence, $hook ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; return true; }
-function wp_schedule_single_event( $ts, $hook, $args = array() ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; return true; }
+function wp_schedule_single_event( $ts, $hook, $args = array() ) { $GLOBALS['hd_test_cron'][ $hook ] = $ts; $GLOBALS['hd_test_cron_single'][] = compact( 'ts', 'hook', 'args' ); return true; }
 function wp_clear_scheduled_hook( $hook ) { unset( $GLOBALS['hd_test_cron'][ $hook ] ); return 1; }
 function delete_transient( $k ) { unset( $GLOBALS['hd_test_transients'][ $k ] ); return true; }
 function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) { $GLOBALS['hd_test_mail'][] = compact( 'to', 'subject', 'message', 'headers', 'attachments' ); return true; }
-function wp_remote_post( $url, $args = array() ) { $GLOBALS['hd_test_http'][] = compact( 'url', 'args' ); return isset( $GLOBALS['hd_test_http_reply'] ) ? $GLOBALS['hd_test_http_reply'] : array( 'response' => array( 'code' => 200 ), 'body' => '{}' ); }
+function wp_remote_post( $url, $args = array() ) {
+	$GLOBALS['hd_test_http'][] = compact( 'url', 'args' );
+	if ( ! empty( $GLOBALS['hd_test_http_replies'] ) ) { return array_shift( $GLOBALS['hd_test_http_replies'] ); } // a queue: one reply per call.
+	return isset( $GLOBALS['hd_test_http_reply'] ) ? $GLOBALS['hd_test_http_reply'] : array( 'response' => array( 'code' => 200 ), 'body' => '{}' );
+}
+function wp_remote_retrieve_response_code( $r ) { return is_array( $r ) && isset( $r['response']['code'] ) ? (int) $r['response']['code'] : 0; }
+function wp_remote_retrieve_body( $r ) { return is_array( $r ) && isset( $r['body'] ) ? (string) $r['body'] : ''; }
 function wp_create_nonce( $action = -1 ) { return 'test-nonce-uid' . (int) $GLOBALS['hd_test_user_id']; }
 function wp_verify_nonce( $nonce, $action = -1 ) { return $nonce === wp_create_nonce( $action ) ? 1 : false; }
 function wp_validate_auth_cookie( $cookie = '', $scheme = '' ) { return $GLOBALS['hd_test_cookie_uid']; }

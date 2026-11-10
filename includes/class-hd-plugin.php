@@ -78,6 +78,7 @@ final class HD_DD_Plugin {
 		HD_DD_Repository::maybe_upgrade();
 		HD_DD_Experiments::maybe_upgrade();
 		HD_DD_Follow_Up::maybe_upgrade();
+		HD_DD_Manager_Queue::maybe_upgrade();
 
 		$this->repository  = new HD_DD_Repository();
 		$this->catalogue   = new HD_DD_Catalogue();
@@ -94,6 +95,7 @@ final class HD_DD_Plugin {
 		$this->experiment_tracking = new HD_DD_Experiment_Tracking();
 		$this->follow_up = new HD_DD_Follow_Up();
 		$this->follow_up_page = new HD_DD_Follow_Up_Page();
+		$this->manager_queue = new HD_DD_Manager_Queue();
 
 		$this->catalogue->register();
 		$this->image_proxy->register();
@@ -109,6 +111,7 @@ final class HD_DD_Plugin {
 		$this->experiment_tracking->register();
 		$this->follow_up->register();
 		$this->follow_up_page->register();
+		$this->manager_queue->register();
 	}
 
 	/** Convenience accessor for the plugin settings array. */
@@ -120,6 +123,8 @@ final class HD_DD_Plugin {
 			'github_repo'     => '', // e.g. https://github.com/OWNER/hd-door-designer
 			'asset_base'      => '', // preview image host; empty = use the model's captured origin.
 			'default_flow'    => 'classic', // designer flow when no A/B test runs (see HD_DD_Experiments).
+			'manager_url'     => '', // where Designer 4 lead events are pushed (server side only).
+			'manager_key'     => '', // bearer key for the manager; never sent to the browser.
 		) + HD_DD_Trust_Settings::defaults(); // Review-step social proof.
 		$saved = get_option( 'hd_dd_settings', array() );
 		return wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );

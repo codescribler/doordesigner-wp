@@ -101,6 +101,9 @@ class HD_DD_Admin {
 			'github_repo'     => isset( $input['github_repo'] ) ? esc_url_raw( trim( $input['github_repo'] ) ) : $current['github_repo'],
 			'asset_base'      => isset( $input['asset_base'] ) ? esc_url_raw( trim( $input['asset_base'] ) ) : $current['asset_base'],
 			'default_flow'    => ( isset( $input['default_flow'] ) && HD_DD_Experiments::is_flow( $input['default_flow'] ) ) ? $input['default_flow'] : $current['default_flow'],
+			'manager_url'     => isset( $input['manager_url'] ) ? esc_url_raw( trim( $input['manager_url'] ) ) : $current['manager_url'],
+			// A blank key field means "leave it as it is" (the stored key is never printed back).
+			'manager_key'     => ( isset( $input['manager_key'] ) && '' !== trim( (string) $input['manager_key'] ) ) ? sanitize_text_field( $input['manager_key'] ) : $current['manager_key'],
 		);
 	}
 
@@ -148,6 +151,20 @@ class HD_DD_Admin {
 								<?php endforeach; ?>
 							</select>
 							<p class="description"><?php esc_html_e( 'What every visitor sees when no A/B test is running (see Experiments).', 'hd-door-designer' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="hd_manager_url"><?php esc_html_e( 'Manager URL', 'hd-door-designer' ); ?></label></th>
+						<td>
+							<input name="<?php echo esc_attr( self::OPTION ); ?>[manager_url]" id="hd_manager_url" type="url" class="regular-text" placeholder="https://" value="<?php echo esc_attr( $s['manager_url'] ); ?>" />
+							<p class="description"><?php esc_html_e( 'Where Designer 4 lead events are sent. Leads are stored here first and sent when this and the key are set.', 'hd-door-designer' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="hd_manager_key"><?php esc_html_e( 'Manager key', 'hd-door-designer' ); ?></label></th>
+						<td>
+							<input name="<?php echo esc_attr( self::OPTION ); ?>[manager_key]" id="hd_manager_key" type="password" class="regular-text" autocomplete="new-password" value="" placeholder="<?php echo '' !== (string) $s['manager_key'] ? esc_attr__( '(saved, leave blank to keep)', 'hd-door-designer' ) : ''; ?>" />
+							<p class="description"><?php esc_html_e( 'Leave blank to keep the saved key.', 'hd-door-designer' ); ?></p>
 						</td>
 					</tr>
 					<tr>
