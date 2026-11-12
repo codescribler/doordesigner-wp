@@ -221,3 +221,34 @@ Manager first (its validators must accept the new fields before the site sends t
 
 - The four existing Designer 3 savers get nothing automatic from this work. Daniel can email them an estimate himself.
 - The follow-up sequence for cold enquiries will be built in the manager separately.
+
+## After launch: changes on 2026-11-12
+
+Daniel looked at the live Designer 4 on a phone and asked for these changes. Each one is live and was checked on the live site at phone width (390px). The rule still holds: changes go to Designer 4 (the challenger) only, so Classic (the control) and Designer 3 behave as before.
+
+| Release | Change | Why (Daniel's words, in short) |
+|---|---|---|
+| v0.8.1 | On phones the email ask starts as **just the button**. The first tap opens the email field, guide price and note; the next tap sends. The dock went from about 212px to 68px. Desktop is unchanged. (`d4-ask.js` `data-open`, `hd-designer4.css`) | The box "takes up half the screen and prevents the user customising the door on mobile. This is a major conversion blocker and risks annoying people." |
+| v0.8.2 | The **style tiles show no handle** (`app.plainStyleTiles` drops the `Handles*` layers in the shared `styleTile`; Designer 3 leaves it unset). | The handle is the visitor's choice in Designer 4, so a pre-drawn handle on the tiles contradicts "choose your handle next". |
+| v0.8.3 | On the wp-admin **Experiments page** the flow names (running test and Finished tests) link to `/door-designer/?flow=<flow>&notrack=1` in a new tab (`HD_DD_Experiments_Admin::review_link`). Admin only. | So Daniel can click through to review each designer without being counted. (`notrack=1` is remembered in that browser; `?notrack=0` undoes it.) The manager's Marketing page "Designer A/B test" panel got the same links (manager b44ef8b). |
+| v0.8.4 | On phones, once a style is chosen, the **page's own intro** above the designer (the Thrive heading "Design Your New Front Door Online…" and its paragraph) is hidden, and comes back on the type and style steps. The door now starts about 145px down the screen instead of 478px. (`P.pageIntro`/`syncIntro` in `d4-app.js`, `.hd-d4-intro-off`) | "The door stays front and centre and in view on the mobile." The intro is page content, not plugin markup, so the plugin finds the text block just before the shortcode (within 4 levels of the mount). If the page is rebuilt in Thrive, check this on a phone. |
+| v0.8.5 | On a new door the **handle choices open by themselves** once the handle preview ends (or straight away with reduced motion): the bottom sheet on phones, the Handle section on desktop. They don't open if the visitor tapped something during the preview, or on a reopened door that already has a handle. The open is "quiet" (`toolbox.open(key, opener, quiet)`), so it is not counted as the visitor opening the handle section in the funnel. | "Choose your handle next" and a glowing pill weren't enough: "people will still struggle to realise they need to click it… pre-load the options and assume that is the next step." |
+
+**The experiment was restarted for the new version.** Daniel asked for it ("re-start the experiment as this is a new version", and the stats "should have zeroed out").
+
+| Test id | Ran (UTC) | Split | Final numbers | Why it ended |
+|---|---|---|---|---|
+| `exp_20261110_bf66c4` | 2026-11-10 14:52 → 2026-11-12 | 50% → 70% to Designer 4 | Classic 1 visitor / 0 leads; Designer 4 5 / 0 | restarted for v0.8.1 and v0.8.2 |
+| `exp_20261112_9af676` | 2026-11-12 08:42 → 09:03 | 70% | Designer 4 1 / 0 | restarted again for v0.8.4 and v0.8.5 |
+| **`exp_20261112_f0821b`** | **from 2026-11-12 09:03:06** | **70% to Designer 4** | running | (the current test) |
+
+Exports are in `Downloads/hd-dd-experiments-20261112-0839.json` and `…-0902.json`.
+
+**What a restart means here (do all of it):**
+1. **Manager:** move `DESIGNER_ERA_START` in `convex/lib/marketing.ts` to the restart day (now `"2026-11-12"`, manager 993bc93). That date, not the test id, resets the Marketing page's designer funnel panels. The old `CURRENT_DESIGNER_FUNNELS` rule, which kept Designer 4 in the current era on any date, was removed, so the funnel registration list above no longer applies to it. Designer 4 now splits by date like Classic. The split is by day, so the restart day counts in full. Run the full vitest suite. A push to main builds on Vercel and deploys Convex (`vercel.json` runs `npx convex deploy`).
+2. **Plugin:** release, then update in wp-admin. If "Update now" does nothing, use the direct `update.php?action=upgrade-plugin` link.
+3. **Export:** on the Experiments page, "Download test data".
+4. **Restart:** stop the test, then start the same arms and split. The forms use a JS `confirm`, so automation submits them with `HTMLFormElement.prototype.submit`.
+5. **Push and check:** Settings → HD Analytics → "Push to dashboard now". Then confirm the new id at 0 / 0 through the manager API: `GET /api/v1/marketing/experiments`, plus `/marketing/overview` for the panel start date.
+
+The live designer page is not cached by Cloudflare (`cf-cache-status: DYNAMIC`), so no purge is needed.
