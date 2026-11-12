@@ -460,6 +460,7 @@ node tests/js/d4-app.test.js          # Designer 4 controller: routing, saved do
 node tests/js/d4-steps.test.js        # progress strip, doorway, details, finished
 node tests/js/d4-doorway-screen.test.js # doorway picks, focus, saves
 node tests/js/d4-mydesigns.test.js    # My designs: cards, remove, closed, prompts
+node tests/js/d4-phone-review.test.js # popular styles, handles by kind, glass row, kept draft, design effort, back button
 node tools/build-designer3-defaults.js --test  # the defaults table rules
 node tools/tests/test-*.js            # wizard, render model, step config…
 php tests/php/run.php                 # all PHP tests below, run together:
@@ -469,6 +470,7 @@ php tests/php/run.php                 # all PHP tests below, run together:
 #   experiment-flows, -admin, -conversion, -expose, -stats, -snapshot
 #   save-callback, assets-designer3, assets-designer4
 #   d4-lead, d4-doors, d4-mailer, repository-d4, experiment-d4, admin-d4, follow-up-d4
+#   d4-effort-popular (design effort with the lead, the popular styles list)
 php tools/tests/test-image-proxy.php  # image-proxy path validator
 ```
 

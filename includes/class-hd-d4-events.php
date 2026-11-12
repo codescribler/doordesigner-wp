@@ -42,13 +42,19 @@ class HD_DD_D4_Events {
 		$payload = json_decode( (string) $row->payload, true );
 		$payload = is_array( $payload ) ? $payload : array();
 		$page    = HD_DD_D4_Access::page_base( isset( $payload['pageUrl'] ) ? $payload['pageUrl'] : '' );
+		// The design effort rides with the door's choices, so the manager shows it with no change there.
+		$choices = self::choices( $design );
+		$effort  = HD_DD_D4_Effort::describe( isset( $payload['effort'] ) ? $payload['effort'] : null );
+		if ( '' !== $effort ) {
+			$choices[] = array( 'heading' => 'Time designing', 'label' => $effort );
+		}
 		return array(
 			'reference' => (string) $row->reference,
 			'name'      => (string) $row->design_name,
 			'summary'   => self::summary( $design ),
 			'imageUrl'  => isset( $payload['image'] ) ? (string) $payload['image'] : '',
 			'designUrl' => '' !== $page ? add_query_arg( 'design', rawurlencode( (string) $row->token ), $page ) : '',
-			'choices'   => self::choices( $design ),
+			'choices'   => $choices,
 			'frame'     => isset( $payload['frame'] ) ? $payload['frame'] : null,
 			'sideGlass' => isset( $payload['sideGlass'] ) ? (string) $payload['sideGlass'] : '',
 		);

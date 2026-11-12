@@ -165,6 +165,10 @@ class HD_DD_D4_Doors {
 		if ( $flagged ) {
 			$payload['flags'] = array( 'honeypot' );
 		}
+		$effort = HD_DD_D4_Effort::clean( isset( $p['effort'] ) ? $p['effort'] : null );
+		if ( $effort ) {
+			$payload['effort'] = $effort;
+		}
 		$experiment = isset( $p['experiment'] ) ? HD_DD_Experiments::sanitize_ref( $p['experiment'] ) : null;
 		if ( $experiment ) {
 			$payload['experiment'] = $experiment;
@@ -239,6 +243,10 @@ class HD_DD_D4_Doors {
 		$payload['sideGlass'] = HD_DD_D4_View::side_glass_of( $design, $first || ! empty( $row->doorway_at ) );
 		$name                 = $changed ? $this->d4->design_name( $design ) : (string) $row->design_name;
 		$payload['designName'] = $name;
+		$effort                = HD_DD_D4_Effort::merge( isset( $payload['effort'] ) ? $payload['effort'] : null, isset( $p['effort'] ) ? $p['effort'] : null );
+		if ( $effort ) {
+			$payload['effort'] = $effort;
+		}
 		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'enquiry' ) ) {
 			return $this->d4->write_failed();
 		}

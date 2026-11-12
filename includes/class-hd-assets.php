@@ -176,6 +176,8 @@ class HD_DD_Assets {
 			'i18n'           => $this->i18n_strings(),
 			// The plugin folder's URL (Designer 3 resolves its frame drawings against it).
 			'pluginUrl'      => HD_DD_URL,
+			// Designer 4's style screen: the styles to show first, per door type (class-hd-d4-popular.php).
+			'popularStyles'  => HD_DD_D4_Popular::front_config(),
 		);
 		// Designer 3's pre-picked furniture per style (assets/js/designer3/d3-defaults.js).
 		$d3 = $this->designer3_defaults();
@@ -233,6 +235,12 @@ class HD_DD_Assets {
 			'd4card'          => 'd4-card.js',
 			'd4mydesigns'     => 'd4-mydesigns.js',
 			'd4saved'         => 'd4-saved.js',
+			'd4styles'        => 'd4-styles.js',
+			'd4toolbox'       => 'd4-toolbox.js',
+			'd4draft'         => 'd4-draft.js',
+			'd4effort'        => 'd4-effort.js',
+			'd4history'       => 'd4-history.js',
+			'd4extras'        => 'd4-extras.js',
 		);
 		foreach ( $mod as $key => $file ) {
 			wp_register_script( $h . $key, HD_DD_URL . 'assets/js/designer4/' . $file, array(), $ver_js, true );

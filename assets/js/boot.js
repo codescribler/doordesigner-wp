@@ -90,7 +90,8 @@
 				if (flow === 'designer4') {
 					var d4 = new window.HD_DD_Designer4App(root, cv, rm, res[2], { api: api, funnel: funnel, experiment: assignment, doorType: doorType, flow: flow });
 					// A bare ?design= link opens the door as a copy: nothing is saved under its token.
-					if (designs) { d4.loadDesigns(designs, designsKey); } else if (saved) { d4.loadCopy(saved); } else { d4.render(); }
+					// Otherwise the door this browser was part-way through comes back (d4-draft.js), else the start.
+					if (designs) { d4.loadDesigns(designs, designsKey); } else if (saved) { d4.loadCopy(saved); } else if (!(d4.resume && d4.resume())) { d4.render(); }
 				} else if (flow === 'designer3') {
 					var d3 = new window.HD_DD_Designer3App(root, cv, rm, res[2], { api: api, funnel: funnel, experiment: assignment, doorType: doorType, flow: flow });
 					if (saved) { d3.loadSaved(saved); } else { d3.render(); }

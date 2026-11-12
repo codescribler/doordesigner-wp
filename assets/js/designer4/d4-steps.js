@@ -17,7 +17,9 @@
 		name: 'Your name', postcode: 'Postcode', phone: 'Phone number',
 		postcodeHint: 'So we can check we cover you and price the fitting.',
 		phoneHint: 'Helps if we need to check a detail.',
-		finish: 'Finish',
+		finish: 'Send my details',
+		skipDetails: 'Skip this for now',
+		empty: 'Add your postcode or name to send, or skip this for now.',
 		badPostcode: 'Please enter a valid UK postcode.',
 		failed: 'Something went wrong. Please try again.',
 		doneTitle: '✓ Your estimate is on its way',
@@ -134,6 +136,8 @@
 		var finish = el('button', 'hd-d3-cta hd-d4-finish', COPY.finish);
 		finish.type = 'submit';
 		form.appendChild(status); form.appendChild(finish);
+		// Leaving the details out is a choice, made with its own link, never by an empty Send.
+		form.appendChild(button('hd-d4-skip hd-d4-details__skip', COPY.skipDetails, function () { if (!busy) { app.go('done'); } }));
 		shell.appendChild(form);
 		var busy = false;
 
@@ -147,7 +151,8 @@
 				if (v) { body[f.spec[0]] = v; sent.push(f.spec[5]); }
 			});
 			status.textContent = '';
-			if (!sent.length || !app.store) { app.go('done'); return; }
+			if (!sent.length) { status.textContent = COPY.empty; if (fields[1].input.focus) { fields[1].input.focus(); } return; }
+			if (!app.store) { app.go('done'); return; }
 			busy = true; finish.disabled = true;
 			function done(res) {
 				busy = false; finish.disabled = false;

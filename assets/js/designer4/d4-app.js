@@ -27,6 +27,7 @@
 		this.known = false;       // started from My designs: the person is already known
 		this.missing = null;      // {name, postcode, phone} still missing, once a designs list has said
 		this.previewDue = false;  // the door screen plays the preview when it next draws
+		if (W.HD_DD_D4Extras) { W.HD_DD_D4Extras.init(this, opts); }   // draft, effort, back button (d4-extras.js)
 		this.newDoor();           // freshDoor: the preview plays once per new door; noHandleSent
 		this.timers = opts.timers || { set: function (f, ms) { return setTimeout(f, ms); }, clear: function (t) { clearTimeout(t); } };
 		this.matchMedia = opts.matchMedia || (typeof W.matchMedia === 'function' ? function (q) { return W.matchMedia(q); } : null);
@@ -133,6 +134,7 @@
 				whenPainted: function () { return self.whenPainted(); },
 				experiment: function () { return self.experiment; },
 				hasHandle: function () { return !self.needHandle; },
+				effort: function () { return self.effort ? self.effort.snapshot() : null; },
 				onNoHandle: function () { if (self.doorView && self.doorView.bubble) { self.doorView.bubble(); } },
 				onLead: function (body) { self.onLead(body); },
 				nextStep: function () { return self.savedNext(); }
@@ -282,5 +284,6 @@
 		this.go('type');
 	};
 
+	if (W.HD_DD_D4Extras) { W.HD_DD_D4Extras.install(App); }
 	W.HD_DD_Designer4App = App;
 })(typeof window !== 'undefined' ? window : this);

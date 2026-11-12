@@ -320,3 +320,71 @@
 @media (max-width: 719px) {
   .hd-d4-intro-off { display: none !important; }
 }
+
+/* 9. Phone review, 2026-11-12 ------------------------------------------------------------------
+   Popular styles first, grouped handles, the zoom on the part being chosen, the pinned doorway
+   picture and Next button, the two-line guide price. */
+/* Style screen (d4-styles.js) */
+.hd-d4-styles__eyebrow {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0 2px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--d3-accent);
+}
+.hd-d4-styles__eyebrow::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--d3-line); }
+.hd-d4-styles__eyebrow--all { margin-top: 4px; color: var(--d4-muted); }
+.hd-d4-styles .hd-d3-grid { margin-bottom: 16px; }
+.hd-d4-styles__more {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px;
+  margin: 0 0 28px; padding: 10px 18px; border: 1.5px solid var(--d3-accent); border-radius: 12px;
+  background: var(--paper, #fff); color: var(--d3-accent); font: inherit; font-weight: 700; letter-spacing: .01em; cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, transform .2s ease;
+}
+.hd-d4-styles__more::after { content: '\2193'; font-size: 1.05em; line-height: 1; transition: transform .2s ease; }
+.hd-d4-styles__more:hover { background: var(--d3-accent); color: #fff; }
+.hd-d4-styles__more:hover::after { transform: translateY(2px); }
+.hd-d4-styles__more:active { transform: scale(.985); }
+.hd-d4 .hd-d3-grid--styles .hd-d3-card { border-radius: 14px; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.hd-d4 .hd-d3-grid--styles .hd-d3-card:active { transform: scale(.985); }
+.hd-d4 .hd-d3-grid--styles .hd-d3-card__media { border-radius: 10px; }
+.hd-d4-styles .hd-d3-grid--styles .hd-d3-card { animation: hd-d4-rise .35s ease-out both; }
+
+/* Handles by kind (d4-toolbox.js) */
+.hd-d4-handles__group + .hd-d4-handles__group { margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--d3-line); }
+.hd-d4-handles .hd-d3-group__title { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--d3-accent); }
+.hd-d4-handles__hint { margin: -2px 0 8px; font-size: .8rem; line-height: 1.4; color: var(--d4-muted); }
+
+/* The door moves in on the part being chosen (d4-door.js view.zoom): eased in, dropped at once. */
+.hd-d4.hd-d4-zoomed .hd-d3-stage { overflow: hidden; }
+.hd-d4.hd-d4-zoomed .hd-d3-frame { transition: transform .45s cubic-bezier(.22, .8, .24, 1); will-change: transform; }
+
+@media (max-width: 719px) {
+  /* The guide price never takes more than two lines of the dock. */
+  .hd-d4-guide { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .hd-d4 .hd-d3-grid--styles .hd-d3-card__media { height: 232px; }
+
+  /* Doorway: the door stays pinned above the choices and Next stays within reach. */
+  .hd-d4-doorway { display: block; }
+  .hd-d4-doorway .hd-d3-stage--after {
+    position: sticky; top: 0; z-index: 6; padding: 8px 12px;
+    box-shadow: 0 8px 16px -12px rgba(0, 0, 0, .35);
+  }
+  .hd-d4-doorway .hd-d3-stage--after .hd-d3-frame { width: 76px; transition: none; }
+  .hd-d4-question, .hd-d4-doorway__glass { scroll-margin-top: 182px; }
+  .hd-d4-doorway__foot {
+    position: sticky; bottom: 0; z-index: 6; gap: 0;
+    margin: 18px -16px 0; padding: 10px 16px calc(4px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0; background: var(--paper, #fff); box-shadow: 0 -4px 18px rgba(0, 0, 0, .12);
+  }
+  .hd-d4-doorway__foot .hd-d4-skip { min-height: 40px; padding: 6px 4px; font-size: .86rem; }
+  .hd-d4-doorway__foot.is-picked { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .hd-d4-doorway__foot.is-picked .hd-d4-skip { display: none; }
+  .hd-d4--doorway .hd-d4-doorway { margin-bottom: 0; }
+}
+.hd-d4-details__skip { display: block; width: 100%; margin-top: 4px; }
+.hd-d4-details__status { margin: 0 0 8px; }
+
+@keyframes hd-d4-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .hd-d4.hd-d4-zoomed .hd-d3-frame, .hd-d4-styles__more, .hd-d4-styles__more::after,
+  .hd-d4 .hd-d3-grid--styles .hd-d3-card { transition: none; }
+  .hd-d4-styles .hd-d3-grid--styles .hd-d3-card { animation: none; }
+}

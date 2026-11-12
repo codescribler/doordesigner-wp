@@ -300,6 +300,8 @@ require_once HD_DD_DIR . 'includes/class-hd-save.php';
 require_once HD_DD_DIR . 'includes/class-hd-manager-client.php';
 require_once HD_DD_DIR . 'includes/class-hd-manager-queue.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-access.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-effort.php';
+require_once HD_DD_DIR . 'includes/class-hd-d4-popular.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-events.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-mailer.php';
 require_once HD_DD_DIR . 'includes/class-hd-d4-view.php';

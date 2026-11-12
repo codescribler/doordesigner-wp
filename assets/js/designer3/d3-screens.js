@@ -119,6 +119,8 @@
 
 	// ---- 2. Style -------------------------------------------------------------------------
 	function style(app, shell) {
+		// An app may draw its own style screen (Designer 4: popular styles first); Designer 3 has no hook.
+		if (typeof app.styleScreen === 'function' && app.styleScreen(shell)) { return; }
 		header(app, shell, COPY.styleTitle, COPY.styleHelp, 'type');
 		var cats = (app.categories && app.categories[app.type()]) || {};
 		var styles = app.styles();
@@ -267,5 +269,6 @@
 		app.root.appendChild(el('div', 'hd-dd hd-d3 hd-d3-loading', COPY.loading));
 	}
 
-	W.HD_DD_D3Screens = { type: type, style: style, door: door, placeholder: placeholder, loading: loading, COPY: COPY, DOT_NAMES: DOT_NAMES };
+	W.HD_DD_D3Screens = { type: type, style: style, door: door, placeholder: placeholder, loading: loading, COPY: COPY, DOT_NAMES: DOT_NAMES,
+		parts: { header: header, card: card, styleTile: styleTile } };   // for Designer 4's own style screen (d4-styles.js)
 })(typeof window !== 'undefined' ? window : this);

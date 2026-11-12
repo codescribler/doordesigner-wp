@@ -7,7 +7,7 @@
 //   - the guide price above the ask, and the nudge pointing at the price (neither once a lead);
 //   - the "no handle" speech bubble above the Handle label (the ask's onNoHandle).
 //
-//   HD_DD_D4Door.door(app, shell) -> { refresh, destroy, bubble, stopPreview }
+//   HD_DD_D4Door.door(app, shell) -> { refresh, destroy, bubble, stopPreview, zoom }
 // app gives: needHandle, previewDue, previewLabels(), reducedMotion(), timers {set, clear},
 // funnel, toolbox, dots(), design(), type(), OPTS, model, canvas, assetBase(), cfg(), whenPainted(),
 // matchMedia.
@@ -19,9 +19,11 @@
 		choose: 'Choose your handle next.',
 		settled: 'Here\'s your door. Tap a label to change any part of it.',   // Designer 3's says "a dot"
 		nudge: 'Looking good. Want a price for it?',
-		bubble: 'How will you get in without a handle?'
+		bubble: 'How will you get in without a handle?',
+		resumed: 'Welcome back. Here\'s your door, just as you left it.'
 	};
 	var FRAME_MS = 1000;
+	var ZOOM = { handle: 1.6, letterplate: 1.9, knocker: 1.9 };   // how far the small door moves in on a part (view.zoom)
 
 	function el(tag, cls, txt) {
 		var n = document.createElement(tag);
@@ -107,7 +109,7 @@
 		// Everything Designer 3's redraw doesn't know about.
 		function sync() {
 			if (banner) {
-				banner.textContent = playing() ? COPY.preview : (app.needHandle ? COPY.choose : COPY.settled);
+				banner.textContent = playing() ? COPY.preview : (app.needHandle ? COPY.choose : (app.resumed ? COPY.resumed : COPY.settled));
 				setClass(banner, 'hd-d4-banner--preview', playing());
 			}
 			setClass(shell, 'hd-d4-needhandle', !!app.needHandle);
@@ -123,6 +125,21 @@
 			var nudge = q(shell, 'hd-d3-nudge__text');
 			if (nudge) { nudge.textContent = COPY.nudge; }
 		}
+
+		// Phones, options sheet open: the small door moves in on the part being chosen, so a handle
+		// (letterplate, knocker) can be judged on the door. The part is centred in the stage. The
+		// toolbox calls this before the door resizes, and the zoom is dropped at once (no easing
+		// out), so the part labels are always measured on a door at rest.
+		view.zoom = function (key, sheetOpen) {
+			var frame = q(shell, 'hd-d3-frame');
+			var scale = sheetOpen && !playing() ? ZOOM[key] : 0;
+			var dot = scale ? (app.dots() || []).filter(function (d) { return d.key === key; })[0] : null;
+			setClass(shell, 'hd-d4-zoomed', !!dot);
+			if (!frame || !frame.style) { return; }
+			if (!dot) { frame.style.transform = ''; return; }
+			frame.style.transformOrigin = (dot.x * 100) + '% ' + (dot.y * 100) + '%';
+			frame.style.transform = 'translate(' + ((0.5 - dot.x) * 100) + '%, ' + ((0.5 - dot.y) * 100) + '%) scale(' + scale + ')';
+		};
 
 		// True when a playing preview was stopped (the caller then owes the real door a redraw).
 		view.stopPreview = function () {
@@ -185,7 +202,7 @@
 			}
 		}
 		sync();
-		if (fresh) { openHandles(); }
+		if (fresh || (app.resumed && app.needHandle)) { openHandles(); }
 		return view;
 	}
 

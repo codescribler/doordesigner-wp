@@ -68,6 +68,10 @@ class HD_DD_D4_Mailer {
 		$lines[] = __( 'REFERENCE: ', 'hd-door-designer' ) . self::ref_of( $payload );
 		$lines[] = __( 'DESIGN:    ', 'hd-door-designer' ) . ( isset( $payload['designName'] ) ? $payload['designName'] : '' );
 		$lines[] = __( 'EMAIL:     ', 'hd-door-designer' ) . $email;
+		$effort  = HD_DD_D4_Effort::describe( isset( $payload['effort'] ) ? $payload['effort'] : null );
+		if ( '' !== $effort ) {
+			$lines[] = __( 'DESIGNING: ', 'hd-door-designer' ) . $effort;
+		}
 		$lines[] = '';
 		foreach ( ( isset( $payload['design'] ) && is_array( $payload['design'] ) ) ? $payload['design'] : array() as $heading => $choice ) {
 			$lines[] = sprintf( '%-26s %s', $heading . ':', ( is_array( $choice ) && isset( $choice['label'] ) ) ? $choice['label'] : '' );

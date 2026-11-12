@@ -194,6 +194,10 @@ class HD_DD_D4 {
 		if ( $image ) {
 			$payload['image'] = $image['url'];
 		}
+		$effort = HD_DD_D4_Effort::merge( isset( $payload['effort'] ) ? $payload['effort'] : null, isset( $p['effort'] ) ? $p['effort'] : null );
+		if ( $effort ) {
+			$payload['effort'] = $effort;
+		}
 		if ( false === $this->repository->update_row( $row->id, array( 'design' => $design, 'design_name' => $name, 'payload' => $payload ), 'enquiry' ) ) {
 			return $this->write_failed();
 		}
@@ -232,6 +236,11 @@ class HD_DD_D4 {
 		}
 		if ( $flagged ) {
 			$payload['flags'] = array( 'honeypot' );
+		}
+		// How much designing went into the door (HD_DD_D4_Effort): shown to the business, never a gate.
+		$effort = HD_DD_D4_Effort::clean( isset( $p['effort'] ) ? $p['effort'] : null );
+		if ( $effort ) {
+			$payload['effort'] = $effort;
 		}
 		// Kept on the record: the A/B conversion below counts for the arm they were in today.
 		$experiment = isset( $p['experiment'] ) ? HD_DD_Experiments::sanitize_ref( $p['experiment'] ) : null;

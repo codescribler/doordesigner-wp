@@ -33,6 +33,16 @@ class HD_DD_D4_Admin {
 		if ( ! empty( $row->details_at ) ) {
 			$html .= self::pill( __( 'Details ✓', 'hd-door-designer' ) );
 		}
+		$payload = isset( $row->payload ) ? json_decode( (string) $row->payload, true ) : null;
+		$effort  = HD_DD_D4_Effort::describe( isset( $payload['effort'] ) ? $payload['effort'] : null );
+		if ( '' !== $effort ) {
+			$html .= self::pill( $effort, '#eef1f6', '#2b3a55' );
+		}
+		$payload = isset( $row->payload ) ? json_decode( (string) $row->payload, true ) : null;
+		$effort  = HD_DD_D4_Effort::describe( isset( $payload['effort'] ) ? $payload['effort'] : null );
+		if ( '' !== $effort ) {
+			$html .= self::pill( $effort, '#eef1f6', '#2b3a55' );
+		}
 		return '<br>' . $html;
 	}
 

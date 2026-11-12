@@ -32,6 +32,7 @@
     ?slow=1           answer the fake calls after 1.5s instead of 0.25s, to see the loading lines
     ?motion=reduce    tell the app reduced motion is on (no handle preview) and switch off every
                       CSS animation on the page; the real check is the OS / devtools setting
+    ?fresh=1          ignore the door kept in this browser (d4-draft.js) and start from the first screen
     ?base=live        load door images through the live site's image cache instead of Endurance's host
 -->
 <link rel="stylesheet" href="../assets/css/hd-door-designer.css">
@@ -117,6 +118,12 @@
 <script src="../assets/js/designer4/d4-card.js"></script>
 <script src="../assets/js/designer4/d4-mydesigns.js"></script>
 <script src="../assets/js/designer4/d4-saved.js"></script>
+<script src="../assets/js/designer4/d4-styles.js"></script>
+<script src="../assets/js/designer4/d4-toolbox.js"></script>
+<script src="../assets/js/designer4/d4-draft.js"></script>
+<script src="../assets/js/designer4/d4-effort.js"></script>
+<script src="../assets/js/designer4/d4-history.js"></script>
+<script src="../assets/js/designer4/d4-extras.js"></script>
 <script src="../assets/js/designer4/d4-app.js"></script>
 <script src="harness-data.js"></script>
 <script src="d4-fake-api.js"></script>
@@ -127,12 +134,14 @@
   var statusEl = document.getElementById('harness-status');
   Promise.all([
     window.HD_DD_HarnessData.load(),
-    fetch('../data/designer3-defaults.json').then(function (r) { return r.json(); }).catch(function () { return null; })
+    fetch('../data/designer3-defaults.json').then(function (r) { return r.json(); }).catch(function () { return null; }),
+    fetch('../data/popular-styles.json').then(function (r) { return r.json(); }).catch(function () { return null; })
   ]).then(function (res) {
     var data = res[0];
     var live = q.get('base') === 'live';
     window.HD_DD_CONFIG.assetBase = live ? 'https://hertfordshiredoors.co.uk/wp-json/hd-door-designer/v1/img' : data.model._assetBase;
     if (res[1]) { window.HD_DD_CONFIG.d3Defaults = res[1]; }
+    if (res[2]) { window.HD_DD_CONFIG.popularStyles = res[2]; }   // the starting list; the live site adds what people choose
     statusEl.textContent = 'Designer 4 harness · ' + (window.HD_DD_CONFIG.restUrl ? 'fake lead on' : 'preview mode (nothing sent)') + ' · assetBase ' + window.HD_DD_CONFIG.assetBase;
     mount.innerHTML = '';
     var reduce = q.get('motion') === 'reduce';
@@ -145,7 +154,7 @@
     window.d4App = app;
     if (q.get('screen') === 'designs') { app.loadDesigns('tA', 'harness-key'); }
     else if (q.get('design')) { app.loadCopy(q.get('design')); }
-    else { app.render(); app.funnel.step('opened'); }
+    else { if (q.get('fresh') === '1' || !app.resume()) { app.render(); } app.funnel.step('opened'); }
   }).catch(function (e) { mount.textContent = 'Failed to load data — serve the plugin folder over http. ' + e; });
 })();
 </script>

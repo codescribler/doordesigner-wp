@@ -165,8 +165,8 @@ class HD_DD_Trust_Settings {
 			<tr>
 				<th scope="row"><label for="hd_guide_price"><?php esc_html_e( 'Guide price', 'hd-door-designer' ); ?></label></th>
 				<td>
-					<input name="<?php echo esc_attr( $option ); ?>[guide_price]" id="hd_guide_price" type="text" class="large-text" value="<?php echo esc_attr( $s['guide_price'] ); ?>" />
-					<p class="description"><?php esc_html_e( 'Shown above the email box and in the email we send. Leave empty to show no price.', 'hd-door-designer' ); ?></p>
+					<input name="<?php echo esc_attr( $option ); ?>[guide_price]" id="hd_guide_price" type="text" class="large-text" maxlength="200" value="<?php echo esc_attr( $s['guide_price'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'Shown above the email box and in the email we send. One short sentence with the figure in it works best: at most 200 characters, and phones show the first two lines. Leave empty to show no price.', 'hd-door-designer' ); ?></p>
 				</td>
 			</tr>
 		</table>

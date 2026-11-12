@@ -180,6 +180,8 @@
         if (input) { body.email = email; body.hd_hp = hp.value || ''; }
         var exp = o.experiment ? o.experiment() : null;
         if (exp) { body.experiment = exp; }
+        var work = o.effort ? o.effort() : null;
+        if (work) { body.effort = work; }
         var shot = snapshot();
         if (shot) { body.image = shot; }
         var key = RS.designKey(o.getDesign());
@@ -232,6 +234,8 @@
       var key = RS.designKey(o.getDesign());
       if (key === savedKey) { show('saved'); return Promise.resolve(true); }
       var body = { design: Enquiry.cleanDesign(o.getDesign()) };
+      var work = o.effort ? o.effort() : null;
+      if (work) { body.effort = work; }
       var shot = snapshot();
       if (shot) { body.image = shot; }
       show('saving');

@@ -89,6 +89,12 @@
 		});
 	}
 
+	var PHONE_H = 150;   // px: the pinned door picture's height on a phone
+	function phone(app) {
+		var mm = typeof W.matchMedia === 'function' ? function (q) { return W.matchMedia(q); } : app.matchMedia;
+		try { return !!(mm && mm('(max-width: 719px)').matches); } catch (e) { return false; }
+	}
+
 	// The door (drawn with its frame) beside the column; app.canvas is the saved picture.
 	function stage(app, wrap) {
 		var box = el('div', 'hd-d3-stage hd-d3-stage--after');
@@ -99,9 +105,20 @@
 		var comp = (W.HD_DD_Preview && app.model) ? W.HD_DD_Preview.create(canvas, { model: app.model, assetBase: app.assetBase() }) : null;
 		return {
 			canvas: canvas,
+			// Phones: the picture is pinned above the choices, so it is sized by height (PHONE_H) whatever
+			// the doorway's shape: once drawn, the frame takes the width that height needs and the
+			// picture is drawn once more at that size.
 			paint: function () {
-				var p = null;
-				if (comp) { try { p = comp.render(app.type(), app.design(), app.OPTS); } catch (e) { /* missing asset */ } }
+				function draw() {
+					try { return comp ? comp.render(app.type(), app.design(), app.OPTS) : null; } catch (e) { return null; /* missing asset */ }
+				}
+				var p = Promise.resolve(draw()).then(function () {
+					if (!phone(app) || !canvas.width || !canvas.height) { return null; }
+					var w = Math.max(60, Math.min(300, Math.round(PHONE_H * canvas.width / canvas.height)));
+					if (Math.abs(w - (parseFloat(frame.style.width) || 0)) < 2) { return null; }
+					frame.style.width = w + 'px';
+					return draw();
+				});
 				return app.painted(p);
 			}
 		};
@@ -150,6 +167,7 @@
 			if (W.HD_DD_D4SideGlass) { W.HD_DD_D4SideGlass.glazeSides(app); }
 			if (W.HD_DD_D3FrameStep) { W.HD_DD_D3FrameStep.fixSideGlass(app); }
 			redraw();
+			bring('hd-d4-doorway__glass');   // the side glass questions, when this doorway has them
 			app.funnel.step('doorway_exact', caption(id));
 			savePicked(app, st, view.canvas);
 		}
@@ -159,7 +177,7 @@
 			st.family = f.key;
 			app.funnel.step('doorway_group', f.label);
 			if (changed) { app.funnel.step('doorway_change', f.label); }
-			if (f.ids.length === 1) { pickExact(f.ids[0]); } else { redraw(); }
+			if (f.ids.length === 1) { pickExact(f.ids[0]); } else { redraw(); bring('hd-d4-question--exact'); }
 		}
 		function skip() {
 			if (st.exact == null) {   // after a pick there is nothing to skip: just go on
@@ -170,8 +188,15 @@
 
 			app.go(S.afterDoorway(app));
 		}
+		// Phones: the next question appears below the fold, so it is brought up under the pinned door.
+		function bring(cls) {
+			var n = null;
+			for (var i = 0; i < side.children.length && !n; i++) { if ((' ' + side.children[i].className + ' ').indexOf(' ' + cls + ' ') !== -1) { n = side.children[i]; } }
+			if (!n || !n.scrollIntoView) { return; }
+			try { n.scrollIntoView({ block: 'start', behavior: app.reducedMotion && app.reducedMotion() ? 'auto' : 'smooth' }); } catch (e) { /* older browsers */ }
+		}
 		function row(cls, q, list) {
-			side.appendChild(el('p', 'hd-d4-question', q));
+			side.appendChild(el('p', 'hd-d4-question hd-d4-question--' + (cls === 'hd-d4-tiles--exact' ? 'exact' : 'family'), q));
 			var tiles = el('div', 'hd-d4-tiles ' + cls);
 			list.forEach(function (t) { tiles.appendChild(t); });
 			side.appendChild(tiles);
@@ -192,7 +217,7 @@
 				side.appendChild(glass);
 				W.HD_DD_D4SideGlass.rows(app, glass, redraw);
 			}
-			var foot = el('div', 'hd-d4-doorway__foot');
+			var foot = el('div', 'hd-d4-doorway__foot' + (picked ? ' is-picked' : ''));   // phones drop Skip once a doorway is picked
 			var next = button('hd-d3-cta hd-d4-next', COPY.next, function () { if (picked) { app.go(S.afterDoorway(app)); } });
 			next.disabled = !picked;
 			foot.appendChild(next);

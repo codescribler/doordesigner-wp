@@ -125,7 +125,13 @@ var byText = T.byText, input = T.input, fire = T.fire, settle = T.settle, fx = T
   await settle();
   assert.strictEqual(s.details.length, 0, 'nothing sent');
   assert.strictEqual(s.of('finished').length, 0, 'nothing fired');
-  assert.strictEqual(s.app.screen, 'done');
+  // An empty Send is not a finish: the screen stays and says what to do; Skip is its own link.
+  assert.strictEqual(s.app.screen, 'details', 'an empty send stays on the details');
+  assert.ok(text(s.shell()).indexOf('Add your postcode or name to send, or skip this for now.') !== -1, 'the empty line');
+  assert.ok(walk(s.shell(), function (x) { return x.tag === 'button' && x.textContent === 'Send my details'; }), 'the button says what it does');
+  fire(byCls(s.shell(), 'hd-d4-details__skip'), 'click');
+  assert.strictEqual(s.app.screen, 'done', 'Skip goes on to the finished screen');
+  assert.strictEqual(s.details.length, 0, 'and sends nothing');
 
   // ---- details: a postcode 422 keeps the screen ----------------------------------------------
   var d = harness();

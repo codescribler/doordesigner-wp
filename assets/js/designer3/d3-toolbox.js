@@ -36,7 +36,8 @@
 			var glass = current(app, 'Door Glass'), hw = current(app, 'Hardware Type');
 			r.value = [glass ? (/unglazed/i.test(glass) ? 'Solid' : glass + ' glass') : '', hw ? hw + ' finish' : ''].filter(Boolean).join(', ');
 		});
-		return out;
+		// An app may reshape the rows (Designer 4 gives the glass its own row); Designer 3 has no hook.
+		return typeof app.toolRows === 'function' ? app.toolRows(out) : out;
 	}
 
 	// Hinge side, inside colour, door glass, hardware finish and letterplate position.
@@ -49,7 +50,7 @@
 			{ key: 'glass', title: 'Door glass', heading: 'Door Glass', kind: 'glass' },
 			{ key: 'hardware', title: 'Hardware finish', heading: 'Hardware Type', kind: 'finish' },
 			{ key: 'lpPos', title: 'Letterplate position', heading: 'Letterplate Position', kind: 'seg' }
-		].filter(function (grp) { return !!app.stepFor(grp.heading); });
+		].filter(function (grp) { return !!app.stepFor(grp.heading) && !(app.hiddenMoreGroups && app.hiddenMoreGroups[grp.key]); });
 	}
 
 	function el(tag, cls, txt) {
@@ -142,6 +143,9 @@
 	function section(app, key) {
 		var box = el('div', 'hd-d3-section hd-d3-section--' + key);
 		box.id = 'hd-d3-panel-' + key;
+		// An app may draw a section itself (Designer 4: the glass row, grouped handles).
+		var own = typeof app.sectionFor === 'function' ? app.sectionFor(key, { tiles: tiles, usable: usable, el: el }) : null;
+		if (own) { box.appendChild(own); return box; }
 		if (key === 'colour') { box.appendChild(tiles(app, key, 'Door Colour (External)', 'colour', app.stepFor('Door Colour (External)').choices)); }
 		else if (key === 'style') { box.appendChild(tiles(app, key, 'Door Design', 'style', app.styles())); }
 		else if (key === 'handle') { box.appendChild(tiles(app, key, 'Handle', 'part', usable(app, 'Handle', 'handle'))); }
@@ -248,6 +252,7 @@
 			}
 			var isSheet = !!(openKey && phone);
 			if (app.shell && app.shell.classList) { app.shell.classList.toggle('is-sheet', isSheet); }
+			if (typeof app.onToolbox === 'function') { app.onToolbox(openKey, isSheet); }   // Designer 4 zooms the door on the open part (before the door resizes)
 			if (isSheet !== wasSheet) { wasSheet = isSheet; if (onLayout) { onLayout(isSheet); } }   // the door resizes
 			restoreFocus([host, sheet], keep);
 		}
@@ -265,7 +270,7 @@
 		// opener: data-k of what opened it ('tab:handle', 'row:handle', 'dot:glass'), for focus on close.
 		// quiet: opened by the app, not the visitor (Designer 4's handle step), so no funnel step.
 		function open(key, opener, quiet) {
-			var to = DOT_TO[key] || [key];
+			var to = (app.dotTo && app.dotTo[key]) || DOT_TO[key] || [key];
 			var changed = openKey !== to[0];
 			openKey = to[0];
 			focus = to[1] || null;

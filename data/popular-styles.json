@@ -1,0 +1,5 @@
+{
+  "Single Door": ["Etna", "Eiger", "Abbott", "Snowdon", "Bleaklow", "Ben Nevis", "Fuji", "Knott"],
+  "Double Door": ["Etna", "Eiger", "Abbott", "Snowdon", "Bleaklow", "Ben Nevis", "Fuji", "Knott"],
+  "Stable Door": ["Etna Stable", "Eiger Stable", "Snowdon Stable", "Ben Nevis Stable", "Knott Stable", "Mont Blanc Stable", "Hope Stable", "Brecon Stable"]
+}
