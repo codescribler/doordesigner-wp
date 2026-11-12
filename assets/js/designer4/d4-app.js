@@ -206,9 +206,32 @@
 		return null;
 	}
 
+	// The page's own intro (heading and text the site puts above the designer) is hidden on phones
+	// once a style is chosen (CSS .hd-d4-intro-off, below 720px), so the door stays in view. Found
+	// once: the nearest ancestor, within 4 levels of the mount, with earlier siblings that hold text.
+	P.pageIntro = function () {
+		if (this._intro) { return this._intro; }
+		var found = [], n = this.root;
+		for (var i = 0; i < 4 && !found.length && n && n.parentNode && n.parentNode !== document.body; i++) {
+			for (var s = n.previousElementSibling; s; s = s.previousElementSibling) {
+				if (!/^(SCRIPT|STYLE|LINK)$/.test(s.tagName) && String(s.textContent || '').trim()) { found.push(s); }
+			}
+			n = n.parentNode;
+		}
+		this._intro = found;
+		return found;
+	};
+	P.syncIntro = function () {
+		var off = this.screen !== 'type' && this.screen !== 'style';
+		this.pageIntro().forEach(function (el) {
+			if (el.classList) { el.classList.toggle('hd-d4-intro-off', off); }
+		});
+	};
+
 	// Mirrors Designer 3's render. type and style are Designer 3's; the door and later screens are
 	// Designer 4's. A screen whose module is still an empty shell gets Designer 3's placeholder.
 	P.render = function () {
+		try { this.syncIntro(); } catch (e) { /* the page's intro is only a nicety */ }
 		if (this.screen !== 'door' && !LATER[this.screen]) {
 			D3P.render.call(this);
 			if (this.shell) { this.shell.className += ' hd-d4'; }

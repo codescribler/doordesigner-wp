@@ -315,3 +315,8 @@
   .hd-d4.hd-d4-needhandle [data-k="tab:handle"] { box-shadow: 0 0 0 2px var(--d3-dot); }
   .hd-d4-tile { transition: none; }
 }
+
+/* The page's own intro above the designer, hidden on phones once a style is chosen (d4-app.js). */
+@media (max-width: 719px) {
+  .hd-d4-intro-off { display: none !important; }
+}

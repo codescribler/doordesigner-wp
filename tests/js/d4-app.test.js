@@ -364,5 +364,29 @@ function opened(design, doors, screen, before) {
   assert.strictEqual(d3.flow, 'designer3');
   assert.ok(H.hasHandle(d3.design()), 'Designer 3 still pre-picks a handle: ' + d3.design().Handle.label);
   assert.strictEqual(d3.needHandle, undefined);
+
+  // The page's intro above the designer (Thrive: a text block before the shortcode's wrapper) is
+  // marked off from the door screen on, and back on at type/style. Empty siblings are left alone.
+  function dom(tag, text) {
+    var e = { tagName: tag, textContent: text || '', parentNode: null, previousElementSibling: null, cls: {} };
+    e.classList = { toggle: function (c, on) { if (on) { e.cls[c] = true; } else { delete e.cls[c]; } } };
+    return e;
+  }
+  var body = dom('BODY'), section = dom('DIV'), intro = dom('DIV', 'Design Your New Front Door Online'), wrap = dom('DIV'),
+    raw = dom('DIV', '  '), rendered = dom('DIV'), mount = dom('DIV');
+  section.parentNode = body; intro.parentNode = section; wrap.parentNode = section; wrap.previousElementSibling = intro;
+  raw.parentNode = wrap; rendered.parentNode = wrap; rendered.previousElementSibling = raw; mount.parentNode = rendered;
+  global.document.body = body;
+  var ia = { root: mount, screen: 'type' };
+  ['pageIntro', 'syncIntro'].forEach(function (k) { ia[k] = App.prototype[k]; });
+  assert.deepStrictEqual(ia.pageIntro(), [intro], 'finds the text block, skips the empty one');
+  ia.syncIntro();
+  assert.ok(!intro.cls['hd-d4-intro-off'], 'shown on the type step');
+  ['door', 'doorway', 'details'].forEach(function (sc) { ia.screen = sc; ia.syncIntro(); assert.ok(intro.cls['hd-d4-intro-off'], 'hidden on ' + sc); });
+  ia.screen = 'style'; ia.syncIntro();
+  assert.ok(!intro.cls['hd-d4-intro-off'], 'back on the style step');
+  assert.ok(!raw.cls['hd-d4-intro-off'], 'empty sibling untouched');
+  delete global.document.body;
+
   console.log('d4-app.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });
