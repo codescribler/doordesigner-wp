@@ -125,6 +125,12 @@ function otherColour() { return app.stepFor(COLOUR).choices.map(function (c) { r
   assert.strictEqual(sheet.hidden, true, 'Escape closes it');
   assert.ok(!shell.classList.contains('is-sheet'));
   assert.strictEqual(active(), 'tab:handle', 'focus back on the tab that opened it');
+  // Opened by the app, not the visitor (Designer 4's handle step): the sheet opens, no funnel step.
+  var nSteps = steps.length;
+  app.toolbox.open('handle', 'tab:handle', true);
+  assert.strictEqual(sheet.hidden, false, 'a quiet open still opens the sheet');
+  assert.strictEqual(steps.length, nSteps, 'a quiet open fires no funnel step');
+  app.toolbox.close();
 
   // the glass dot opens More options at the door glass; Done returns focus to the dot
   var gdot = byKey(shell, 'dot:glass');

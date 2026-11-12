@@ -89,11 +89,11 @@ function fakeTimers() {
 }
 function fakeApp(over) {
   var app = {
-    log: [], opened: [], phone: false, needHandle: true, previewDue: true, nudgeOn: false, reduce: false,
+    log: [], opened: [], screen: 'door', phone: false, needHandle: true, previewDue: true, nudgeOn: false, reduce: false,
     model: {}, canvas: {}, OPTS: { toplights: true }, guide: '',
     funnel: { step: function (k) { app.log.push(k); }, lead: function () {} },
     timers: fakeTimers(),
-    toolbox: { open: function (k, by) { app.opened.push([k, by]); } },
+    toolbox: { open: function (k, by, quiet) { app.opened.push(quiet ? [k, by, 'quiet'] : [k, by]); } },
     previewLabels: function () { return ['Lever/Lever', 'Finger Pull', '400mm Pull Handle']; },
     reducedMotion: function () { return app.reduce; },
     design: function () { return { 'Door Type': { label: 'Single Door' }, Handle: { label: 'No Handle ' } }; },
@@ -156,6 +156,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.ok(!has(banner, 'hd-d4-banner--preview'));
   assert.ok(!has(shell, 'hd-d4-previewing'), 'the handle ring is back when the preview ends');
   assert.deepStrictEqual(app.log, ['handle_preview'], 'nothing per frame');
+  assert.deepStrictEqual(app.opened, [['handle', 'tab:handle', 'quiet']], 'the handle choices open by themselves when the preview ends, quietly');
 
   // a handle picked: glow off, the settled banner names the labels (there are no dots in Designer 4)
   assert.strictEqual(C.settled, "Here's your door. Tap a label to change any part of it.");
@@ -185,6 +186,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.ok(!has(shell2, 'hd-d4-previewing'), 'a pick during the preview brings the handle ring back');
   retries[retries.length - 1]();
   assert.deepStrictEqual(renders, ['Lever/Lever'], 'a stopped frame never redraws');
+  assert.deepStrictEqual(app2.opened, [], 'a preview the visitor cut short does not open the handle choices');
 
   // stopPreview says whether it stopped a playing preview (the app then redraws the real door
   // for a pick that changed nothing: picking the option already on the door)
@@ -223,6 +225,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.deepStrictEqual(app4.log, [], 'no handle_preview step');
   assert.strictEqual(app4.previewDue, false);
   assert.strictEqual(shell4.querySelector('.hd-d3-banner').textContent, C.choose);
+  assert.deepStrictEqual(app4.opened, [['handle', 'tab:handle', 'quiet']], 'reduced motion: the handle choices open straight away');
 
   // no preview due (a reopened door with a handle): the settled banner, no glow
   var app5 = fakeApp({ previewDue: false, needHandle: false });
@@ -232,6 +235,7 @@ function drawn(shell, cls) { return svgOf(shell).children.filter(function (c) { 
   assert.strictEqual(shell5.querySelector('.hd-d3-banner').textContent, C.settled);
   assert.ok(!has(shell5, 'hd-d4-needhandle'));
   assert.strictEqual(app5.timers.q.length, 0);
+  assert.deepStrictEqual(app5.opened, [], 'a reopened door with a handle: nothing opens by itself');
   // no labels: nothing to play
   var app6 = fakeApp({ previewLabels: function () { return []; } });
   Door.door(app6, node('div'));

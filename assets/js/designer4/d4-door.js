@@ -161,19 +161,31 @@
 			setClass(shell, 'hd-d4-bubbling', true);
 		};
 
+		// A new door with no handle: the handle choices open by themselves (the phone sheet, the
+		// desktop section), since choosing one is the next step. Quiet, so not counted as the visitor
+		// opening them. A preview stopped by the visitor (they tapped something) never gets here.
+		function openHandles() {
+			if (app.needHandle && app.screen === 'door' && app.toolbox && app.toolbox.open) { app.toolbox.open('handle', 'tab:handle', true); }
+		}
+
+		var fresh = false;
 		if (app.previewDue) {
 			app.previewDue = false;
+			fresh = true;
 			var labels = app.reducedMotion() ? [] : app.previewLabels();
 			if (labels.length) {
+				fresh = false;
 				app.funnel.step('handle_preview');
 				runner = previewRunner(app, labels, function () {
 					runner = null;
 					if (base.refresh) { base.refresh(); }   // the real door, with no handle
 					sync();
+					openHandles();
 				});
 			}
 		}
 		sync();
+		if (fresh) { openHandles(); }
 		return view;
 	}
 

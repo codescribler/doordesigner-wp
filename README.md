@@ -374,7 +374,7 @@ It is Designer 3's type, style and door screen, changed so the handle is the vis
 
 1. **Your door** (step 1 of 3). The door is shown without a handle (a one-second preview of each
    kind of handle plays once, skipped with reduced motion). The Handle row, tab and dot glow until
-   one is picked. The email box, "Email me this design and its price", is the lead: it sends a
+   one is picked, and the handle choices open by themselves once the preview ends. The email box, "Email me this design and its price", is the lead: it sends a
    link to the design straight away and the price follows within 1 working day. Sending with no
    handle shows a speech bubble by the handle dot instead. A handle is required for a Designer 4
    door to be stored, in the browser and on the server. On phones the box starts as just the

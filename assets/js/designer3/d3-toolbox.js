@@ -263,7 +263,8 @@
 		}
 
 		// opener: data-k of what opened it ('tab:handle', 'row:handle', 'dot:glass'), for focus on close.
-		function open(key, opener) {
+		// quiet: opened by the app, not the visitor (Designer 4's handle step), so no funnel step.
+		function open(key, opener, quiet) {
 			var to = DOT_TO[key] || [key];
 			var changed = openKey !== to[0];
 			openKey = to[0];
@@ -271,7 +272,7 @@
 			openedBy = opener || openedBy;
 			if (sheet) { sheet.scrollTop = 0; }
 			draw();
-			if (changed && app.opened) { app.opened(openKey); }
+			if (changed && app.opened && !quiet) { app.opened(openKey); }
 			land(isPhone());
 		}
 		function close() {
