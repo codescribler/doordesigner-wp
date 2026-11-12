@@ -271,3 +271,14 @@ What the review found on a 390px screen: the guide price was cut off before the 
 | H | **Details step**: the button reads "Send my details"; sent empty it asks for a postcode or name; "Skip this for now" is its own link. | `d4-steps.js` |
 
 Tests: `tests/js/d4-phone-review.test.js`, `tests/php/d4-effort-popular.test.php`, and the updated `d4-steps` and `assets-designer4` tests. Checked by eye at 390px and 1280px on `tools/d4-test.html` (which now resumes a kept door; `?fresh=1` ignores it).
+
+**Released and restarted the same day.** v0.9.0, then v0.9.1 (on the live site the theme sizes `<p>`, so the "Most popular" heading and the handle hint became `<div>`s). Both installed through wp-admin's direct upgrade link and checked on the live site at 390px with `?flow=designer4&notrack=1`. The live popular list already differs from the starting list because stored designs (test doors included) count.
+
+| Test id | Ran (UTC) | Split | Final numbers | Why it ended |
+|---|---|---|---|---|
+| `exp_20261112_f0821b` | 2026-11-12 09:03 → 09:43 | 70% | Classic 0 / 0; Designer 4 0 / 0 | restarted for v0.9.1 |
+| **`exp_20261112_8d2b8b`** | **from 2026-11-12 09:43:26** | **70% to Designer 4** | running | (the current test) |
+
+Export: `Downloads/hd-dd-experiments-20261112-0942.json`. The manager needed no change (`DESIGNER_ERA_START` was already "2026-11-12"); its API showed the new id at 0 / 0 after "Push to dashboard now".
+
+Still open: Daniel's guide price text in Door Enquiries → Settings is longer than 200 characters and is cut off before the figure.
