@@ -201,7 +201,7 @@ class HD_DD_Experiments_Admin {
 			<tbody>
 				<?php foreach ( $arms as $key => $arm ) : ?>
 					<tr>
-						<td><strong><?php echo esc_html( $arm['label'] ); ?></strong> <small>(<?php echo esc_html( $key ); ?>)</small></td>
+						<td><strong><?php echo self::review_link( isset( $arm['flow'] ) ? $arm['flow'] : $exp[ $key ], $arm['label'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in review_link(). ?></strong> <small>(<?php echo esc_html( $key ); ?>)</small></td>
 						<td><?php echo (int) $arm['visitors']; ?></td>
 						<td><?php echo (int) $arm['leads']; ?><?php echo HD_DD_D4_Admin::leads_note( isset( $arm['flow'] ) ? $arm['flow'] : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in HD_DD_D4_Admin. ?></td>
 						<td><?php echo esc_html( HD_DD_Experiment_Notifier::pct( $decision['rates'][ $key ], 1 ) ); ?></td>
@@ -349,7 +349,7 @@ class HD_DD_Experiments_Admin {
 				<?php foreach ( $history as $h ) : ?>
 					<tr>
 						<td><?php echo esc_html( substr( $h['started_at'], 0, 10 ) . ' → ' . substr( $h['ended_at'], 0, 10 ) ); ?></td>
-						<td><?php echo esc_html( HD_DD_Experiments::flow_label( $h['control'] ) . ' vs ' . HD_DD_Experiments::flow_label( $h['challenger'] ) . ' (' . (int) $h['percent'] . '%)' ); ?>
+						<td><?php echo self::review_link( $h['control'], HD_DD_Experiments::flow_label( $h['control'] ) ) . ' vs ' . self::review_link( $h['challenger'], HD_DD_Experiments::flow_label( $h['challenger'] ) ) . esc_html( ' (' . (int) $h['percent'] . '%)' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in review_link(). ?>
 							<?php foreach ( self::split_changes( $h ) as $line ) : ?>
 								<br><small><?php echo esc_html( $line ); ?></small>
 							<?php endforeach; ?>
@@ -368,6 +368,24 @@ class HD_DD_Experiments_Admin {
 	}
 
 	/** 'made_default:swipe' → "Swipe made the default"; 'stopped' → "Stopped". */
+	/**
+	 * The live designer opened on one flow with analytics off (?notrack=1, remembered in that
+	 * browser), so the owner can look at either version without being counted.
+	 */
+	public static function review_url( $flow ) {
+		return home_url( '/door-designer/' ) . '?flow=' . rawurlencode( (string) $flow ) . '&notrack=1';
+	}
+
+	/** A flow name that opens that flow in a new tab, not tracked. Returns escaped HTML. */
+	public static function review_link( $flow, $label ) {
+		return sprintf(
+			'<a href="%s" target="_blank" rel="noopener noreferrer" title="%s">%s</a>',
+			esc_url( self::review_url( $flow ) ),
+			esc_attr__( 'Open this version of the designer (not tracked)', 'hd-door-designer' ),
+			esc_html( $label )
+		);
+	}
+
 	public static function outcome_label( $outcome ) {
 		if ( 0 === strpos( (string) $outcome, 'made_default:' ) ) {
 			/* translators: %s: flow */

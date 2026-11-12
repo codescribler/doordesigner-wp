@@ -81,4 +81,10 @@ $r = $A::export_response( $good );
 check( $r && (bool) preg_grep( '/^Content-Disposition: attachment; filename=hd-dd-experiments-\d{8}-\d{4}\.json$/', $r['headers'] ), 'attachment header with a dated filename' );
 check( $r && array_key_exists( 'visitors', (array) json_decode( $r['body'], true ) ), 'body is the export JSON' );
 
+
+// --- Flow names open that version of the designer, not tracked ------------------------------
+check( 'https://example.test/door-designer/?flow=designer4&notrack=1' === $A::review_url( 'designer4' ), 'review url forces the flow with analytics off' );
+$link = $A::review_link( 'classic', 'Classic <b>' );
+check( false !== strpos( $link, 'href="https://example.test/door-designer/?flow=classic&#038;notrack=1"' ) || false !== strpos( $link, 'flow=classic&amp;notrack=1' ) || false !== strpos( $link, 'flow=classic&notrack=1' ), 'link points at the review url' );
+check( false !== strpos( $link, 'target="_blank"' ) && false !== strpos( $link, 'Classic &lt;b&gt;' ), 'opens a new tab; label escaped' );
 hd_test_done( 'experiment-admin.test.php' );
