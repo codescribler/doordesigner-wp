@@ -77,7 +77,7 @@
 				return;
 			}
 			if (labels.length <= FEW || sp.top.length < 4) { body.appendChild(grid(labels)); return; }
-			body.appendChild(el('p', 'hd-d4-styles__eyebrow', COPY.popular));
+			body.appendChild(el('div', 'hd-d4-styles__eyebrow', COPY.popular));
 			body.appendChild(grid(sp.top));
 			if (!app.allStyles) {
 				var more = el('button', 'hd-d4-styles__more', COPY.more.replace('{n}', String(labels.length)));
@@ -87,7 +87,7 @@
 				body.appendChild(more);
 				return;
 			}
-			body.appendChild(el('p', 'hd-d4-styles__eyebrow hd-d4-styles__eyebrow--all', COPY.all));
+			body.appendChild(el('div', 'hd-d4-styles__eyebrow hd-d4-styles__eyebrow--all', COPY.all));
 			body.appendChild(grid(sp.rest));
 		}
 

@@ -86,7 +86,7 @@
 			var wrap = h.el('div', 'hd-d3-group hd-d4-handles__group');
 			wrap.setAttribute('data-group', grp.key);
 			wrap.appendChild(h.el('div', 'hd-d3-group__title', grp.title));
-			if (grp.hint) { wrap.appendChild(h.el('p', 'hd-d4-handles__hint', grp.hint)); }
+			if (grp.hint) { wrap.appendChild(h.el('div', 'hd-d4-handles__hint', grp.hint)); }
 			wrap.appendChild(h.tiles(app, 'handle', 'Handle', 'part', grp.choices));
 			box.appendChild(wrap);
 		});
