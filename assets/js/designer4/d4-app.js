@@ -23,6 +23,7 @@
 		o.flow = 'designer4';
 		D3.call(this, root, cv, rm, categories, o);
 		this.store = opts.store || (W.HD_DD_D4Store ? W.HD_DD_D4Store.create({ api: this.api }) : null);
+		this.plainStyleTiles = true;   // the style tiles show no handle: the handle is chosen on the door
 		this.known = false;       // started from My designs: the person is already known
 		this.missing = null;      // {name, postcode, phone} still missing, once a designs list has said
 		this.previewDue = false;  // the door screen plays the preview when it next draws

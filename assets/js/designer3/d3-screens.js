@@ -44,11 +44,14 @@
 
 	// A style tile for any door type: all leaves composited from the same layers Classic's style tiles use
 	// (RenderModel.assemble, the "no glass" cassettes so the design shows), placed as % of the stage.
+	// An app with plainStyleTiles set (Designer 4, where the handle is the visitor's choice) gets
+	// the doors without a handle; Designer 3 leaves it unset and its tiles are unchanged.
 	function styleTile(app, label) {
 		var type = app.type(), RM = W.HD_DD_RenderModel, base = app.assetBase(), T = app.model && app.model.types && app.model.types[type];
 		if (!RM || !base || !T) { return null; }
 		var dd = { 'Door Type': { label: type }, 'Door Design': { label: label }, 'Door Colour (External)': { label: T.baselineColour } };
 		var raw = RM.assemble(app.model, type, dd), maxX = 0, maxY = 0;
+		if (app.plainStyleTiles) { raw = raw.filter(function (l) { return !/^Handles/.test(l.slot || ''); }); }
 		var layers = raw.map(function (l) {
 			maxX = Math.max(maxX, (l.cx || 0) + (l.w || 0) / 2);
 			maxY = Math.max(maxY, (l.cy || 0) + (l.h || 0) / 2);

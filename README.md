@@ -369,7 +369,8 @@ Design: `docs/superpowers/specs/2026-10-21-designer-3-design.md`.
 
 **Flow** `designer4` (label "Designer 4"), funnel **`door-designer-v5`**. Open it yourself with
 `?flow=designer4&notrack=1` (never counted in a test, and your visit is kept out of the stats).
-It is Designer 3's type, style and door screen, changed so the handle is the visitor's choice:
+It is Designer 3's type, style and door screen, changed so the handle is the visitor's choice
+(the style tiles show the doors without a handle):
 
 1. **Your door** (step 1 of 3). The door is shown without a handle (a one-second preview of each
    kind of handle plays once, skipped with reduced motion). The Handle row, tab and dot glow until

@@ -79,3 +79,17 @@ var fb = imgs('Single Door');
 assert.ok(fb.length <= 1, 'falls back to one blank picture when assembly yields nothing');
 rm.assemble = orig;
 console.log('d3-style-tile: ok');
+
+// Designer 4 (plainStyleTiles): the style tiles show no handle, on every type; Designer 3's keep theirs.
+['Single Door', 'Double Door', 'Stable Door', 'Avantal'].forEach(function (t) {
+  if (!model.types[t]) { return; }
+  STY = Object.keys(model.types[t].styles)[0];
+  var handles = function (l) { return l.filter(function (i) { return /\/Handles(Right)?\//.test(i.src); }).length; };
+  delete app.plainStyleTiles;
+  assert.ok(handles(imgs(t)) > 0, t + ': Designer 3 tile still has its handle');
+  app.plainStyleTiles = true;
+  var l = imgs(t);
+  assert.strictEqual(handles(l), 0, t + ': Designer 4 tile has no handle');
+  assert.ok(l.some(function (i) { return /DoorBlanks/.test(i.src); }), t + ': the door itself is still drawn');
+  delete app.plainStyleTiles;
+});
