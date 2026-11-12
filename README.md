@@ -376,7 +376,8 @@ It is Designer 3's type, style and door screen, changed so the handle is the vis
    one is picked. The email box, "Email me this design and its price", is the lead: it sends a
    link to the design straight away and the price follows within 1 working day. Sending with no
    handle shows a speech bubble by the handle dot instead. A handle is required for a Designer 4
-   door to be stored, in the browser and on the server.
+   door to be stored, in the browser and on the server. On phones the box starts as just the
+   button, so the door and its options keep the screen; the first tap opens the email field.
 2. **Your doorway** (step 2 of 3), when the door type offers side or top lights: pick the closest
    of six pictures, then the exact layout; side glass choices follow. It can be skipped.
 3. **Your details** (step 3 of 3): name, postcode and phone, none required. Then "✓ Your estimate

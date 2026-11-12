@@ -293,5 +293,37 @@ function harness(over) {
   assert.strictEqual(lineText(k2.box), SAVED);
   assert.strictEqual(byClass(k2.box, 'hd-d4-ask__btn').length, 0);
 
+  // Phones: the ask starts as just the button. The first tap opens the email field and focuses it,
+  // sending nothing; the next tap sends. Desktop is open from the start and sends on the first tap.
+  window.matchMedia = function () { return { matches: true }; };
+  var m = harness();
+  assert.strictEqual(find(m.box, 'hd-d4-ask').attrs['data-open'], 'false', 'phone: starts as the button');
+  submit(m.box);
+  assert.strictEqual(m.calls.length, 0, 'the first tap sends nothing');
+  assert.strictEqual(find(m.box, 'hd-d4-ask').attrs['data-open'], 'true', 'the first tap opens the field');
+  assert.strictEqual(document.activeElement, input(m.box, 'email'), 'the field gets focus');
+  input(m.box, 'email').value = 'jo@example.com';
+  submit(m.box);
+  await tick();
+  assert.strictEqual(m.calls.length, 1, 'the next tap sends');
+  // With no handle the first tap still shows the bubble and opens nothing.
+  var mh = harness();
+  mh.handle = false;
+  submit(mh.box);
+  assert.strictEqual(mh.noHandle, 1);
+  assert.strictEqual(find(mh.box, 'hd-d4-ask').attrs['data-open'], 'false');
+  // Known mode has no field to open: one tap adds the door.
+  var mk = harness({ known: true, onLead: function () {} });
+  submit(mk.box);
+  await tick();
+  assert.strictEqual(mk.calls.length, 1);
+  window.matchMedia = function () { return { matches: false }; };
+  var dsk = harness();
+  input(dsk.box, 'email').value = 'jo@example.com';
+  submit(dsk.box);
+  await tick();
+  assert.strictEqual(dsk.calls.length, 1, 'desktop: the first tap sends');
+  delete window.matchMedia;
+
   console.log('d4-ask.test.js: all assertions passed');
 })().catch(function (e) { console.error(e); process.exit(1); });

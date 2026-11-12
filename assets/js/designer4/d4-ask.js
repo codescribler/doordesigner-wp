@@ -116,6 +116,12 @@
       return input;
     }
 
+    // Phones: the box starts as just the button so the door and its options keep the screen. The
+    // first tap opens the email field; the next one sends. Open from the start once an email is typed.
+    function phone() {
+      try { return !!(window.matchMedia && window.matchMedia('(max-width: 719px)').matches); } catch (e) { return false; }
+    }
+
     function render(container) {
       container.innerHTML = '';
       line = null;
@@ -123,6 +129,8 @@
       var f = document.createElement('form');
       f.className = 'hd-d4-ask';
       f.setAttribute('novalidate', 'novalidate');
+      var open = o.known || !!email;
+      f.setAttribute('data-open', open ? 'true' : 'false');
       var row = el('div', 'hd-d4-ask__row');
       var hp = document.createElement('input'); // honeypot: bots fill it, people never see it
       hp.type = 'text'; hp.name = 'hd_hp'; hp.className = 'hd-dd__hp'; hp.tabIndex = -1;
@@ -151,7 +159,15 @@
           if (o.onNoHandle) { o.onNoHandle(); }
           return;
         }
+        if (input && !open && phone()) {
+          open = true;
+          f.setAttribute('data-open', 'true');
+          if (input.focus) { input.focus(); }
+          return;
+        }
         if (input) {
+          open = true;
+          f.setAttribute('data-open', 'true');
           email = RS.cleanEmail(input.value);
           if (!RS.validEmail(email)) { error.textContent = COPY.badEmail; return; }
         }
